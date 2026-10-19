@@ -12,9 +12,13 @@ khoản. Mỗi tập của loạt thêm vào repo những thứ một bước SD
 
 ## Đã có
 
-| Tập | Bước | Thêm gì | Bằng chứng |
-|---|---|---|---|
-| SDLC-1 | Plan: ý tưởng thành `intent.md` | skill `write-intent`, subagent `intent-reviewer`, hook `no-self-approve`, thư mục `intent/` | [demo/sdlc-1/](demo/sdlc-1/README.md) |
+| Tập | Bước | Thêm gì | Bằng chứng | Blog |
+|---|---|---|---|---|
+| SDLC-0 | Tổng quan: code nhanh rồi, sao team vẫn chậm? | `docs/`: ghi chép đọc playbook theo sáu bước, kèm chỗ còn hở và cách vá ban đầu | không có demo (tập bản đồ) | [Code nhanh rồi, sao team vẫn chậm?](https://fxstudio.dev/ai-native-sdlc-code-nhanh-team-van-cham/) |
+| SDLC-1 | Plan: ý tưởng thành `intent.md` | skill `write-intent`, subagent `intent-reviewer`, hook `no-self-approve`, thư mục `intent/` | [demo/sdlc-1/](demo/sdlc-1/README.md) | [Ý tưởng thành intent.md](https://fxstudio.dev/ai-native-sdlc-plan-y-tuong-thanh-intent/) |
+
+Các bài của loạt trên blog: https://fxstudio.dev/tag/ai-native-sdlc/
+
 
 ## Mang về repo của bạn (bước Plan)
 
