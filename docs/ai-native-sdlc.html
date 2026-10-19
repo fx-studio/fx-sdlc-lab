@@ -1,0 +1,1412 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AI-native SDLC</title>
+<style>
+:root{
+  --paper:#FBFAF7;--paper-2:#F2EEE6;--ink:#1D1C1A;--muted:#66625A;--soft:#8F8A80;
+  --rule:#DDD7CC;--accent:#A8452F;--accent-tint:#F5E6E0;
+  --sans:-apple-system,'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif;
+  --mono:'SF Mono','JetBrains Mono',Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --paper:#171615;--paper-2:#211F1D;--ink:#ECE8E1;--muted:#ABA59A;--soft:#7E796F;
+  --rule:#34312D;--accent:#E07A5F;--accent-tint:#2C1E1A;}}
+:root[data-theme="dark"]{--paper:#171615;--paper-2:#211F1D;--ink:#ECE8E1;--muted:#ABA59A;--soft:#7E796F;--rule:#34312D;--accent:#E07A5F;--accent-tint:#2C1E1A;}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--paper);color:var(--ink);font:16px/1.65 var(--sans)}
+.wrap{max-width:1040px;margin:0 auto;padding:0 24px}
+a{color:inherit;text-decoration-color:var(--rule);text-underline-offset:3px}
+a:hover{text-decoration-color:var(--accent)}
+code{font:0.9em var(--mono);background:var(--paper-2);padding:1px 5px;border-radius:4px}
+header{padding:72px 0 48px;border-bottom:1px solid var(--rule)}
+.eyebrow{font-size:13px;letter-spacing:.04em;color:var(--soft);margin:0 0 20px}
+h1{font:600 clamp(40px,7vw,64px)/1.08 var(--sans);margin:0 0 24px;letter-spacing:-.025em}
+.lede{font:400 clamp(19px,2.4vw,23px)/1.5 var(--sans);max-width:30ch;margin:0;color:var(--ink)}
+.lede em{font-style:normal;color:var(--accent)}
+section{padding:64px 0;border-bottom:1px solid var(--rule)}
+.sec-head{display:grid;grid-template-columns:200px 1fr;gap:32px;margin-bottom:36px}
+.sec-head .n{font:13px var(--mono);color:var(--soft);padding-top:8px}
+h2{font:600 28px/1.25 var(--sans);margin:0;letter-spacing:-.015em}
+.sec-head p{margin:10px 0 0;color:var(--muted);max-width:56ch}
+.shifts{display:grid;grid-template-columns:repeat(3,1fr);gap:0;border-top:1px solid var(--ink)}
+.shift{padding:20px 24px 4px 0}
+.shift+.shift{padding-left:24px;border-left:1px solid var(--rule)}
+.shift b{display:block;font:600 18px/1.35 var(--sans);margin-bottom:8px}
+.shift p{margin:0;color:var(--muted);font-size:15px}
+.loop{background:var(--paper-2);border-radius:8px;padding:28px 20px}
+.loop svg{display:block;width:100%;height:auto}
+.loop .box{fill:var(--paper);stroke:var(--ink);stroke-width:1}
+.loop .box.f{fill:var(--accent-tint);stroke:var(--accent);stroke-width:2}
+.loop .t{font:500 17px var(--sans);fill:var(--ink)}
+.loop .s{font:13px var(--mono);fill:var(--muted)}
+.loop .ln{stroke:var(--muted);stroke-width:1.2;fill:none}
+.loop .back{stroke:var(--accent);stroke-dasharray:5 5}
+.loop .lbl{font:12px var(--sans);fill:var(--accent)}
+.loop a:hover .box{stroke:var(--accent)}
+.loop-list{display:none;margin:0;padding:0;list-style:none}
+.loop-note{margin:16px 4px 0;font-size:14px;color:var(--muted)}
+.loop-note i{font-style:normal;color:var(--accent)}
+.phases{display:grid;grid-template-columns:repeat(2,1fr);gap:20px}
+.ph{border:1px solid var(--rule);border-radius:8px;padding:24px;background:var(--paper);display:flex;flex-direction:column}
+.ph h3{font:600 21px/1.25 var(--sans);margin:0 0 4px;display:flex;gap:12px;align-items:baseline}
+.ph h3 span{font:13px var(--mono);color:var(--accent)}
+.ph .one{margin:0 0 18px;color:var(--muted)}
+.ph dl{margin:0;display:grid;grid-template-columns:88px 1fr;gap:10px 14px;font-size:15px}
+.ph dt{color:var(--soft);font-size:13px;padding-top:2px}
+.ph dd{margin:0}
+.ph .more{margin-top:auto;padding-top:18px;font-size:14px}
+.layers{display:grid;grid-template-columns:repeat(3,1fr);gap:20px}
+.layer{border-top:3px solid var(--rule);padding-top:16px}
+.layer:nth-child(2){border-top-color:var(--muted)}
+.layer:nth-child(3){border-top-color:var(--ink)}
+.layer b{font:600 19px var(--sans);display:block}
+.layer .k{font-size:13px;color:var(--soft);margin:2px 0 10px}
+.layer p{margin:0;color:var(--muted);font-size:15px}
+.rule-line{margin:32px 0 0;padding:18px 22px;border-left:3px solid var(--accent);background:var(--accent-tint);font:500 17px/1.5 var(--sans)}
+.gates{width:100%;border-collapse:collapse;font-size:15px}
+.gates th{text-align:left;font-weight:500;font-size:13px;color:var(--soft);padding:0 0 10px;border-bottom:1px solid var(--ink)}
+.gates td{padding:12px 0;border-bottom:1px solid var(--rule);vertical-align:top}
+.gates td:first-child{width:34%}
+.open{display:grid;grid-template-columns:repeat(2,1fr);gap:28px 40px;margin:0;padding:0;list-style:none}
+.open li b{display:block;font-weight:500;margin-bottom:4px}
+.open li p{margin:0;color:var(--muted);font-size:15px}
+footer{padding:40px 0 64px;font-size:14px;color:var(--muted)}
+footer ol{margin:12px 0 20px;padding-left:20px;columns:2;column-gap:40px}
+footer li{margin-bottom:4px}
+@media (max-width:760px){
+  header{padding:48px 0 36px}
+  section{padding:48px 0}
+  .sec-head{grid-template-columns:1fr;gap:6px;margin-bottom:28px}
+  .shifts,.layers,.phases,.open{grid-template-columns:1fr}
+  .shift+.shift{padding-left:0;border-left:0;border-top:1px solid var(--rule)}
+  .loop svg{display:none}
+  .loop-list{display:block}
+  .loop-list li{display:flex;gap:12px;align-items:baseline;padding:10px 0;border-bottom:1px solid var(--rule)}
+  .loop-list li:last-child{border-bottom:0}
+  .loop-list .num{font:13px var(--mono);color:var(--soft);min-width:20px}
+  .loop-list .f .nm{color:var(--accent)}
+  .loop-list .nm{font-weight:500;min-width:84px}
+  .loop-list .ar{font:13px var(--mono);color:var(--muted)}
+  .ph dl{grid-template-columns:1fr;gap:2px}
+  .ph dd{margin-bottom:10px}
+  footer ol{columns:1}
+}
+
+.rsel{position:absolute;opacity:0;pointer-events:none;width:1px;height:1px}
+.tabbar{position:sticky;top:0;z-index:10;background:var(--paper);border-bottom:1px solid var(--rule)}
+.tabbar .wrap{display:flex;align-items:center;gap:20px}
+.brand{font-weight:600;font-size:15px;white-space:nowrap;cursor:pointer;color:var(--ink)}.brand:hover{color:var(--accent)}
+.tabs{display:flex;gap:6px;padding:12px 0;overflow-x:auto;scrollbar-width:none;flex:1}
+.tabs::-webkit-scrollbar{display:none}
+.tab{display:block;white-space:nowrap;padding:7px 14px;border:1px solid var(--rule);border-radius:999px;font-size:14px;color:var(--muted);background:var(--paper);cursor:pointer;user-select:none}
+.tab:hover{border-color:var(--ink);color:var(--ink)}
+.page{display:none}
+.lnk{cursor:pointer;text-decoration:underline;text-decoration-color:var(--rule);text-underline-offset:3px}
+.lnk:hover{text-decoration-color:var(--accent);color:var(--accent)}
+.ph .more{text-decoration:none;color:var(--accent);font-weight:500}
+.d-hero{padding:56px 0 28px;max-width:760px}
+.kick{font:13px var(--mono);color:var(--accent);margin:0 0 12px}
+.d-title{font:600 clamp(36px,5.5vw,56px)/1.05 var(--sans);letter-spacing:-.03em;margin:0 0 14px}
+.d-tag{font-size:clamp(18px,2.2vw,21px);line-height:1.5;color:var(--muted);margin:0}
+.compare{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin:8px 0 8px}
+.cmp{border:1px solid var(--rule);border-radius:8px;padding:22px 24px;background:var(--paper)}
+.cmp.new{background:var(--accent-tint);border-color:var(--accent)}
+.cmp-l{font:500 12px var(--sans);letter-spacing:.06em;text-transform:uppercase;color:var(--soft);margin:0 0 10px}
+.cmp.new .cmp-l{color:var(--accent)}
+.lead p{margin:0 0 10px;font-size:16px;line-height:1.65}
+.prose p,.prose li{font-size:15px;line-height:1.7;color:var(--ink)}
+.prose p{margin:0 0 10px}
+.prose ul,.prose ol{margin:0 0 12px;padding-left:20px}
+.prose li{margin-bottom:5px}
+.prose h4{font:600 15px var(--sans);margin:18px 0 8px}
+.prose blockquote{margin:0 0 12px;padding:8px 14px;border-left:3px solid var(--rule);color:var(--muted)}
+.prose pre{background:var(--paper-2);border:1px solid var(--rule);border-radius:8px;padding:14px 16px;overflow-x:auto;margin:0 0 12px}
+.prose pre code{background:none;padding:0;font-size:12.5px;line-height:1.6}
+.lead pre,.prose pre{font:12.5px/1.6 var(--mono)}.lead pre code,.prose pre code{display:block;line-height:1.6}
+.lead,.prose,.play>div,.cmp,.gap,.subc,.sidec,.fix,.week li{min-width:0}
+.lead ul,.lead ol{margin:0 0 10px;padding-left:20px}.lead li{font-size:15.5px;line-height:1.65;margin-bottom:4px}
+.lead pre{background:var(--paper-2);border:1px solid var(--rule);border-radius:8px;padding:14px 16px;overflow-x:auto;margin:0 0 12px}
+.lead pre code{background:none;padding:0;font-size:12.5px;line-height:1.6}
+strong{font-weight:600}
+.tbl{overflow-x:auto;margin:4px 0 14px}
+.tbl table{width:100%;border-collapse:collapse;font-size:14.5px}
+.tbl th{text-align:left;font-weight:600;font-size:13px;color:var(--muted);padding:8px 12px 8px 0;border-bottom:1px solid var(--ink)}
+.tbl td{padding:9px 12px 9px 0;border-bottom:1px solid var(--rule);vertical-align:top;line-height:1.55}
+details{margin-top:6px}
+summary{list-style:none;cursor:pointer;display:inline-flex;align-items:center;gap:6px;font-size:14px;font-weight:500;color:var(--accent);padding:4px 0;user-select:none}
+summary::-webkit-details-marker{display:none}
+summary::before{content:"+";display:inline-grid;place-items:center;width:18px;height:18px;border:1px solid currentColor;border-radius:4px;font-size:13px;line-height:1}
+details[open] summary::before{content:"−"}
+summary .c{display:none}details[open] summary .c{display:inline}details[open] summary .o{display:none}
+details[open] .prose{margin-top:10px;padding-top:12px;border-top:1px dashed var(--rule)}
+.blk{padding:48px 0 8px}
+.blk-h{display:flex;align-items:baseline;gap:14px;flex-wrap:wrap;margin-bottom:22px;padding-bottom:12px;border-bottom:1px solid var(--ink)}
+.blk-h .bn{font:13px var(--mono);color:var(--soft)}
+.blk-h h2{font:600 24px/1.25 var(--sans);letter-spacing:-.015em;margin:0}
+.badge{font-size:12px;padding:3px 10px;border-radius:999px;background:var(--paper-2);color:var(--muted);border:1px solid var(--rule)}
+.intro{max-width:760px;margin-bottom:16px;color:var(--muted)}
+.plays{display:grid;gap:12px}
+.play{display:grid;grid-template-columns:64px 1fr;gap:4px 16px;padding:20px 24px;border:1px solid var(--rule);border-radius:8px;background:var(--paper)}
+.pn{font:500 22px var(--mono);color:var(--accent);line-height:1.2}
+.play h3,.fix h3,.gap h3,.subc h3{font:600 17px/1.35 var(--sans);margin:0 0 8px}
+.side{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px}
+.sidec{padding:20px 24px;border-radius:8px;background:var(--paper-2)}
+.gaps{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.gaps.sub{margin-top:16px}
+.gap{padding:18px 22px;border-left:3px solid var(--accent);background:var(--paper-2);border-radius:0}
+.gap .prose p{color:var(--muted)}
+.subc{padding:20px 22px;border:1px solid var(--rule);border-radius:8px}
+.fixes{display:grid;grid-template-columns:1fr 1fr;gap:12px;align-items:start}
+.fix{padding:20px 22px;border:1px solid var(--rule);border-radius:8px;background:var(--paper);min-width:0}
+.fx-h{display:flex;gap:10px;align-items:baseline}
+.chip{font:500 12px var(--mono);color:var(--accent);background:var(--accent-tint);padding:2px 7px;border-radius:4px;flex:none}
+.week{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(5,1fr);gap:12px;counter-reset:w}
+.week li{padding:18px 18px 16px;border:1px solid var(--rule);border-radius:8px;position:relative}
+.week .sn{display:inline-grid;place-items:center;width:28px;height:28px;border-radius:50%;background:var(--ink);color:var(--paper);font:500 13px var(--mono);margin-bottom:12px}
+.week p{margin:0;font-size:14.5px;line-height:1.6}
+.wnote{margin:18px 0 0;padding:14px 18px;background:var(--accent-tint);border-left:3px solid var(--accent);font-size:15px}
+.gos{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+.go{display:flex;gap:12px;align-items:baseline;padding:16px 20px;border:1px solid var(--rule);border-radius:8px;cursor:pointer;font-weight:600;font-size:17px}
+.go span{font:13px var(--mono);color:var(--accent);font-weight:400}
+.go:hover{border-color:var(--accent)}
+.dpage{padding-bottom:56px}
+@media (max-width:860px){.week{grid-template-columns:1fr 1fr}}
+@media (max-width:760px){.brand{display:none}.compare,.side,.gaps,.fixes,.gos{grid-template-columns:1fr}.week{grid-template-columns:1fr}.play{grid-template-columns:1fr;padding:18px}.pn{font-size:16px}.d-hero{padding:36px 0 20px}.blk{padding:36px 0 4px}}
+@media print{.tabbar,.rsel{display:none}.page{display:block!important;break-before:page}details>*{display:block}}
+#r-sum:checked~.pages #pg-sum{display:block}
+#r-sum:checked~.tabbar .tab[for="r-sum"]{background:var(--ink);border-color:var(--ink);color:var(--paper)}
+#r-sum:focus-visible~.tabbar .tab[for="r-sum"]{outline:2px solid var(--accent);outline-offset:2px}
+#r-00:checked~.pages #pg-00{display:block}
+#r-00:checked~.tabbar .tab[for="r-00"]{background:var(--ink);border-color:var(--ink);color:var(--paper)}
+#r-00:focus-visible~.tabbar .tab[for="r-00"]{outline:2px solid var(--accent);outline-offset:2px}
+#r-01:checked~.pages #pg-01{display:block}
+#r-01:checked~.tabbar .tab[for="r-01"]{background:var(--ink);border-color:var(--ink);color:var(--paper)}
+#r-01:focus-visible~.tabbar .tab[for="r-01"]{outline:2px solid var(--accent);outline-offset:2px}
+#r-02:checked~.pages #pg-02{display:block}
+#r-02:checked~.tabbar .tab[for="r-02"]{background:var(--ink);border-color:var(--ink);color:var(--paper)}
+#r-02:focus-visible~.tabbar .tab[for="r-02"]{outline:2px solid var(--accent);outline-offset:2px}
+#r-03:checked~.pages #pg-03{display:block}
+#r-03:checked~.tabbar .tab[for="r-03"]{background:var(--ink);border-color:var(--ink);color:var(--paper)}
+#r-03:focus-visible~.tabbar .tab[for="r-03"]{outline:2px solid var(--accent);outline-offset:2px}
+#r-04:checked~.pages #pg-04{display:block}
+#r-04:checked~.tabbar .tab[for="r-04"]{background:var(--ink);border-color:var(--ink);color:var(--paper)}
+#r-04:focus-visible~.tabbar .tab[for="r-04"]{outline:2px solid var(--accent);outline-offset:2px}
+#r-05:checked~.pages #pg-05{display:block}
+#r-05:checked~.tabbar .tab[for="r-05"]{background:var(--ink);border-color:var(--ink);color:var(--paper)}
+#r-05:focus-visible~.tabbar .tab[for="r-05"]{outline:2px solid var(--accent);outline-offset:2px}
+#r-06:checked~.pages #pg-06{display:block}
+#r-06:checked~.tabbar .tab[for="r-06"]{background:var(--ink);border-color:var(--ink);color:var(--paper)}
+#r-06:focus-visible~.tabbar .tab[for="r-06"]{outline:2px solid var(--accent);outline-offset:2px}
+</style>
+</head>
+<body>
+<input class="rsel" type="radio" name="tab" id="r-sum" checked aria-label="Tóm tắt"><input class="rsel" type="radio" name="tab" id="r-00" aria-label="Tổng quan"><input class="rsel" type="radio" name="tab" id="r-01" aria-label="Plan"><input class="rsel" type="radio" name="tab" id="r-02" aria-label="Design"><input class="rsel" type="radio" name="tab" id="r-03" aria-label="Build"><input class="rsel" type="radio" name="tab" id="r-04" aria-label="Test"><input class="rsel" type="radio" name="tab" id="r-05" aria-label="Deploy"><input class="rsel" type="radio" name="tab" id="r-06" aria-label="Maintain">
+<nav class="tabbar" aria-label="Các trang"><div class="wrap"><label class="brand lnk" for="r-sum" style="text-decoration:none">AI-native SDLC</label><div class="tabs"><label class="tab" for="r-sum">Tóm tắt</label><label class="tab" for="r-00">00 · Tổng quan</label><label class="tab" for="r-01">01 · Plan</label><label class="tab" for="r-02">02 · Design</label><label class="tab" for="r-03">03 · Build</label><label class="tab" for="r-04">04 · Test</label><label class="tab" for="r-05">05 · Deploy</label><label class="tab" for="r-06">06 · Maintain</label></div></div></nav>
+<div class="pages">
+<div class="page" id="pg-sum">
+<header>
+  <div class="wrap">
+    <p class="eyebrow">Đọc playbook của Anthropic · Louis Claxton · 21/8/2026</p>
+    <h1>AI-native SDLC</h1>
+    <p class="lede">Viết code đã nhanh. Thứ còn chậm là <em>mọi việc xung quanh code</em>, nên phải làm lại cả quy trình chứ không chỉ bước build.</p>
+  </div>
+</header>
+
+<section>
+  <div class="wrap">
+    <div class="sec-head">
+      <div class="n">01 · Vấn đề</div>
+      <div><h2>Khi build không còn là nút thắt</h2>
+      <p>SDLC cũ được thiết kế cho thời viết code là khâu đắt nhất, và giả định con người làm từng bước. Agent phá vỡ cả hai giả định.</p></div>
+    </div>
+    <div class="shifts">
+      <div class="shift"><b>Nút thắt dời chỗ</b><p>Build xong trong vài giờ. Plan, review và deploy vẫn chạy ở tốc độ con người.</p></div>
+      <div class="shift"><b>Control lệch thực tế</b><p>Đọc từng dòng hợp lý khi người viết code. Agent viết phần lớn diff thì không ai đọc kịp.</p></div>
+      <div class="shift"><b>Governance đắt dần</b><p>Mỗi ngoại lệ vẫn chờ hội đồng họp theo tuần, theo tháng.</p></div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <div class="sec-head">
+      <div class="n">02 · Quy trình</div>
+      <div><h2>Đường thẳng thành vòng lặp</h2>
+      <p>Mỗi stage kết thúc bằng một file commit vào git. Stage sau bắt đầu bằng việc đọc file đó. Chuỗi commit vừa là bàn giao, vừa là audit trail.</p></div>
+    </div>
+    <div class="loop">
+      <svg viewBox="0 0 900 300" role="img" aria-labelledby="lt ld">
+        <title id="lt">Vòng sáu stage</title>
+        <desc id="ld">Plan, Design, Build ở hàng trên; Test, Deploy, Maintain ở hàng dưới; Maintain sinh intent.md mới quay về Plan.</desc>
+        <defs><marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M1 1L9 5L1 9" fill="none" stroke="context-stroke" stroke-width="1.5"/></marker></defs>
+        <rect class="box" x="100" y="20" width="200" height="76" rx="8"/><text class="t" x="200" y="52" text-anchor="middle">1 · Plan</text><text class="s" x="200" y="76" text-anchor="middle">intent.md</text>
+        <rect class="box" x="350" y="20" width="200" height="76" rx="8"/><text class="t" x="450" y="52" text-anchor="middle">2 · Design</text><text class="s" x="450" y="76" text-anchor="middle">spec.md</text>
+        <rect class="box" x="600" y="20" width="200" height="76" rx="8"/><text class="t" x="700" y="52" text-anchor="middle">3 · Build</text><text class="s" x="700" y="76" text-anchor="middle">plan.md + diff</text>
+        <rect class="box" x="600" y="196" width="200" height="76" rx="8"/><text class="t" x="700" y="228" text-anchor="middle">4 · Test</text><text class="s" x="700" y="252" text-anchor="middle">test + eval</text>
+        <rect class="box f" x="350" y="196" width="200" height="76" rx="8"/><text class="t" x="450" y="228" text-anchor="middle">5 · Deploy</text><text class="s" x="450" y="252" text-anchor="middle">PR + findings</text>
+        <rect class="box f" x="100" y="196" width="200" height="76" rx="8"/><text class="t" x="200" y="228" text-anchor="middle">6 · Maintain</text><text class="s" x="200" y="252" text-anchor="middle">intent.md mới</text>
+        <line class="ln" x1="302" y1="58" x2="346" y2="58" marker-end="url(#ah)"/>
+        <line class="ln" x1="552" y1="58" x2="596" y2="58" marker-end="url(#ah)"/>
+        <line class="ln" x1="700" y1="98" x2="700" y2="192" marker-end="url(#ah)"/>
+        <line class="ln" x1="598" y1="234" x2="554" y2="234" marker-end="url(#ah)"/>
+        <line class="ln" x1="348" y1="234" x2="304" y2="234" marker-end="url(#ah)"/>
+        <path class="ln back" d="M98 234 H48 V58 H96" marker-end="url(#ah)"/>
+        <text class="lbl" x="58" y="150">quay về</text>
+      </svg>
+      <ol class="loop-list">
+        <li><span class="num">1</span><label class="nm lnk" for="r-01">Plan</label><span class="ar">→ intent.md</span></li>
+        <li><span class="num">2</span><label class="nm lnk" for="r-02">Design</label><span class="ar">→ spec.md</span></li>
+        <li><span class="num">3</span><label class="nm lnk" for="r-03">Build</label><span class="ar">→ plan.md + diff</span></li>
+        <li><span class="num">4</span><label class="nm lnk" for="r-04">Test</label><span class="ar">→ test + eval</span></li>
+        <li class="f"><span class="num">5</span><label class="nm lnk" for="r-05">Deploy</label><span class="ar">→ PR + findings</span></li>
+        <li class="f"><span class="num">6</span><label class="nm lnk" for="r-06">Maintain</label><span class="ar">→ intent.md mới, quay về 1</span></li>
+      </ol>
+      <p class="loop-note"><i>Tô đỏ</i>: theo đánh giá của bộ tài liệu này, hai stage khác SDLC cũ nhiều nhất. Deploy chuyển cổng duyệt sang hook, Maintain khép vòng lặp.</p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <div class="sec-head">
+      <div class="n">03 · Sáu phase</div>
+      <div><h2>Mỗi phase: đổi gì, còn hở gì, thử gì trước</h2>
+      <p>Cột "Còn hở" và "Thử trước" là phân tích thêm, không có trong bài gốc.</p></div>
+    </div>
+    <div class="phases">
+      <article class="ph" id="p1">
+        <h3><span>01</span>Plan</h3>
+        <p class="one">Ý tưởng không còn chờ ai đó viết hộ.</p>
+        <dl>
+          <dt>Cách mới</dt><dd>Người có ý tưởng làm việc với Claude, ghi thành <code>intent.md</code> trong repo, product owner duyệt.</dd>
+          <dt>Còn hở</dt><dd>Tạo intent dễ thì product owner thành hàng đợi mới.</dd>
+          <dt>Thử trước</dt><dd>Danh sách kiểm trước khi commit, trần số intent chờ duyệt.</dd>
+        </dl>
+        <label class="more lnk" for="r-01">Đọc chi tiết →</label>
+      </article>
+      <article class="ph" id="p2">
+        <h3><span>02</span>Design</h3>
+        <p class="one">Requirements và design gộp vào một session.</p>
+        <dl>
+          <dt>Cách mới</dt><dd>Claude viết <code>spec.md</code> từ intent, policy áp qua skill ngay lúc viết, tự đánh dấu chỗ đáng lo.</dd>
+          <dt>Còn hở</dt><dd>Spec trôi chảy dễ giấu giả định sai.</dd>
+          <dt>Thử trước</dt><dd>Bắt agent liệt kê giả định, định nghĩa sẵn "rủi ro cao".</dd>
+        </dl>
+        <label class="more lnk" for="r-02">Đọc chi tiết →</label>
+      </article>
+      <article class="ph" id="p3">
+        <h3><span>03</span>Build</h3>
+        <p class="one">Không dòng code nào trước khi có plan được duyệt.</p>
+        <dl>
+          <dt>Cách mới</dt><dd>Plan mode, <code>CLAUDE.md</code>, skill, hook, nhiều session song song trên worktree.</dd>
+          <dt>Còn hở</dt><dd>Plan cho mọi việc thành thủ tục. <code>CLAUDE.md</code> cũ dần.</dd>
+          <dt>Thử trước</dt><dd>Phân hạng thay đổi để quyết định mức plan, bộ hook khởi đầu.</dd>
+        </dl>
+        <label class="more lnk" for="r-03">Đọc chi tiết →</label>
+      </article>
+      <article class="ph" id="p4">
+        <h3><span>04</span>Test</h3>
+        <p class="one">Agent tự kiểm, cấu hình agent cũng phải test.</p>
+        <dl>
+          <dt>Cách mới</dt><dd>Vòng tự kiểm trước khi người nhìn thấy. Eval chạy trong CI mỗi khi <code>CLAUDE.md</code> hay skill đổi.</dd>
+          <dt>Còn hở</dt><dd>Agent viết cả code lẫn test thì sai cùng một hướng.</dd>
+          <dt>Thử trước</dt><dd>Viết test từ tiêu chí nghiệm thu trong session riêng, bắt đầu với 10 eval.</dd>
+        </dl>
+        <label class="more lnk" for="r-04">Đọc chi tiết →</label>
+      </article>
+      <article class="ph" id="p5">
+        <h3><span>05</span>Deploy</h3>
+        <p class="one">Agent đi tới cổng production, không vượt qua.</p>
+        <dl>
+          <dt>Cách mới</dt><dd>AI review theo <code>REVIEW.md</code>, hook làm cổng duyệt, managed settings, Claude trong CI/CD.</dd>
+          <dt>Còn hở</dt><dd>Người duyệt vẫn là trần, dễ bấm duyệt cho có.</dd>
+          <dt>Thử trước</dt><dd>Số người duyệt theo mức rủi ro, giới hạn kích thước PR.</dd>
+        </dl>
+        <label class="more lnk" for="r-05">Đọc chi tiết →</label>
+      </article>
+      <article class="ph" id="p6">
+        <h3><span>06</span>Maintain</h3>
+        <p class="one">Vòng lặp tự khép.</p>
+        <dl>
+          <dt>Cách mới</dt><dd>Script cố định phát hiện vượt ngưỡng, Claude chẩn đoán và viết <code>intent.md</code> mới. Scan định kỳ, trực sự cố qua Slack.</dd>
+          <dt>Còn hở</dt><dd>Hàng đợi phân loại thành backlog mới.</dd>
+          <dt>Thử trước</dt><dd>Bắt đầu với tỉ lệ test fail trong CI, phân loại lý do bỏ qua.</dd>
+        </dl>
+        <label class="more lnk" for="r-06">Đọc chi tiết →</label>
+      </article>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <div class="sec-head">
+      <div class="n">04 · Kiểm soát</div>
+      <div><h2>Ba lớp, từ mềm tới cứng</h2>
+      <p>Playbook phân biệt skill (khuyến nghị) và hook (bắt buộc). Managed settings đến từ ví dụ cấu hình cho doanh nghiệp. Gom thành ba lớp là cách trình bày của bộ tài liệu này.</p></div>
+    </div>
+    <div class="layers">
+      <div class="layer"><b>Skill</b><div class="k">khuyến nghị</div><p>Agent đọc và thường làm đúng. Làm vi phạm hiếm đi, nhưng không ép được.</p></div>
+      <div class="layer"><b>Hook</b><div class="k">bắt buộc</div><p>Chạy trên mọi hành động khớp điều kiện. Cho qua, chặn, hoặc hỏi người.</p></div>
+      <div class="layer"><b>Managed settings</b><div class="k">không tắt được</div><p>Do platform hoặc IT giữ. Engineer, file project hay cờ dòng lệnh đều không nới được.</p></div>
+    </div>
+    <p class="rule-line">Agent viết code không thể tự duyệt code đó. Agent được làm mọi thứ tới trước cổng production, và dừng ở đó.</p>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <div class="sec-head">
+      <div class="n">05 · Con người</div>
+      <div><h2>Từ làm từng bước sang đứng ở cổng</h2>
+      <p>Câu hỏi của người duyệt đổi từ "dòng này đúng chưa" sang "thay đổi có đúng ý plan không, rủi ro có chấp nhận được không".</p></div>
+    </div>
+    <table class="gates">
+      <thead><tr><th>Cổng</th><th>Người duyệt</th></tr></thead>
+      <tbody>
+        <tr><td><code>intent.md</code></td><td>Product owner</td></tr>
+        <tr><td><code>spec.md</code></td><td>Product owner, thêm tech lead khi rủi ro cao</td></tr>
+        <tr><td><code>plan.md</code></td><td>Engineer, thêm tech lead hoặc architect khi rủi ro cao</td></tr>
+        <tr><td>Pull request</td><td>Code owner, qua branch protection</td></tr>
+        <tr><td>Release production</td><td>Release manager có tên cụ thể</td></tr>
+        <tr><td>Phát hiện từ production</td><td>Service owner hoặc người trực</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <div class="sec-head">
+      <div class="n">06 · Còn mở</div>
+      <div><h2>Những gì playbook chưa trả lời</h2>
+      <p>Nhận xét của người đọc, không có trong bài gốc.</p></div>
+    </div>
+    <ul class="open">
+      <li><b>Nút thắt được nén, không mất</b><p>Phần soạn thảo và chờ lịch được tự động. Phần phán đoán dồn về ít cổng hơn, nhưng vẫn cần người.</p></li>
+      <li><b>Chưa có số liệu kết quả</b><p>Bài đưa chỉ số để tự đo, không công bố số trước và sau của khách hàng nào.</p></li>
+      <li><b>Mobile gần như vắng mặt</b><p>Build chậm, simulator nặng, cổng store nằm ngoài tầm tay, rollback không phải một lệnh.</p></li>
+      <li><b>Chi phí và tổ chức</b><p>Eval, session song song, scan định kỳ đều tốn token. Compliance và khách hàng phải chấp nhận audit trail trong git.</p></li>
+    </ul>
+  </div>
+</section>
+</div>
+<div class="page dpage" id="pg-00"><div class="wrap"><div class="d-hero"><p class="kick">00 · Tổng quan</p><h1 class="d-title">Tổng quan</h1><p class="d-tag">Viết code giờ đã nhanh. Thứ còn chậm là mọi việc xung quanh code. Muốn hưởng trọn tốc độ của agent thì phải làm lại cả quy trình, không chỉ bước viết code.</p></div>
+<section class="blk"><div class="blk-h"><span class="bn">01</span><h2>Vấn đề gốc: code nhanh, quy trình đứng yên</h2></div><div class="lead"><p>Quy trình phát triển phần mềm (SDLC) quen thuộc có sáu bước: lên kế hoạch, thiết kế, xây dựng, kiểm thử, triển khai, vận hành. Mỗi bước có một vai phụ trách riêng. PM viết yêu cầu, architect chuyển thành thiết kế, engineer code, QA kiểm (ở các doanh nghiệp bị quản lý chặt), team release đưa lên, team vận hành theo dõi. Công việc chuyền tay nhau qua tài liệu, ticket và chữ ký duyệt.</p></div><details><summary><span class="o">Xem chi tiết</span><span class="c">Thu gọn</span></summary><div class="prose"><p>Cách làm này được thiết kế cho thời mà <strong>viết code là khâu tốn kém nhất</strong>. PRD, buổi ước lượng, review bảo mật đều tồn tại để mọi người thống nhất trước khi bỏ ra vài tuần hay vài tháng để code. Mọi control cũng ngầm giả định rằng <strong>con người làm từng bước</strong>.</p>
+<p>Khi agent như Claude Code viết code trong vài giờ thay vì vài tuần, giả định đó gãy. Playbook chỉ ra ba hệ quả:</p>
+<ol>
+<li><strong>Nút thắt dời chỗ.</strong> Build nhanh lên, nhưng plan, review/test và deploy vẫn chạy ở tốc độ con người. Đường găng giờ nằm ở hai bên bước build.</li>
+<li><strong>Control không còn khớp thực tế.</strong> Đọc từng dòng code là hợp lý khi một người viết ra nó. Khi agent viết phần lớn diff, người review không đọc kịp.</li>
+<li><strong>Governance đắt dần.</strong> Mỗi ngoại lệ vẫn phải chờ hội đồng họp theo tuần hoặc theo tháng.</li>
+</ol>
+<p>Ví dụ playbook dùng là đội bảo mật. Đội này được định biên theo năng lực viết code của con người. Khi agent nhân lượng code lên nhiều lần, chỉ còn hai kết cục: hàng đợi review phình ra, hoặc code lên production mà chưa được soát kỹ. Doanh nghiệp bị quản lý chặt không chấp nhận được kết cục nào.</p></div></details></section>
+<section class="blk"><div class="blk-h"><span class="bn">02</span><h2>Ý tưởng chính</h2></div><div class="gaps sub"><div class="subc"><h3>Giữ mục tiêu kiểm soát, đổi cách thực thi</h3><div class="lead"><p>Playbook không bỏ control. Trách nhiệm, tách bạch nhiệm vụ, khả năng audit vẫn giữ nguyên. Thứ thay đổi là <strong>ai và cái gì thực thi</strong> chúng: máy làm phần cơ học ngay lúc agent hành động, người giữ phần cần phán đoán.</p></div></div><div class="subc"><h3>Từ đường thẳng sang vòng lặp</h3><div class="lead"><p>SDLC cũ chạy một chiều, xong bước này mới tới bước kia, và vận hành là điểm cuối. Ở phiên bản AI-native, vận hành nối ngược về lên kế hoạch. Sự cố trên production được chẩn đoán rồi trở thành yêu cầu mới, đi lại từ đầu vòng.</p></div></div><div class="subc"><h3>Sợi chỉ xuyên suốt: artifact được commit</h3><div class="lead"><p>Đây là ý xuyên suốt cả playbook. Mỗi stage kết thúc bằng việc <strong>ghi một file vào git</strong>, và stage sau bắt đầu bằng việc <strong>đọc file đó</strong>.</p></div><details><summary><span class="o">Xem chi tiết</span><span class="c">Thu gọn</span></summary><div class="prose"><pre><code>intent.md → spec.md → plan.md → diff + test → PR + review findings → incident record → intent.md mới
+</code></pre>
+<p>File <code>.md</code> chiếm ưu thế ở các stage đầu vì cả người lẫn agent đọc và sửa được cùng một file. Từ Build trở đi, artifact là code và các bản ghi đi kèm.</p>
+<p>Chuỗi commit này có hai tác dụng cùng lúc:</p>
+<ul>
+<li><strong>Bàn giao không cần họp.</strong> Bước sau đọc file là biết phải làm gì, không phải ngồi giải thích lại.</li>
+<li><strong>Audit trail sẵn có.</strong> Ai yêu cầu gì, agent làm ra gì, ai duyệt, git đều ghi lại.</li>
+</ul>
+<p>Khi một artifact được chấp nhận, nó kích hoạt bước tiếp theo:</p>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>Artifact được chấp nhận</th>
+<th>Kích hoạt</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>intent.md</code></td>
+<td>Bước viết requirements và design</td>
+</tr>
+<tr>
+<td><code>spec.md</code></td>
+<td>Plan mode trong Claude Code</td>
+</tr>
+<tr>
+<td>PR được merge</td>
+<td>Pipeline CI/CD</td>
+</tr>
+<tr>
+<td>Một chỉ số production vượt ngưỡng</td>
+<td><code>intent.md</code> mới, vòng lặp tiếp tục</td>
+</tr>
+</tbody>
+</table></div>
+<p>Lúc đầu mỗi bước vẫn do người kích tay. Đích đến là một vòng lặp tự chạy, con người chỉ đứng ở các cổng để duyệt những gì agent đã đánh dấu.</p></div></details></div></div></section>
+<section class="blk"><div class="blk-h"><span class="bn">03</span><h2>Sáu stage, nhìn nhanh</h2></div><div class="lead"><div class="tbl"><table>
+<thead>
+<tr>
+<th>Stage</th>
+<th>Cách cũ</th>
+<th>Cách AI-native</th>
+<th>Artifact</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Plan</strong></td>
+<td>Yêu cầu qua hội đồng, workshop, chữ ký, viết tay</td>
+<td>Người có ý tưởng làm việc với Claude, ghi thành proto-spec</td>
+<td><code>intent.md</code></td>
+</tr>
+<tr>
+<td><strong>Design</strong></td>
+<td>Analyst viết spec, designer đọc lại rồi thiết kế</td>
+<td>Gộp requirements và design vào một session, policy áp qua skill</td>
+<td><code>spec.md</code></td>
+</tr>
+<tr>
+<td><strong>Build</strong></td>
+<td>Code và test viết tay, tài liệu viết sau</td>
+<td>Plan mode trước, agent viết code và test, tri thức nằm trong <code>CLAUDE.md</code> và skill</td>
+<td><code>plan.md</code>, diff</td>
+</tr>
+<tr>
+<td><strong>Test</strong></td>
+<td>QA gate ở ranh giới giữa các stage</td>
+<td>Agent tự kiểm liên tục, eval chạy trong CI</td>
+<td>test, eval</td>
+</tr>
+<tr>
+<td><strong>Deploy</strong></td>
+<td>Người đọc từng dòng, governance theo chu kỳ họp</td>
+<td>Nhiều lượt AI review, người chỉ soát code quan trọng, hook làm cổng duyệt</td>
+<td>PR, findings</td>
+</tr>
+<tr>
+<td><strong>Maintain</strong></td>
+<td>Người canh production</td>
+<td>Agent theo dõi, vượt ngưỡng thì chẩn đoán và viết <code>intent.md</code> mới</td>
+<td>incident, intent</td>
+</tr>
+</tbody>
+</table></div></div><details><summary><span class="o">Xem chi tiết</span><span class="c">Thu gọn</span></summary><div class="prose"><p>Mỗi stage được chia thành các "play". Play nào cũng có cùng khung: thay đổi gì, cần gì trước, các bước làm, governance, và cách đo hiệu quả.</p></div></details></section>
+<section class="blk"><div class="blk-h"><span class="bn">04</span><h2>Ba lớp kiểm soát</h2></div><div class="lead"><p>Playbook phân biệt rõ skill (control mang tính khuyến nghị) và hook (control bắt buộc). Lớp thứ ba, managed settings, xuất hiện trong ví dụ cấu hình cho doanh nghiệp bị quản lý chặt. Gom lại thành ba lớp là cách trình bày của bộ tài liệu này:</p>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>Lớp</th>
+<th>Bản chất</th>
+<th>Tác dụng</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Skill</strong></td>
+<td>Hướng dẫn agent đọc khi làm việc</td>
+<td>Làm vi phạm <em>hiếm đi</em>, nhưng không gì ép session phải tuân theo</td>
+</tr>
+<tr>
+<td><strong>Hook</strong></td>
+<td>Script chạy trước hoặc sau hành động của agent</td>
+<td>Làm vi phạm <em>gần như không thể</em>: chặn, cho qua, hoặc hỏi người</td>
+</tr>
+<tr>
+<td><strong>Managed settings</strong></td>
+<td>Cấu hình do platform/IT quản lý</td>
+<td>Engineer không tự tắt hay nới được</td>
+</tr>
+</tbody>
+</table></div></div><details><summary><span class="o">Xem chi tiết</span><span class="c">Thu gọn</span></summary><div class="prose"><p>Nguyên tắc rút ra: policy nào bắt buộc phải đúng mọi lúc thì phải có hook đứng sau skill. Skill để agent làm đúng ngay từ đầu, hook để chắc chắn không lọt.</p>
+<p>Ngoài ra, playbook nhắc nhiều lần một nguyên tắc ở khâu triển khai: <strong>agent được làm mọi thứ đến trước cổng production, và không được vượt qua.</strong> Agent viết code cũng không thể tự duyệt code đó.</p></div></details></section>
+<section class="blk"><div class="blk-h"><span class="bn">05</span><h2>Con người đứng ở đâu</h2></div><div class="lead"><p>Con người không biến mất. Vị trí của họ thay đổi: từ người làm từng bước sang người đứng ở các cổng.</p>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>Cổng</th>
+<th>Người duyệt</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>intent.md</code></td>
+<td>Product owner</td>
+</tr>
+<tr>
+<td><code>spec.md</code></td>
+<td>Product owner, tham khảo tech lead nếu rủi ro cao</td>
+</tr>
+<tr>
+<td><code>plan.md</code></td>
+<td>Engineer, tech lead hoặc architect nếu rủi ro cao</td>
+</tr>
+<tr>
+<td>PR</td>
+<td>Code owner, qua branch protection</td>
+</tr>
+<tr>
+<td>Release production</td>
+<td>Release manager có tên cụ thể</td>
+</tr>
+<tr>
+<td>Phân loại phát hiện từ production</td>
+<td>Service owner hoặc người trực</td>
+</tr>
+</tbody>
+</table></div></div><details><summary><span class="o">Xem chi tiết</span><span class="c">Thu gọn</span></summary><div class="prose"><p>Sự chú ý của con người dịch theo artifact cần duyệt. Thay vì đọc từng dòng code, người duyệt hỏi: thay đổi này có đúng ý của plan không, rủi ro có chấp nhận được không.</p></div></details></section>
+<section class="blk"><div class="blk-h"><span class="bn">06</span><h2>Áp dụng theo thứ tự nào</h2></div><div class="lead"><p>Playbook có một đồ thị phụ thuộc giữa các play. Không cần làm đủ sáu stage cùng lúc. Một số play không cần gì trước nên có thể bắt đầu ngay:</p>
+<ul>
+<li>Viết <code>intent.md</code> (Plan)</li>
+<li><code>CLAUDE.md</code> cho repo (Build)</li>
+<li>Skill cho một policy (Build)</li>
+<li>Cho agent một vòng tự kiểm (Test)</li>
+<li>Hook làm cổng duyệt (Deploy)</li>
+</ul></div><details><summary><span class="o">Xem chi tiết</span><span class="c">Thu gọn</span></summary><div class="prose"><p>Các play phức tạp hơn, như đưa Claude vào CI/CD hay khép vòng ở Maintain, đòi hỏi các play nền phải chạy trước. Ví dụ: phải có cổng duyệt trước rồi mới tự động hoá thứ đi qua cổng.</p></div></details><div class="gaps sub"><div class="subc"><h3>Sống chung với hệ thống cũ</h3><div class="lead"><p>Phần lớn tổ chức đã có Jira, công cụ quản lý yêu cầu, Figma, change board. Những hệ thống này khó thay vì auditor và các team khác đã quen. Playbook đề xuất chọn <strong>một nguồn sự thật cho mỗi loại artifact</strong>, theo một trong ba cấu hình:</p>
+<ol>
+<li><strong>Repo là nguồn sự thật.</strong> File markdown là bản chính, hệ thống cũ chỉ trỏ tới commit.</li>
+<li><strong>Hệ thống cũ là nguồn sự thật.</strong> Claude đọc ticket đầu session và ghi kết quả về qua MCP.</li>
+<li><strong>Tối thiểu là liên kết hai chiều.</strong> File markdown ghi ID của ticket, ticket ghi commit SHA của file.</li>
+</ol></div></div><div class="subc"><h3>Đo bằng dữ liệu có sẵn</h3><div class="lead"><p>Mỗi play có chỉ số dẫn (leading) và chỉ số trễ (lagging), lấy từ những nguồn đội engineering thường đã có: timestamp trong git, metadata của PR, hệ thống CI, hệ thống quản lý sự cố. Riêng phần dữ liệu session của agent cần bật export OpenTelemetry.</p></div></div></div></section>
+<section class="blk"><div class="blk-h"><span class="bn">07</span><h2>Những gì playbook chưa trả lời</h2><span class="badge">Phân tích thêm</span></div><div class="prose intro"><p>Đây là phần nhận xét, không có trong bài gốc.</p></div><div class="gaps"><div class="gap"><h3>Nút thắt bị dời và nén, không biến mất</h3><div class="prose"><p>Phần soạn thảo, chờ lịch, kiểm tra cơ học được tự động hoá. Phần phán đoán vẫn cần người, và giờ dồn về ít cổng hơn. Chính playbook cũng thừa nhận giới hạn của việc chạy song song là số luồng một người review được tử tế. Nếu điểm nghẽn thật của team là thiếu người có quyền duyệt, playbook chỉ giúp được một phần.</p></div></div><div class="gap"><h3>Chưa có số liệu kết quả</h3><div class="prose"><p>Bài đưa ra chỉ số để tự đo, không công bố số trước và sau của khách hàng nào. Những kỳ vọng như "từ vài tuần xuống vài giờ" vẫn là kỳ vọng.</p></div></div><div class="gap"><h3>Mobile gần như vắng mặt</h3><div class="prose"><p>Vòng tự kiểm cho UI dựa vào trình duyệt và screenshot. Rollback dựa vào pipeline. Với app iOS và Android, build chậm hơn, simulator khó chạy song song, và cổng App Store hay Google Play nằm ngoài tầm kiểm soát. Team mobile phải tự lấp khoảng trống này.</p></div></div><div class="gap"><h3>Chi phí ít được bàn</h3><div class="prose"><p>Eval chạy định kỳ, nhiều session song song, scan bảo mật theo lịch đều tốn token. Bài chỉ nhắc ngắn: cần ngân sách API cho eval, và đặt giới hạn chi tiêu khi dùng Claude Security.</p></div></div><div class="gap"><h3>Phần tổ chức không được bàn</h3><div class="prose"><p>Đổi quy trình đòi hỏi compliance, change board và khách hàng chấp nhận audit trail trong git thay cho chữ ký cũ. Bài chỉ đưa phương án kỹ thuật cho việc này.</p></div></div><div class="gap"><h3>Nhiều công cụ còn ở giai đoạn thử</h3><div class="prose"><p>Claude Design, Code Review, Claude Tag đang ở beta hoặc research preview. Claude Security chỉ có cho gói Enterprise. Khung tư duy dùng chung được, còn công cụ cụ thể thì nên kiểm tra trước khi cam kết.</p></div></div></div></section>
+<section class="blk"><div class="blk-h"><span class="bn">→</span><h2>Đọc tiếp từng phase</h2></div><div class="gos"><label class="go" for="r-01"><span>01</span>Plan</label><label class="go" for="r-02"><span>02</span>Design</label><label class="go" for="r-03"><span>03</span>Build</label><label class="go" for="r-04"><span>04</span>Test</label><label class="go" for="r-05"><span>05</span>Deploy</label><label class="go" for="r-06"><span>06</span>Maintain</label></div></section></div></div>
+<div class="page dpage" id="pg-01"><div class="wrap"><div class="d-hero"><p class="kick">Phase 01</p><h1 class="d-title">Plan</h1><p class="d-tag">Ý tưởng thành <code>intent.md</code></p></div>
+<div class="compare">
+<div class="cmp"><p class="cmp-l">Cách cũ</p><div class="lead"><p>Một ý tưởng ở quy trình truyền thống phải đi qua nhiều trạm trước khi có người bắt tay làm: vào backlog, viết thành user story, ước lượng story point, mang ra buổi refinement. Mỗi trạm đổi chủ một lần.</p></div><details><summary><span class="o">Xem chi tiết</span><span class="c">Thu gọn</span></summary><div class="prose"><p>Có hai cái giá phải trả:</p>
+<ul>
+<li><strong>Chậm.</strong> Từ lúc có ý tưởng tới lúc engineering nhận việc có thể mất vài tuần, chủ yếu là thời gian chờ.</li>
+<li><strong>Méo.</strong> Qua mỗi lần chuyển tay, ý gốc bị diễn giải lại. Thứ đến tay engineer đã cách người nghĩ ra nó vài bước.</li>
+</ul>
+<p>Thêm một rào cản ít được nói: người có ý tưởng thường không phải người viết tài liệu. Một nhân viên vận hành thấy vấn đề phải đi thuyết phục ai đó trong team product viết giúp. Nhiều ý tưởng chết ở bước này.</p></div></details></div>
+<div class="cmp new"><p class="cmp-l">Cách AI-native</p><div class="lead"><p>Ý tưởng không còn phải chờ ai đó rảnh để viết thành tài liệu. Người có ý tưởng tự làm việc với Claude, ghi lại thành một file <code>intent.md</code> bằng chính ngôn ngữ của mình, rồi commit vào git. Product owner duyệt file đó, và việc duyệt kích hoạt bước thiết kế.</p></div></div>
+</div>
+<section class="blk"><div class="blk-h"><span class="bn">01</span><h2>Playbook làm gì</h2></div><div class="plays"><article class="play"><div class="pn">01</div><div><h3>Một file, ba con đường vào</h3><div class="lead"><p><code>intent.md</code> là điểm khởi đầu của cả vòng lặp. Nó có thể đến từ ba nguồn:</p>
+<ul>
+<li>Một người có ý tưởng.</li>
+<li>Một ticket được tạo.</li>
+<li>Một cảnh báo từ production (xem <label class="lnk" for="r-06">Maintain</label>).</li>
+</ul></div><div class="prose"><p>Dù đến từ đâu, quy tắc chung là product owner đọc và sửa file trước khi nó được commit chính thức.</p></div></div></article><article class="play"><div class="pn">02</div><div><h3>Cách làm</h3><details><summary><span class="o">Xem chi tiết</span><span class="c">Thu gọn</span></summary><div class="prose"><ol>
+<li>Người có ý tưởng kể vấn đề với Claude theo cách tự nhiên: hôm nay không làm được gì, ai bị ảnh hưởng, tốt hơn trông thế nào, cái gì nằm ngoài phạm vi. Không cần ngôn ngữ chuyên môn.</li>
+<li>Claude hỏi lại như một business analyst sẽ hỏi: phạm vi, người dùng, ràng buộc, thế nào là thành công. Hai bên trao đổi cho đến khi ý tưởng đủ cụ thể.</li>
+<li>Claude viết kết quả theo template của tổ chức. Template này nên được đóng gói thành skill do người kỹ thuật dựng và trưởng nhóm duyệt.</li>
+<li>Người có ý tưởng sửa những chỗ Claude hiểu sai.</li>
+<li>Commit file vào nơi chứa intent chung. Git tự ghi tác giả và thời gian.</li>
+</ol></div></details></div></article><article class="play"><div class="pn">03</div><div><h3>File trông thế nào</h3><div class="lead"><p>Ví dụ trong playbook là một yêu cầu tự tra cứu trạng thái hồ sơ bảo hiểm. Cấu trúc gồm: vấn đề, kết quả mong muốn, người dùng và hệ thống bị ảnh hưởng, ràng buộc, câu hỏi còn mở. Ngắn, không quá một trang.</p></div></div></article><article class="play"><div class="pn">04</div><div><h3>Hạ tầng cần có</h3><details><summary><span class="o">Xem chi tiết</span><span class="c">Thu gọn</span></summary><div class="prose"><ul>
+<li>Người không phải engineer có quyền dùng Claude (claude.ai hoặc Cowork).</li>
+<li>Một template thống nhất cho <code>intent.md</code>.</li>
+<li>Một chỗ chứa intent có quản lý phiên bản. Với một sản phẩm, đơn giản nhất là thư mục <code>intent/</code> trong repo. Repo riêng cho intent chỉ đáng làm khi intent trải trên nhiều repo.</li>
+<li>Một connector tới GitHub để Claude commit thay cho người không biết git.</li>
+</ul>
+<p>Người dựng hạ tầng là team platform hoặc engineering, làm một lần. Họ quyết định ai được ghi vào thư mục intent, vì người đóng góp sẽ đến từ khắp tổ chức.</p></div></details></div></article></div><div class="side"><div class="sidec"><p class="cmp-l">Governance</p><div class="prose"><p>Bằng chứng là chính file đã commit: tác giả, thời gian, lịch sử sửa. Quyết định chấp nhận hay từ chối của product owner được ghi lại dưới dạng merge hoặc đóng review.</p></div></div><div class="sidec"><p class="cmp-l">Đo hiệu quả</p><div class="prose"><div class="tbl"><table>
+<thead>
+<tr>
+<th>Loại</th>
+<th>Chỉ số</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Dẫn</td>
+<td>Thời gian từ cuộc trò chuyện đầu tiên tới khi <code>intent.md</code> được commit. Kỳ vọng giảm từ vài tuần xuống vài giờ</td>
+</tr>
+<tr>
+<td>Trễ</td>
+<td>Tỉ lệ intent được chấp nhận sang bước Design. Số lần intent bị sửa sau khi <code>spec.md</code> đầu tiên đã commit</td>
+</tr>
+</tbody>
+</table></div></div></div></div></section>
+<section class="blk"><div class="blk-h"><span class="bn">02</span><h2>Chỗ còn hở</h2><span class="badge">Phân tích thêm</span></div><div class="gaps"><div class="gap"><h3>Product owner thành nút thắt mới</h3><div class="prose"><p>Khi ai cũng tạo được intent trong vài phút, số intent tăng nhanh hơn khả năng đọc của product owner. Hàng đợi chỉ dời từ "chờ người viết" sang "chờ người duyệt". Playbook đo thời gian tạo intent nhưng không đo thời gian intent nằm chờ.</p></div></div><div class="gap"><h3>Chất lượng phụ thuộc người kể</h3><div class="prose"><p>Claude hỏi lại được, nhưng chỉ hỏi được những gì người kể gợi ra. Nếu người kể không biết hệ thống có ràng buộc gì, file vẫn trông đầy đủ mà thiếu thứ quan trọng. Một file viết trôi chảy dễ khiến người duyệt tin rằng nó đã được nghĩ kỹ.</p></div></div><div class="gap"><h3>Trùng lặp</h3><div class="prose"><p>Ba người thấy cùng một vấn đề sẽ tạo ba intent. Không có bước nào trong playbook kiểm tra trùng.</p></div></div><div class="gap"><h3>Yêu cầu đến từ khách hàng bên ngoài</h3><div class="prose"><p>Playbook giả định người có ý tưởng ở trong tổ chức. Với dự án outsource, yêu cầu đến từ khách hàng, thường qua một người trung gian như BrSE, và đôi khi bằng ngôn ngữ khác. Khách không vào repo của mình để viết intent.</p></div></div></div></section>
+<section class="blk"><div class="blk-h"><span class="bn">03</span><h2>Giải pháp ban đầu</h2><span class="badge">Đề xuất, chưa kiểm chứng</span></div><div class="fixes"><article class="fix"><div class="fx-h"><span class="chip">4.1</span><h3>Đặt "điều kiện sẵn sàng" cho intent</h3></div><div class="lead"><p>Trước khi commit, cho Claude tự kiểm file theo một danh sách ngắn. Thiếu mục nào thì hỏi lại người kể chứ không tự điền.</p></div><details><summary><span class="o">Xem mẫu và chi tiết</span><span class="c">Thu gọn</span></summary><div class="prose"><pre><code class="language-markdown">## Kiểm trước khi commit intent.md
+
+- [ ] Vấn đề nói được ai đang gặp, gặp lúc nào
+- [ ] Có ít nhất một bằng chứng (số liệu, ticket, lời phàn nàn, ảnh chụp)
+- [ ] Có mục &quot;Không làm&quot; ghi rõ ngoài phạm vi
+- [ ] Tiêu chí thành công đo được, không phải &quot;tốt hơn&quot;, &quot;nhanh hơn&quot;
+- [ ] Câu hỏi mở được liệt kê, không bị giấu trong văn bản
+</code></pre>
+<p>Đóng gói danh sách này vào cùng skill template. Như vậy mọi intent đi qua cùng một cửa lọc.</p></div></details></article><article class="fix"><div class="fx-h"><span class="chip">4.2</span><h3>Template mở rộng</h3></div><div class="lead"><p>So với ví dụ trong playbook, thêm ba mục giúp product owner duyệt nhanh hơn:</p>
+<pre><code class="language-markdown"># Intent: &lt;tên ngắn&gt;
+Tác giả: &lt;tên&gt; (&lt;team&gt;) · Trạng thái: draft · Nguồn: &lt;người / ticket / cảnh báo&gt;
+
+## Vấn đề
+## Bằng chứng            ← thêm: vì sao biết đây là vấn đề thật
+## Kết quả mong muốn
+## Tiêu chí thành công   ← thêm: con số hoặc hành vi kiểm được
+## Người và hệ thống bị ảnh hưởng
+## Ràng buộc
+## Không làm
+## Mức ảnh hưởng         ← thêm: thấp / vừa / cao, để product owner xếp thứ tự
+## Câu hỏi mở
+</code></pre></div></article><article class="fix"><div class="fx-h"><span class="chip">4.3</span><h3>Giới hạn hàng đợi duyệt</h3></div><details><summary><span class="o">Xem mẫu và chi tiết</span><span class="c">Thu gọn</span></summary><div class="prose"><ul>
+<li>Đặt trần số intent đang chờ duyệt, ví dụ 10. Vượt trần thì intent mới vẫn được tạo nhưng nằm ở trạng thái "chờ xếp hàng".</li>
+<li>Intent chờ quá 14 ngày tự động được đánh dấu để product owner quyết: nhận, gộp hay đóng.</li>
+<li>Thêm một chỉ số dẫn mà playbook chưa có: <strong>thời gian từ lúc commit tới lúc được duyệt</strong>.</li>
+</ul></div></details></article><article class="fix"><div class="fx-h"><span class="chip">4.4</span><h3>Kiểm trùng trước khi tạo</h3></div><div class="lead"><p>Thêm một bước vào skill: trước khi viết file mới, Claude tìm trong thư mục <code>intent/</code> các file có vấn đề tương tự. Có thì đề xuất bổ sung vào file cũ thay vì tạo file mới.</p></div></article><article class="fix"><div class="fx-h"><span class="chip">4.5</span><h3>Intent hai lớp cho yêu cầu từ khách hàng</h3></div><div class="lead"><p>Với dự án làm cho khách nước ngoài:</p>
+<ul>
+<li><strong>Lớp nguyên văn.</strong> Giữ lời khách viết bằng ngôn ngữ gốc (email, tin nhắn, biên bản họp).</li>
+<li><strong>Lớp diễn giải.</strong> Phần intent chuẩn do team viết cùng Claude, bằng ngôn ngữ làm việc của team.</li>
+<li><strong>Câu hỏi mở thành danh sách gửi khách.</strong> Mục này tách ra để BrSE gửi một lần, thay vì hỏi rải rác.</li>
+</ul></div><div class="prose"><p>Hai lớp giúp đối chiếu khi có tranh cãi về phạm vi sau này: khách nói gì, team hiểu thế nào.</p></div></article></div></section>
+<section class="blk"><div class="blk-h"><span class="bn">04</span><h2>Tuần đầu tiên</h2></div><ol class="week"><li><span class="sn">1</span><p>Tạo thư mục <code>intent/</code> trong một repo đang hoạt động.</p></li><li><span class="sn">2</span><p>Viết template và danh sách kiểm, đóng gói thành một skill.</p></li><li><span class="sn">3</span><p>Chọn 3 yêu cầu đang nằm trong backlog, viết lại thành <code>intent.md</code> cùng Claude.</p></li><li><span class="sn">4</span><p>Product owner duyệt cả ba và ghi lại mất bao lâu.</p></li><li><span class="sn">5</span><p>Cuối tuần, so với thời gian một yêu cầu tương tự đi qua quy trình cũ.</p></li></ol><p class="wnote">Nếu product owner thấy đọc ba file này nhanh hơn đọc ba ticket cũ, đó là tín hiệu đúng hướng.</p></section></div></div>
+<div class="page dpage" id="pg-02"><div class="wrap"><div class="d-hero"><p class="kick">Phase 02</p><h1 class="d-title">Design</h1><p class="d-tag">Spec trong một session</p></div>
+<div class="compare">
+<div class="cmp"><p class="cmp-l">Cách cũ</p><div class="lead"><p>Ở quy trình truyền thống, analyst viết requirements, rồi designer đọc lại để làm thiết kế. Hai bước, hai team.</p></div><details><summary><span class="o">Xem chi tiết</span><span class="c">Thu gọn</span></summary><div class="prose"><p>Việc tách đôi có lý do: mỗi bước có người chịu trách nhiệm rõ ràng. Nhưng giá phải trả là:</p>
+<ul>
+<li><strong>Chậm.</strong> Mỗi lần chuyển tay là một lần chờ.</li>
+<li><strong>Thất thoát.</strong> Designer phải hiểu lại thứ analyst đã hiểu. Mỗi lần diễn giải lại là một lần lệch.</li>
+<li><strong>Policy phát hiện muộn.</strong> Vi phạm về bảo mật, compliance hay chuẩn UX thường chỉ lộ ra khi review, có khi vài tuần sau. Lúc đó sửa đã tốn kém.</li>
+</ul></div></details></div>
+<div class="cmp new"><p class="cmp-l">Cách AI-native</p><div class="lead"><p>Requirements và design không còn là hai giai đoạn của hai team. Claude nhận <code>intent.md</code> đã được duyệt, viết ra một bản spec gộp cả hai, tuân theo các policy của tổ chức đã đóng gói thành skill. Product owner duyệt spec chứ không viết spec. Policy được áp ngay lúc viết, không phải chờ đến lúc review mới phát hiện vi phạm.</p></div></div>
+</div>
+<section class="blk"><div class="blk-h"><span class="bn">01</span><h2>Playbook làm gì</h2></div><div class="plays"><article class="play"><div class="pn">01</div><div><h3>Một session thay cho hai giai đoạn</h3><div class="lead"><p>Khi <code>intent.md</code> được duyệt, Claude dùng nó để viết spec. Session được nạp sẵn các skill của tổ chức: brand, bảo mật, compliance, UX. Đầu ra là một spec mà team engineering lập kế hoạch được, kèm danh sách <strong>các chỗ đáng lo</strong> mà Claude tự đánh dấu.</p></div><div class="prose"><p>Với giao diện, product owner có thể dựng mock trực tiếp từ <code>intent.md</code> bằng Claude Design (đang beta), chỉnh qua lại, rồi chuyển sang Claude Code để build.</p></div></div></article><article class="play"><div class="pn">02</div><div><h3>Cách làm</h3><details><summary><span class="o">Xem chi tiết</span><span class="c">Thu gọn</span></summary><div class="prose"><ol>
+<li>Product owner mở session có sẵn các skill của tổ chức và đính kèm <code>intent.md</code>.</li>
+<li>Prompt chỉ rõ file intent, nêu các ràng buộc, và yêu cầu Claude đánh dấu những chỗ đáng lo. Playbook gợi ý tiến hoá theo ba bước:
+   - Ban đầu chạy tay.
+   - Sau đó đóng gói thành slash command cấp tổ chức.
+   - Cuối cùng biến việc merge <code>intent.md</code> thành điểm kích hoạt: một job không tương tác tự chạy, sinh <code>spec.md</code> dưới dạng pull request. Lúc đó, lần đầu tiên product owner chạm vào là lúc review.</li>
+<li>Product owner so spec với ý tưởng: spec có giải quyết đúng vấn đề không, các câu hỏi mở trong intent đã được trả lời hay được chuyển tiếp?</li>
+<li>Xử lý các chỗ đáng lo trước tiên. Đây là những điểm một analyst giỏi sẽ báo lên. Product owner giải quyết từng điểm với người sở hữu policy tương ứng, trước khi engineering nhìn thấy spec.</li>
+<li>Commit <code>spec.md</code> cạnh <code>intent.md</code>. Cặp file này ghi lại cái được yêu cầu và cái được quyết định.</li>
+<li>Product owner quyết định có cho sang Build hay không. Với việc rủi ro cao, hỏi thêm tech lead. Quyết định này luôn do người đưa ra, và việc chấp nhận spec kích hoạt plan mode ở bước Build.</li>
+</ol></div></details></div></article><article class="play"><div class="pn">03</div><div><h3>Prompt mẫu trong playbook</h3><div class="lead"><p>Ý chính của prompt: đọc intent, viết spec tích hợp vào codebase hiện tại, áp các skill để tuân theo brand, bảo mật và UX, ghi đầy đủ vào <code>spec.md</code>, và <strong>nói rõ chỗ nào đáng lo, đặc biệt khi các policy mâu thuẫn nhau</strong>.</p></div><div class="prose"><p>Câu cuối là phần quan trọng. Nó buộc agent nói ra xung đột thay vì tự chọn một bên.</p></div></div></article></div><div class="side"><div class="sidec"><p class="cmp-l">Governance</p><div class="prose"><p>Policy đang có hiệu lực được đọc và áp ngay lúc viết spec. Git lưu spec, prompt đã sinh ra nó, và <strong>phiên bản của các skill tại thời điểm đó</strong>. Product owner ký duyệt spec và chuyển các chỗ đáng lo tới người sở hữu policy.</p></div></div><div class="sidec"><p class="cmp-l">Đo hiệu quả</p><div class="prose"><div class="tbl"><table>
+<thead>
+<tr>
+<th>Loại</th>
+<th>Chỉ số</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Dẫn</td>
+<td>Khoảng thời gian giữa commit <code>intent.md</code> và commit <code>spec.md</code> của cùng một thay đổi</td>
+</tr>
+<tr>
+<td>Trễ</td>
+<td>Số lần <code>spec.md</code> bị sửa sau khi <code>plan.md</code> đầu tiên đã commit, tức là phải làm lại requirements khi đã bắt đầu build</td>
+</tr>
+</tbody>
+</table></div></div></div></div></section>
+<section class="blk"><div class="blk-h"><span class="bn">02</span><h2>Chỗ còn hở</h2><span class="badge">Phân tích thêm</span></div><div class="gaps"><div class="gap"><h3>Product owner duyệt thứ vượt chuyên môn của mình</h3><div class="prose"><p>Spec bây giờ chứa cả phần kỹ thuật: dữ liệu, tích hợp, ràng buộc bảo mật. Product owner được giao việc duyệt nhưng không phải lúc nào cũng đủ nền để thấy chỗ sai. Playbook gợi ý hỏi tech lead với những việc mà tổ chức xếp vào loại rủi ro cao, nhưng để tổ chức tự định nghĩa, không đưa tiêu chí cụ thể.</p></div></div><div class="gap"><h3>Spec trông đầy đủ chưa chắc đã đúng</h3><div class="prose"><p>Agent viết spec rất trôi chảy. Một bản spec mạch lạc, đủ đề mục dễ khiến người duyệt tin rằng mọi thứ đã được tính. Thứ nguy hiểm nhất không phải là chỗ agent đánh dấu đáng lo, mà là <strong>giả định agent tự đặt ra rồi không nói</strong>.</p></div></div><div class="gap"><h3>Người sở hữu policy thành nút thắt</h3><div class="prose"><p>Mỗi chỗ đáng lo phải được giải quyết với người sở hữu policy. Nếu một người phụ trách bảo mật nhận câu hỏi từ hai mươi spec mỗi tuần, ta lại có một hàng đợi mới, chỉ là ở chỗ khác.</p></div></div><div class="gap"><h3>Chất lượng skill quyết định chất lượng spec</h3><div class="prose"><p>Cơ chế "áp policy ngay lúc viết" chỉ tốt bằng skill. Skill viết mơ hồ hoặc đã cũ thì spec tuân theo một policy sai, mà nhìn vẫn có vẻ đúng quy trình.</p></div></div></div></section>
+<section class="blk"><div class="blk-h"><span class="bn">03</span><h2>Giải pháp ban đầu</h2><span class="badge">Đề xuất, chưa kiểm chứng</span></div><div class="fixes"><article class="fix"><div class="fx-h"><span class="chip">4.1</span><h3>Bắt agent liệt kê giả định</h3></div><div class="lead"><p>Thêm vào prompt và template một mục bắt buộc: <strong>những gì agent đã tự giả định vì intent không nói</strong>. Người duyệt đọc mục này đầu tiên.</p></div><details><summary><span class="o">Xem mẫu và chi tiết</span><span class="c">Thu gọn</span></summary><div class="prose"><pre><code class="language-markdown">## Giả định (agent tự đặt, cần xác nhận)
+
+- Người dùng đã đăng nhập khi vào màn hình này
+- Dữ liệu trạng thái lấy từ API hiện có, không cần endpoint mới
+- Không cần hỗ trợ ngoại tuyến
+</code></pre>
+<p>Mỗi dòng là một câu hỏi có/không. Product owner xác nhận nhanh hơn đọc lại cả spec.</p></div></details></article><article class="fix"><div class="fx-h"><span class="chip">4.2</span><h3>Template spec gợi ý</h3></div><details><summary><span class="o">Xem mẫu và chi tiết</span><span class="c">Thu gọn</span></summary><div class="prose"><pre><code class="language-markdown"># Spec: &lt;tên&gt;
+Từ: intent/&lt;file&gt;.md · Skill áp dụng: security@v3, ux@v5, brand@v2
+
+## Mục tiêu (một đoạn)
+## Không làm
+## Luồng người dùng
+## Dữ liệu và tích hợp
+## Ràng buộc từ policy (ghi rõ skill nào, điều nào)
+## Giả định
+## Chỗ đáng lo (mỗi chỗ: mô tả, policy liên quan, người cần hỏi)
+## Tiêu chí nghiệm thu (viết dạng kiểm được)
+## Câu hỏi chuyển tiếp từ intent
+</code></pre>
+<p>Hai điểm mấu chốt:</p>
+<ul>
+<li><strong>Ghi phiên bản skill ngay đầu file.</strong> Khi policy đổi, biết ngay spec nào cần xem lại.</li>
+<li><strong>Tiêu chí nghiệm thu viết dạng kiểm được.</strong> Đây sẽ là đầu vào cho test ở <label class="lnk" for="r-04">Phase 4</label>, nên viết sao cho chuyển thành test được.</li>
+</ul></div></details></article><article class="fix"><div class="fx-h"><span class="chip">4.3</span><h3>Định nghĩa "rủi ro cao" từ trước</h3></div><div class="lead"><p>Đừng để mỗi product owner tự cảm nhận. Viết sẵn danh sách, ví dụ:</p>
+<ul>
+<li>Đụng tới thanh toán, xác thực, dữ liệu cá nhân</li>
+<li>Thay đổi schema dữ liệu</li>
+<li>Thêm phụ thuộc bên ngoài mới</li>
+<li>Ảnh hưởng tới hơn một team</li>
+</ul></div><div class="prose"><p>Spec thuộc danh sách này bắt buộc có tech lead duyệt. Có thể để Claude tự gắn nhãn rủi ro dựa trên danh sách khi viết spec.</p></div></article><article class="fix"><div class="fx-h"><span class="chip">4.4</span><h3>Hẹn thời gian phản hồi cho người sở hữu policy</h3></div><details><summary><span class="o">Xem mẫu và chi tiết</span><span class="c">Thu gọn</span></summary><div class="prose"><ul>
+<li>Lập bảng: mỗi skill policy có một người sở hữu và một người thay thế.</li>
+<li>Đặt thời gian phản hồi, ví dụ 2 ngày làm việc. Quá hạn thì chuyển lên trưởng nhóm.</li>
+<li>Đếm số câu hỏi mỗi người sở hữu nhận mỗi tuần. Con số tăng đều là tín hiệu skill chưa đủ rõ, cần viết lại để agent tự xử lý được nhiều hơn.</li>
+</ul></div></details></article><article class="fix"><div class="fx-h"><span class="chip">4.5</span><h3>Bắt đầu skill từ chỗ đau nhất</h3></div><div class="lead"><p>Đừng cố viết skill cho mọi policy. Xem lại review gần đây, tìm policy nào bị nhắc đến nhiều nhất, viết skill cho policy đó trước. Một skill tốt cho một policy hay vi phạm có giá trị hơn mười skill chung chung.</p></div></article><article class="fix"><div class="fx-h"><span class="chip">4.6</span><h3>Lưu ý cho dự án mobile</h3></div><div class="lead"><p>Spec cho app di động nên có thêm các mục mà agent hay bỏ sót:</p>
+<ul>
+<li>Trạng thái màn hình: đang tải, rỗng, lỗi, mất mạng</li>
+<li>Quyền hệ điều hành cần xin (camera, vị trí, thông báo) và luồng khi người dùng từ chối</li>
+<li>Hành vi khi app vào nền rồi quay lại</li>
+<li>Khác biệt iOS và Android nếu có</li>
+<li>Những điểm có thể vướng quy định review của App Store hoặc Google Play</li>
+</ul></div><div class="prose"><p>Quy định của store là ứng viên tốt để đóng gói thành skill: thay đổi ít, vi phạm thì tốn cả tuần chờ review lại.</p></div></article></div></section>
+<section class="blk"><div class="blk-h"><span class="bn">04</span><h2>Tuần đầu tiên</h2></div><ol class="week"><li><span class="sn">1</span><p>Lấy một <code>intent.md</code> đã duyệt từ Phase 1.</p></li><li><span class="sn">2</span><p>Chạy prompt sinh spec có kèm mục giả định và chỗ đáng lo.</p></li><li><span class="sn">3</span><p>Product owner và tech lead cùng đọc, ghi lại: bao nhiêu giả định sai, bao nhiêu chỗ đáng lo là thật.</p></li><li><span class="sn">4</span><p>Viết một skill cho policy gây nhiều vấn đề nhất trong lần đọc đó.</p></li><li><span class="sn">5</span><p>Chạy lại lần hai, so sánh số giả định sai.</p></li></ol><p class="wnote">Nếu lần hai ít giả định sai hơn, skill đang làm đúng việc của nó.</p></section></div></div>
+<div class="page dpage" id="pg-03"><div class="wrap"><div class="d-hero"><p class="kick">Phase 03</p><h1 class="d-title">Build</h1><p class="d-tag">Plan trước, code sau</p></div>
+<div class="compare">
+<div class="cmp"><p class="cmp-l">Cách cũ</p><div class="lead"><p>Engineer đọc thiết kế rồi bắt tay code. Cách thay đổi sẽ được thực hiện, sửa file nào, test gì, nằm trong đầu người viết, hoặc cùng lắm là một comment trong ticket. Không ai khác review được.</p></div><details><summary><span class="o">Xem chi tiết</span><span class="c">Thu gọn</span></summary><div class="prose"><p>Thứ đầu tiên reviewer nhìn thấy là diff đã xong. Lúc đó phát hiện hướng sai thì phải làm lại, và làm lại thì chậm.</p>
+<p>Một vấn đề nữa: một engineer làm một việc một lúc, và mất phần lớn thời gian chờ build, chờ test, chờ review. Chuyển sang việc khác trong lúc chờ thì mệt vì đổi ngữ cảnh, nên ít ai làm.</p></div></details></div>
+<div class="cmp new"><p class="cmp-l">Cách AI-native</p><div class="lead"><p>Không dòng code nào được viết khi chưa có plan được duyệt. Tri thức của team chuyển từ đầu người và wiki vào các file mà agent đọc mỗi lần làm việc. Rào chắn chạy bằng code, không dựa vào thói quen. Một engineer có thể điều phối nhiều session song song.</p></div><div class="prose"><p>Phase này có nhiều play nhất trong playbook: plan mode, auto mode, <code>CLAUDE.md</code>, skill, hook, và chạy song song.</p></div></div>
+</div>
+<section class="blk"><div class="blk-h"><span class="bn">01</span><h2>Playbook làm gì</h2></div><div class="plays"><article class="play"><div class="pn">2.1</div><div><h3>Plan mode làm điểm bắt đầu mặc định</h3><div class="lead"><p>Engineer mở Claude Code ở plan mode, đưa vào <code>spec.md</code> đã duyệt, rồi để Claude hỏi lại. Ở plan mode, Claude đọc được codebase nhưng không sửa được gì cho tới khi engineer chấp nhận plan.</p></div><details><summary><span class="o">Xem chi tiết</span><span class="c">Thu gọn</span></summary><div class="prose"><p>Các bước:</p>
+<ol>
+<li>Yêu cầu Claude viết plan gồm: file nào thay đổi, thứ tự làm, test nào chứng minh thay đổi đúng.</li>
+<li>Chất vấn plan: thay đổi này có thể làm hỏng gì, bước nào rủi ro nhất, có phương án nào Claude đã cân nhắc rồi bỏ.</li>
+<li>Sửa đến khi một engineer chưa đọc cuộc trò chuyện vẫn làm theo được chỉ bằng plan.</li>
+<li>Commit plan thành <code>plan.md</code>. Ở bước review PR sau này, diff sẽ được so với plan.</li>
+<li>Chấp nhận plan và để Claude làm. Plan tốt thì thường làm một lượt là xong.</li>
+<li>Khi code đi khác plan, cập nhật <code>plan.md</code> trong cùng commit. Có thể dùng hook để ép việc này.</li>
+</ol>
+<p>Lợi ích lớn nhất: review thiết kế diễn ra <strong>trước khi có code</strong>, lúc đổi hướng chỉ là sửa một tài liệu.</p></div></details></div></article><article class="play"><div class="pn">2.2</div><div><h3>Auto mode khi rào chắn đã đủ chắc</h3><div class="lead"><p>Ở auto mode, engineer duyệt plan một lần, sau đó Claude tự sửa file mà không hỏi từng lần. Khi các rào chắn đã trưởng thành (<code>CLAUDE.md</code> tốt, skill chứa policy, hook chặn hành động nguy hiểm, test chạy được), auto mode trở thành mặc định cho việc thường ngày: spec chặt, phạm vi ảnh hưởng nhỏ, code đã có test bao.</p></div><div class="prose"><p>Sự chú ý của con người chuyển từ việc ngồi xem agent sửa từng dòng sang việc <strong>review artifact sau một phiên làm việc dài</strong>. Đây cũng là điều kiện để chạy song song và để khép vòng ở Maintain.</p></div></div></article><article class="play"><div class="pn">2.3</div><div><h3><code>CLAUDE.md</code>: thứ một người mới cần biết</h3><div class="lead"><p><code>CLAUDE.md</code> chứa những gì một người mới vào team cần biết: quy ước, lệnh build và test, kiến trúc, và các lỗi team hay gặp. Agent đọc file này đầu mỗi session.</p></div><details><summary><span class="o">Xem chi tiết</span><span class="c">Thu gọn</span></summary><div class="prose"><p>Cách làm:</p>
+<ol>
+<li>Chạy <code>/init</code> trong repo để Claude sinh bản đầu.</li>
+<li>Cắt bớt, chỉ giữ thứ người mới cần trong ngày đầu: lệnh build, test, lint, quy ước quan trọng, và những chỗ Claude hay làm sai.</li>
+<li>Commit vào gốc repo để cả team dùng chung một bản, sửa đổi được review như code.</li>
+<li>Quy tắc làm việc: <strong>Claude sai một lỗi hai lần thì ghi cách sửa vào <code>CLAUDE.md</code>.</strong></li>
+<li>Giữ dưới một trang. Claude đọc toàn bộ mỗi session, nên thứ đã cũ chỉ chiếm chỗ mà không giúp gì.</li>
+</ol></div></details></div></article><article class="play"><div class="pn">2.4</div><div><h3>Skill: tri thức tổ chức thành thứ dùng được</h3><div class="lead"><p>Skill là cách biến tri thức của tổ chức thành chỉ dẫn rõ ràng, có phiên bản, áp dụng rộng và cập nhật tập trung khi policy đổi.</p></div><details><summary><span class="o">Xem chi tiết</span><span class="c">Thu gọn</span></summary><div class="prose"><p>Quy tắc phân biệt:</p>
+<ul>
+<li>Tri thức <strong>phải được áp dụng nhất quán</strong> ở nhiều nơi → skill.</li>
+<li>Thứ thuộc về <code>CLAUDE.md</code> hoặc prompt → không viết thành skill.</li>
+</ul>
+<p>Nói cách khác, <code>CLAUDE.md</code> giữ ngữ cảnh làm việc của repo, prompt giữ yêu cầu của từng lần, còn skill dành cho tri thức cần áp dụng giống nhau ở nhiều nơi.</p>
+<p>Cách làm: chọn một kiến thức hôm nay đang bị áp dụng không đều (chuẩn bảo mật, quy ước API, quy tắc brand), viết thành skill, để trong repo hoặc phân phối toàn tổ chức qua plugin, thử xem skill có được kích hoạt với nhiều cách hỏi khác nhau không. Khi policy đổi, sửa skill và người sở hữu policy duyệt.</p>
+<p>Điểm quan trọng nhất: <strong>skill là control mang tính khuyến nghị</strong>. Nó làm agent nhiều khả năng áp đúng policy, nhưng không gì ép một session phải tuân theo. Policy bắt buộc phải có hook đứng sau.</p></div></details></div></article><article class="play"><div class="pn">2.5</div><div><h3>Hook: rào chắn lúc build</h3><div class="lead"><p>Hook là lớp bắt buộc đứng sau skill. Ở bước build, agent chủ yếu sửa file và chạy lệnh, nên đây là nơi hook được kích hoạt nhiều nhất. Hook có thể:</p>
+<ul>
+<li>Chặn sửa đường dẫn được bảo vệ (code sinh tự động, package đã đóng băng).</li>
+<li>Chạy formatter và linter sau mỗi lần sửa file để code không lệch chuẩn dần.</li>
+<li>Giữ credential không lọt vào diff.</li>
+</ul></div><details><summary><span class="o">Xem chi tiết</span><span class="c">Thu gọn</span></summary><div class="prose"><p>Hai lưu ý từ playbook:</p>
+<ul>
+<li>Hook ở bước build phải <strong>nhanh và chỉ kiểm file vừa đổi</strong>. Kiểm tra nặng như chạy cả bộ test để ở commit hoặc PR.</li>
+<li>Hook <strong>hỏi người duyệt không nên đặt ở bước build</strong>. Nó đưa con người quay lại đường găng của mọi session đang chạy song song. Để hook duyệt ở <label class="lnk" for="r-05">Deploy</label>.</li>
+</ul></div></details></div></article><article class="play"><div class="pn">2.6</div><div><h3>Chạy song song và subagent</h3><div class="lead"><p>Hai khái niệm khác nhau:</p>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th></th>
+<th>Session song song</th>
+<th>Subagent</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Là gì</td>
+<td>Một Claude Code đầy đủ khác, làm việc khác, trong git worktree riêng</td>
+<td>Trợ lý có phạm vi hẹp chạy bên trong một session, có context và giới hạn công cụ riêng</td>
+</tr>
+<tr>
+<td>Biết về nhau</td>
+<td>Không. Thứ chung duy nhất là engineer điều phối</td>
+<td>Báo kết quả về session chính</td>
+</tr>
+<tr>
+<td>Dùng cho</td>
+<td>Tăng số việc làm cùng lúc</td>
+<td>Việc lặp lại: kiểm app có chạy, đơn giản hoá code, khảo sát codebase</td>
+</tr>
+</tbody>
+</table></div></div><details><summary><span class="o">Xem chi tiết</span><span class="c">Thu gọn</span></summary><div class="prose"><p>Cách làm:</p>
+<ol>
+<li>Dùng plan để tách việc thành các phần sửa file khác nhau. Việc đụng chung file thì làm tuần tự trong một session.</li>
+<li>Mỗi việc song song một worktree riêng.</li>
+<li>Bắt đầu với 2–3 session. <strong>Giới hạn thực tế là số luồng một người review được tử tế.</strong> Chỉ thêm session khi review vẫn theo kịp.</li>
+<li>Biến việc lặp lại thành subagent, định nghĩa trong <code>.claude/agents/</code>, commit vào git để cả team dùng chung.</li>
+</ol>
+<p>Playbook đưa ví dụ một subagent <code>verifier</code>: chạy app, thử hành vi vừa đổi và hai luồng lân cận, báo lại những gì không khớp <code>plan.md</code>, và chỉ báo cáo chứ không tự sửa.</p></div></details></div></article><article class="play"><div class="pn">2.7</div><div><h3>Sống chung với hệ thống cũ</h3><div class="lead"><p>Phần này nằm trong Build nhưng áp dụng cho mọi artifact. Xem mục "Sống chung với hệ thống cũ" trong <label class="lnk" for="r-00">tổng quan</label>.</p></div></div></article></div><div class="side"><div class="sidec"><p class="cmp-l">Đo hiệu quả</p><div class="prose"><div class="tbl"><table>
+<thead>
+<tr>
+<th>Play</th>
+<th>Chỉ số dẫn</th>
+<th>Chỉ số trễ</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Plan mode</td>
+<td>Tỉ lệ thay đổi merge được ngay từ lượt code đầu</td>
+<td>Số vòng làm lại mỗi thay đổi, mức khớp giữa diff và <code>plan.md</code></td>
+</tr>
+<tr>
+<td><code>CLAUDE.md</code></td>
+<td>Số lần Claude lặp lại lỗi lẽ ra file đã chặn</td>
+<td>Thời gian tới PR đầu tiên được merge của người mới</td>
+</tr>
+<tr>
+<td>Skill</td>
+<td>Thời gian từ lúc policy đổi tới lúc skill được cập nhật</td>
+<td>Số finding trong review liên quan tới policy đó, kỳ vọng giảm về gần 0</td>
+</tr>
+<tr>
+<td>Song song</td>
+<td>Số session đồng thời mỗi engineer khi chất lượng review vẫn giữ</td>
+<td>Số thay đổi merge mỗi tuần, đọc cùng tỉ lệ làm lại</td>
+</tr>
+</tbody>
+</table></div></div></div></div></section>
+<section class="blk"><div class="blk-h"><span class="bn">02</span><h2>Chỗ còn hở</h2><span class="badge">Phân tích thêm</span></div><div class="gaps"><div class="gap"><h3>Plan cho mọi việc thành thủ tục</h3><div class="prose"><p>Bắt viết và commit <code>plan.md</code> cho việc sửa một dòng là lãng phí. Playbook nói plan mode là mặc định nhưng không nói khi nào được bỏ qua. Không có ranh giới thì team sẽ hoặc làm hình thức, hoặc lặng lẽ bỏ luôn.</p></div></div><div class="gap"><h3><code>CLAUDE.md</code> cũ dần mà không ai để ý</h3><div class="prose"><p>Quy tắc "sai hai lần thì ghi vào" làm file dài ra. Quy tắc "giữ dưới một trang" làm file phải ngắn lại. Không ai được giao việc dọn. Sau vài tháng, file chứa những dòng đúng với code cũ.</p></div></div><div class="gap"><h3>Không biết skill có thật sự được kích hoạt</h3><div class="prose"><p>Playbook khuyên thử bằng nhiều cách hỏi, nhưng thử một lần lúc viết thì chưa đủ. Model mới, skill mới thêm vào có thể làm skill cũ không còn được chọn.</p></div></div><div class="gap"><h3>Song song va vào đặc thù mobile</h3><div class="prose"><p>Với app iOS, file <code>project.pbxproj</code> thay đổi gần như mỗi khi thêm file. Hai session song song cùng thêm file sẽ xung đột ở đây dù code không liên quan. Build iOS và Android cũng chậm hơn web nhiều, và simulator ngốn tài nguyên. Ba session song song trên một máy có thể chậm hơn một session.</p></div></div></div></section>
+<section class="blk"><div class="blk-h"><span class="bn">03</span><h2>Giải pháp ban đầu</h2><span class="badge">Đề xuất, chưa kiểm chứng</span></div><div class="fixes"><article class="fix"><div class="fx-h"><span class="chip">4.1</span><h3>Phân hạng thay đổi để quyết định mức plan</h3></div><details><summary><span class="o">Xem mẫu và chi tiết</span><span class="c">Thu gọn</span></summary><div class="prose"><div class="tbl"><table>
+<thead>
+<tr>
+<th>Hạng</th>
+<th>Ví dụ</th>
+<th>Plan</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Rất nhỏ</td>
+<td>Sửa chữ, đổi màu, đổi hằng số</td>
+<td>Không cần plan mode</td>
+</tr>
+<tr>
+<td>Nhỏ</td>
+<td>Sửa bug khoanh vùng rõ, một file</td>
+<td>Plan mode, không cần commit <code>plan.md</code></td>
+</tr>
+<tr>
+<td>Vừa</td>
+<td>Tính năng nhỏ, vài file</td>
+<td>Plan mode, commit <code>plan.md</code></td>
+</tr>
+<tr>
+<td>Lớn</td>
+<td>Đụng nhiều module, đổi kiến trúc</td>
+<td><code>plan.md</code> + tech lead duyệt trước khi code</td>
+</tr>
+</tbody>
+</table></div>
+<p>Ghi bảng này vào <code>CLAUDE.md</code> để agent tự đề xuất hạng khi bắt đầu.</p></div></details></article><article class="fix"><div class="fx-h"><span class="chip">4.2</span><h3>Năm câu chất vấn plan</h3></div><div class="lead"><p>Dùng cố định mỗi lần duyệt plan:</p>
+<ol>
+<li>File nào thay đổi, có file nào bất ngờ không?</li>
+<li>Thay đổi này có thể làm hỏng luồng nào đang chạy?</li>
+<li>Bước nào rủi ro nhất, và làm sao biết nó hỏng?</li>
+<li>Test nào sẽ fail nếu làm sai?</li>
+<li>Có cách nào đơn giản hơn mà Claude đã bỏ qua?</li>
+</ol></div></article><article class="fix"><div class="fx-h"><span class="chip">4.3</span><h3>Chăm <code>CLAUDE.md</code> như một file code</h3></div><details><summary><span class="o">Xem mẫu và chi tiết</span><span class="c">Thu gọn</span></summary><div class="prose"><ul>
+<li>Có một người chịu trách nhiệm, thường là tech lead.</li>
+<li>Mỗi dòng trong mục "những chỗ Claude hay sai" ghi kèm tháng thêm vào.</li>
+<li>Mỗi tháng rà một lần: dòng nào ba tháng không còn tác dụng thì xoá hoặc chuyển thành hook.</li>
+<li>Một quy tắc đã được ghi mà Claude vẫn sai thì không ghi thêm lần nữa. Chuyển thành hook.</li>
+</ul></div></details></article><article class="fix"><div class="fx-h"><span class="chip">4.4</span><h3>Bộ thử kích hoạt skill</h3></div><div class="lead"><p>Với mỗi skill quan trọng, viết 5 câu yêu cầu với nhiều cách diễn đạt. Lưu thành một file. Chạy lại mỗi khi thêm skill mới hoặc đổi model, xem skill có được nạp không. Bộ này về sau chính là một phần của eval ở <label class="lnk" for="r-04">Phase 4</label>.</p></div></article><article class="fix"><div class="fx-h"><span class="chip">4.5</span><h3>Bộ hook khởi đầu cho repo mobile</h3></div><details><summary><span class="o">Xem mẫu và chi tiết</span><span class="c">Thu gọn</span></summary><div class="prose"><div class="tbl"><table>
+<thead>
+<tr>
+<th>Hook</th>
+<th>Chặn hoặc làm gì</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Đường dẫn được bảo vệ</td>
+<td>Không sửa <code>Pods/</code>, code sinh tự động, file khoá phiên bản phụ thuộc</td>
+</tr>
+<tr>
+<td>Format sau khi sửa</td>
+<td>Chạy <code>swiftformat</code> hoặc <code>ktlint</code> trên file vừa đổi</td>
+</tr>
+<tr>
+<td>Credential</td>
+<td>Chặn diff chứa key, file <code>.p12</code>, <code>google-services.json</code> có dữ liệu thật</td>
+</tr>
+<tr>
+<td>Phiên bản phụ thuộc</td>
+<td>Chặn tự ý nâng version trong <code>Package.resolved</code>, <code>build.gradle</code></td>
+</tr>
+</tbody>
+</table></div></div></details></article><article class="fix"><div class="fx-h"><span class="chip">4.6</span><h3>Giảm xung đột khi chạy song song trên iOS</h3></div><details><summary><span class="o">Xem mẫu và chi tiết</span><span class="c">Thu gọn</span></summary><div class="prose"><ul>
+<li>Cân nhắc sinh file project từ cấu hình (XcodeGen, Tuist) hoặc dùng Swift Package cho module mới. Khi đó <code>project.pbxproj</code> không còn là điểm xung đột.</li>
+<li>Chia việc song song theo module, không theo màn hình.</li>
+<li>Bắt đầu với 2 session, đo thời gian build. Nếu máy chậm rõ, giữ ở 2.</li>
+</ul></div></details></article></div></section>
+<section class="blk"><div class="blk-h"><span class="bn">04</span><h2>Tuần đầu tiên</h2></div><ol class="week"><li><span class="sn">1</span><p>Chạy <code>/init</code>, cắt <code>CLAUDE.md</code> xuống dưới một trang, thêm bảng phân hạng thay đổi.</p></li><li><span class="sn">2</span><p>Thêm hai hook đơn giản nhất: chặn đường dẫn được bảo vệ và chạy formatter.</p></li><li><span class="sn">3</span><p>Làm 3 việc hạng vừa bằng plan mode, commit <code>plan.md</code>, ghi lại bao nhiêu việc merge được từ lượt code đầu.</p></li><li><span class="sn">4</span><p>Ghi mọi lỗi Claude lặp lại. Cuối tuần chuyển thành dòng trong <code>CLAUDE.md</code> hoặc hook.</p></li><li><span class="sn">5</span><p>Thử 2 session song song trên hai module khác nhau ít nhất một ngày.</p></li></ol></section></div></div>
+<div class="page dpage" id="pg-04"><div class="wrap"><div class="d-hero"><p class="kick">Phase 04</p><h1 class="d-title">Test</h1><p class="d-tag">Agent tự kiểm, cấu hình cũng phải test</p></div>
+<div class="compare">
+<div class="cmp"><p class="cmp-l">Cách cũ</p><div class="lead"><p>Tín hiệu "code này chạy đúng" đến muộn: CI báo sau vài phút, tester báo sau vài ngày, production báo sau vài tuần.</p></div><details><summary><span class="o">Xem chi tiết</span><span class="c">Thu gọn</span></summary><div class="prose"><p>Khi người viết code, độ trễ này chấp nhận được. Khi agent viết code nhanh gấp nhiều lần, tín hiệu đến muộn nghĩa là <strong>một người phải kiểm toàn bộ output của agent</strong>, và người đó trở thành nút thắt.</p>
+<p>Ở cách cũ, QA là cổng chặn giữa các stage. Cổng này được định biên theo tốc độ code của con người.</p></div></details></div>
+<div class="cmp new"><p class="cmp-l">Cách AI-native</p><div class="lead"><p>Mỗi session tự kiểm tra công việc của mình trước khi người nhìn thấy. Thêm vào đó, cấu hình điều khiển agent (<code>CLAUDE.md</code>, skill, hook) cũng được kiểm hồi quy giống như code mà agent viết.</p></div><div class="prose"><p>Phase này có hai play: <strong>vòng tự kiểm</strong> và <strong>eval liên tục trong CI</strong>.</p></div></div>
+</div>
+<section class="blk"><div class="blk-h"><span class="bn">01</span><h2>Playbook làm gì</h2></div><div class="plays"><article class="play"><div class="pn">2.1</div><div><h3>Cho agent một vòng tự kiểm</h3><div class="lead"><p>Nguyên tắc: <strong>luôn cho Claude cách tự kiểm tra công việc của nó</strong>, dù là chạy test, chạy build hay so screenshot. Session tự kiểm, tự sửa trước khi engineer nhìn thấy.</p></div><details><summary><span class="o">Xem chi tiết</span><span class="c">Thu gọn</span></summary><div class="prose"><p>Vòng tự kiểm khác với subagent <code>verifier</code> ở Phase 3:</p>
+<ul>
+<li>Vòng tự kiểm chạy <strong>suốt quá trình làm</strong>, lặp bao nhiêu lần cũng được.</li>
+<li><code>verifier</code> là bước kiểm cuối, chạy trong một context mới khi session nghĩ mình đã xong. Context mới giúp kết luận không bị ảnh hưởng bởi những giả định đã sinh ra code.</li>
+</ul>
+<p>Cách làm:</p>
+<ol>
+<li><strong>Gói việc kiểm vào một lệnh.</strong> Nếu hôm nay kiểm tra cần chuỗi lệnh và hiểu biết về môi trường, gói thành một target như <code>make test</code>, trả mã khác 0 khi fail.</li>
+<li><strong>Ghi lệnh vào <code>CLAUDE.md</code></strong>, kèm ví dụ output khi mọi thứ ổn.</li>
+<li><strong>Đặt mục tiêu đo được</strong> để Claude tự biết khi nào xong mà không cần hỏi. Ví dụ: "mọi test trong file X pass", "screenshot khớp mock đính kèm", "endpoint trả 200 với trường mới".</li>
+<li><strong>Sửa bug thì viết test fail trước.</strong> Yêu cầu Claude tái hiện bug bằng một test, chạy, xác nhận nó fail đúng lý do. Commit test đó. Sau đó mới yêu cầu sửa code cho test pass, và không được sửa test. Một test có trước bản sửa mà agent không đụng được là bằng chứng bug đã hết.</li>
+<li><strong>Với giao diện, khép vòng bằng hình ảnh.</strong> Cho Claude công cụ chụp màn hình và bản mock. Làm, chụp, so, chỉnh. Hai ba vòng là bình thường.</li>
+<li><strong>Kiểm tra là một phần của "xong".</strong> Ghi vào <code>CLAUDE.md</code>: chạy test trước khi báo hoàn thành, và dán output.</li>
+<li><strong>Bảo vệ chính vòng kiểm.</strong> Agent đang sửa code không được làm yếu đi phép kiểm tra code đó. Dùng hook chặn sửa file test trong lúc sửa bug, hoặc từ chối ở review mọi diff đụng tới test.</li>
+</ol>
+<p>Ví dụ khối kiểm trong <code>CLAUDE.md</code> gồm ba lệnh build, test, lint, mỗi lệnh kèm điều kiện thành công, và hai câu quy tắc: chạy cả ba trước khi báo xong và dán output; test fail thì sửa code, không sửa test.</p></div></details></div></article><article class="play"><div class="pn">2.2</div><div><h3>Eval liên tục trong CI</h3><div class="lead"><p>Eval là phiên bản AI-native của QA gate. Đó là một bộ bài kiểm tra chạy mỗi khi cấu hình agent thay đổi. Khi đổi model hay viết lại prompt, eval cho biết agent còn làm việc đạt chuẩn cũ không.</p></div><details><summary><span class="o">Xem chi tiết</span><span class="c">Thu gọn</span></summary><div class="prose"><p>Cách làm:</p>
+<ol>
+<li>Platform engineer gom <strong>20–50 task thật</strong> từ công việc gần đây, kèm kết quả đã được chấp nhận.</li>
+<li>Viết mỗi task thành một eval: prompt cộng các phép kiểm định nghĩa thế nào là đạt (test pass, lint sạch, hành vi không đổi, policy được tuân thủ).</li>
+<li>Bộ eval chạy không tương tác trong CI, theo lịch và <strong>mỗi khi <code>CLAUDE.md</code>, skill hoặc hook thay đổi</strong>. Cấu hình này điều khiển agent, nên xứng đáng được test hồi quy như code.</li>
+<li>Đặt cổng: thay đổi skill làm giảm tỉ lệ đạt thì phải được review trước khi merge.</li>
+<li><strong>Mỗi sự cố production thành một eval</strong>, do team phụ trách sự cố viết, giữ vĩnh viễn trong bộ.</li>
+</ol>
+<p>Playbook có ví dụ workflow GitHub Actions: chạy khi PR đụng tới <code>CLAUDE.md</code> hoặc <code>.claude/</code>, và chạy hằng đêm. Mỗi eval gọi <code>claude -p</code> với danh sách công cụ được giới hạn, rồi một script chấm kết quả.</p>
+<p>Lưu ý quan trọng: <strong>bộ eval phải sống</strong>. Khi model mạnh lên, những bài từng phân biệt được tốt xấu sẽ không còn phân biệt nữa. Phải liên tục thêm bài mới từ quá trình theo dõi.</p></div></details></div></article></div><div class="side"><div class="sidec"><p class="cmp-l">Governance</p><div class="prose"><div class="tbl"><table>
+<thead>
+<tr>
+<th></th>
+<th>Vòng tự kiểm</th>
+<th>Eval</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Bắt buộc</td>
+<td>Kiểm trước khi báo xong, chặn sửa test khi sửa bug (qua hook nếu cần chắc chắn)</td>
+<td>Ngưỡng tỉ lệ đạt là điều kiện merge</td>
+</tr>
+<tr>
+<td>Bằng chứng</td>
+<td>Output thật của lệnh test, log build, kết quả so screenshot</td>
+<td>Kết quả mỗi lần chạy, so được theo thời gian</td>
+</tr>
+<tr>
+<td>Nơi lưu</td>
+<td>Transcript session (qua OpenTelemetry), check run của PR</td>
+<td>Log CI</td>
+</tr>
+<tr>
+<td>Người duyệt</td>
+<td>Code owner, tập trung vào ý đồ và rủi ro vì bằng chứng cơ học đã có sẵn</td>
+<td>Team sở hữu thay đổi cấu hình</td>
+</tr>
+</tbody>
+</table></div></div></div><div class="sidec"><p class="cmp-l">Đo hiệu quả</p><div class="prose"><div class="tbl"><table>
+<thead>
+<tr>
+<th>Play</th>
+<th>Chỉ số dẫn</th>
+<th>Chỉ số trễ</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Vòng tự kiểm</td>
+<td>Tỉ lệ CI pass ngay lần đầu với thay đổi do agent viết</td>
+<td>Thời gian review mỗi PR, tỉ lệ thay đổi gây lỗi</td>
+</tr>
+<tr>
+<td>Eval</td>
+<td>Tỉ lệ đạt theo thời gian, thời gian từ sự cố tới khi có eval</td>
+<td>Số lỗi hồi quy bắt được ở CI so với số lỗi lọt ra production</td>
+</tr>
+</tbody>
+</table></div></div></div></div></section>
+<section class="blk"><div class="blk-h"><span class="bn">02</span><h2>Chỗ còn hở</h2><span class="badge">Phân tích thêm</span></div><div class="gaps"><div class="gap"><h3>Cùng một tác giả viết code và test</h3><div class="prose"><p>Khi agent viết cả code lẫn test, test thường kiểm đúng những gì agent đã hiểu. Nếu agent hiểu sai yêu cầu, cả code và test sai theo cùng một hướng, và test vẫn pass. Kỹ thuật "test fail trước" của playbook chỉ áp cho sửa bug, chưa áp cho tính năng mới.</p></div></div><div class="gap"><h3>Test chập chờn đầu độc vòng tự kiểm</h3><div class="prose"><p>Một test lúc pass lúc fail làm agent mất thời gian sửa thứ không hỏng, hoặc tệ hơn là học cách bỏ qua test fail. Playbook không nói phải xử lý test chập chờn trước khi bật vòng tự kiểm.</p></div></div><div class="gap"><h3>Vòng hình ảnh trên mobile khó hơn web</h3><div class="prose"><p>Playbook nói về trình duyệt và screenshot. Với app di động, chụp màn hình cần simulator hoặc emulator đang chạy, đưa app tới đúng màn hình cần kiểm, và xử lý khác biệt kích thước màn hình. Không có công cụ nào cắm vào là chạy như trình duyệt.</p></div></div><div class="gap"><h3>Chấm eval là phần khó nhất</h3><div class="prose"><p>Ví dụ trong playbook dùng một script <code>check.sh</code> để chấm, nhưng không nói chấm thế nào. Với task "sửa bug", chấm bằng test là được. Với task "viết spec" hay "review PR", chấm khó hơn nhiều.</p></div></div><div class="gap"><h3>Chi phí</h3><div class="prose"><p>50 eval, mỗi eval một session Claude Code đầy đủ, chạy mỗi đêm và mỗi PR đụng cấu hình. Con số cộng dồn nhanh.</p></div></div></div></section>
+<section class="blk"><div class="blk-h"><span class="bn">03</span><h2>Giải pháp ban đầu</h2><span class="badge">Đề xuất, chưa kiểm chứng</span></div><div class="fixes"><article class="fix"><div class="fx-h"><span class="chip">4.1</span><h3>Tách người viết test khỏi người viết code</h3></div><div class="lead"><p>Với tính năng mới, áp cùng tinh thần "test trước" của playbook:</p>
+<ol>
+<li>Lấy <strong>tiêu chí nghiệm thu</strong> trong <code>spec.md</code> (xem <label class="lnk" for="r-02">Phase 2</label>).</li>
+<li>Một session riêng viết test từ tiêu chí đó, chưa nhìn thấy code. Commit test.</li>
+<li>Session khác viết code cho test pass, có hook chặn sửa file test.</li>
+</ol></div><div class="prose"><p>Test bây giờ phản ánh spec, không phải cách hiểu của người viết code.</p></div></article><article class="fix"><div class="fx-h"><span class="chip">4.2</span><h3>Dọn test chập chờn trước khi bật vòng</h3></div><div class="prose"><ul>
+<li>Chạy cả bộ test 10 lần liên tiếp, ghi lại test nào có kết quả không ổn định.</li>
+<li>Đưa các test đó vào danh sách cách ly, ghi vào <code>CLAUDE.md</code> để agent không cố sửa.</li>
+<li>Sửa dần danh sách cách ly như một việc riêng.</li>
+</ul></div></article><article class="fix"><div class="fx-h"><span class="chip">4.3</span><h3>Vòng tự kiểm cho app mobile</h3></div><details><summary><span class="o">Xem mẫu và chi tiết</span><span class="c">Thu gọn</span></summary><div class="prose"><div class="tbl"><table>
+<thead>
+<tr>
+<th>Nhu cầu</th>
+<th>iOS</th>
+<th>Android</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Một lệnh test</td>
+<td><code>xcodebuild test</code> gói trong <code>make test</code></td>
+<td><code>./gradlew test</code> gói trong <code>make test</code></td>
+</tr>
+<tr>
+<td>Chụp màn hình</td>
+<td><code>xcrun simctl io booted screenshot</code></td>
+<td><code>adb exec-out screencap -p</code></td>
+</tr>
+<tr>
+<td>So giao diện tự động</td>
+<td>Snapshot test (ví dụ swift-snapshot-testing)</td>
+<td>Snapshot test chạy trên JVM (ví dụ Paparazzi, Roborazzi)</td>
+</tr>
+</tbody>
+</table></div>
+<p>Snapshot test có lợi hơn chụp màn hình tay vì chạy không cần simulator mở sẵn, nhanh hơn, và kết quả so sánh rõ ràng. Agent nhận được ảnh khác biệt để tự chỉnh.</p></div></details></article><article class="fix"><div class="fx-h"><span class="chip">4.4</span><h3>Bắt đầu eval nhỏ và dễ chấm</h3></div><details><summary><span class="o">Xem mẫu và chi tiết</span><span class="c">Thu gọn</span></summary><div class="prose"><ul>
+<li>Bắt đầu với <strong>10 task</strong>, không phải 50.</li>
+<li>Chọn task chấm được bằng máy: sửa bug có test, thêm endpoint có test, refactor không đổi hành vi.</li>
+<li>Mỗi task chấm bằng ba phép kiểm: test pass, lint sạch, diff không đụng file ngoài phạm vi.</li>
+<li>Chỉ thêm task chấm bằng đánh giá chủ quan khi bộ đầu đã chạy ổn.</li>
+</ul></div></details></article><article class="fix"><div class="fx-h"><span class="chip">4.5</span><h3>Kiểm soát chi phí eval</h3></div><details><summary><span class="o">Xem mẫu và chi tiết</span><span class="c">Thu gọn</span></summary><div class="prose"><ul>
+<li>Chạy toàn bộ eval khi PR đụng cấu hình agent.</li>
+<li>Chạy định kỳ mỗi tuần thay vì mỗi đêm, trừ khi team thay đổi cấu hình thường xuyên.</li>
+<li>Ghi lại chi phí mỗi lần chạy cạnh tỉ lệ đạt. Nếu chi phí tăng mà tỉ lệ đạt không đổi, bộ eval có bài thừa.</li>
+</ul></div></details></article><article class="fix"><div class="fx-h"><span class="chip">4.6</span><h3>Cách viết một eval từ sự cố</h3></div><div class="lead"><p>Khi một sự cố được sửa xong:</p>
+<pre><code class="language-json">{
+  &quot;id&quot;: &quot;inc-2026-031-null-session&quot;,
+  &quot;source&quot;: &quot;Sự cố 031, crash khi phiên đăng nhập hết hạn giữa chừng&quot;,
+  &quot;prompt&quot;: &quot;Màn hình hồ sơ crash khi token hết hạn lúc đang tải. Sửa lỗi.&quot;,
+  &quot;checks&quot;: [
+    &quot;make test pass&quot;,
+    &quot;test_profile_expired_session tồn tại và pass&quot;,
+    &quot;diff không sửa file trong tests/ ngoài file test mới&quot;
+  ]
+}
+</code></pre></div><div class="prose"><p>Giữ format đơn giản để team nào cũng viết được.</p></div></article></div></section>
+<section class="blk"><div class="blk-h"><span class="bn">04</span><h2>Tuần đầu tiên</h2></div><ol class="week"><li><span class="sn">1</span><p>Gói build, test, lint thành ba lệnh, ghi vào <code>CLAUDE.md</code> kèm output mẫu.</p></li><li><span class="sn">2</span><p>Chạy bộ test 10 lần, lập danh sách test chập chờn.</p></li><li><span class="sn">3</span><p>Thêm hook chặn sửa file test khi làm việc sửa bug.</p></li><li><span class="sn">4</span><p>Sửa 2 bug bằng quy trình "test fail trước".</p></li><li><span class="sn">5</span><p>Viết 3 eval đầu tiên từ 3 bug vừa sửa gần đây.</p></li></ol><p class="wnote">Sau một tuần, so tỉ lệ CI pass lần đầu của thay đổi do agent viết với tuần trước.</p></section></div></div>
+<div class="page dpage" id="pg-05"><div class="wrap"><div class="d-hero"><p class="kick">Phase 05</p><h1 class="d-title">Deploy</h1><p class="d-tag">Review hai chiều, cổng do hook giữ</p></div>
+<div class="compare">
+<div class="cmp"><p class="cmp-l">Cách cũ</p><div class="lead"><p>Năng lực review được lên kế hoạch theo lượng code con người viết ra. Một PR phải chờ có người đọc hết. Chất lượng review dao động theo độ bận của người review. Tác giả phải đi nhắc, còn hàng đợi thì dài dần.</p></div><details><summary><span class="o">Xem chi tiết</span><span class="c">Thu gọn</span></summary><div class="prose"><p>Governance diễn ra theo chu kỳ review, thường không nhất quán. Pipeline chạy các script cố định, việc gì cần phán đoán thì chờ người: phân loại test chập chờn, viết changelog, tìm lý do build hỏng. Deploy và rollback là những runbook người phải làm theo khi đang chịu áp lực.</p></div></details></div>
+<div class="cmp new"><p class="cmp-l">Cách AI-native</p><div class="lead"><p>Review chạy theo hai chiều: Claude review PR của người khác và tự xử lý comment trên PR của mình. Governance được thực thi ngay khi agent hành động, không chờ chu kỳ họp. Agent làm mọi thứ đến trước cổng production, và không được vượt qua.</p></div><div class="prose"><p>Phase này có ba play: <strong>AI trong vòng review PR</strong>, <strong>hook làm cổng duyệt</strong>, và <strong>tích hợp vào CI/CD</strong>.</p></div></div>
+</div>
+<section class="blk"><div class="blk-h"><span class="bn">01</span><h2>Playbook làm gì</h2></div><div class="plays"><article class="play"><div class="pn">2.1</div><div><h3>AI trong vòng review PR</h3><div class="lead"><p>Mọi PR đều đi qua cùng một bộ lượt review, finding được xếp theo mức nghiêm trọng. Sự chú ý của người review dịch lên một tầng: <strong>thay đổi có làm đúng ý plan không, và rủi ro có chấp nhận được không</strong>.</p></div><details><summary><span class="o">Xem chi tiết</span><span class="c">Thu gọn</span></summary><div class="prose"><p>Hai cách triển khai:</p>
+<ul>
+<li>Dịch vụ <strong>Code Review</strong> được quản lý (research preview): admin bật lên, chọn repo. Nhanh nhất.</li>
+<li><strong>claude-code-action</strong> chạy trong CI của mình: khi cần kiểm soát pipeline, hoặc cần gọi model qua Bedrock, Vertex hay Foundry theo hợp đồng cloud của tổ chức.</li>
+</ul>
+<p>Cách làm:</p>
+<ol>
+<li>Tech lead viết chính sách review thành <strong><code>REVIEW.md</code></strong> ở gốc repo, chia thành các lượt: bug và lỗi logic; bảo mật; tuân thủ <code>spec.md</code>, <code>plan.md</code> và nguyên tắc thiết kế. File cũng định nghĩa thế nào là "Important", thế nào là "Nit", và thứ gì bỏ qua.</li>
+<li><strong>Finding không tự duyệt hay chặn PR.</strong> Branch protection vẫn bắt buộc có code owner duyệt. Nếu muốn chặn merge theo finding, đọc bảng đếm theo mức nghiêm trọng mà check run xuất ra.</li>
+<li><strong>Vòng sửa:</strong> người review hoặc tác giả tag <code>@claude</code> vào comment, Claude sửa và đẩy commit. Vòng này chạy qua claude-code-action; ở dịch vụ Code Review được quản lý, comment <code>@claude review</code> sẽ yêu cầu một lượt review mới thay vì sửa. Với PR do Claude mở, có thể để Claude "trông" PR tới khi merge: một slash command quét các comment chưa giải quyết và check đang fail, sửa, đẩy lên, cho tới khi PR chỉ còn chờ code owner duyệt.</li>
+<li><strong>Finding quay về <code>CLAUDE.md</code>.</strong> Một lỗi bị review bắt lần thứ hai thì ghi cách sửa vào <code>CLAUDE.md</code>. Vì review đọc <code>CLAUDE.md</code>, lỗi đó bị chặn từ PR sau. Review cũng báo khi một thay đổi làm <code>CLAUDE.md</code> lỗi thời.</li>
+<li><strong>Tinh chỉnh hằng tháng:</strong> chấm điểm finding để review tốt lên, giới hạn số nit, loại trừ code sinh tự động và những gì CI đã kiểm.</li>
+</ol>
+<p><code>REVIEW.md</code> mẫu trong playbook có ba lượt (bug, bảo mật, tuân thủ), định nghĩa Important là thứ làm hỏng hành vi, lộ dữ liệu hoặc vi phạm policy, giới hạn tối đa 5 nit mỗi review, và liệt kê những gì không cần báo.</p>
+<p>Nguyên tắc governance: <strong>agent viết code không có cách nào duyệt code đó.</strong> Tách bạch nhiệm vụ được giữ nguyên.</p></div></details></div></article><article class="play"><div class="pn">2.2</div><div><h3>Hook làm cổng duyệt</h3><div class="lead"><p>Ở Build, hook cho qua hoặc chặn mà không cần người. Hook còn có lựa chọn thứ ba: <strong>hỏi</strong>, tạm dừng hành động cho tới khi một người cụ thể đồng ý. Đây đúng là thứ cổng release cần.</p></div><details><summary><span class="o">Xem chi tiết</span><span class="c">Thu gọn</span></summary><div class="prose"><p>Cách làm:</p>
+<ol>
+<li>Lãnh đạo engineering cùng change management và compliance liệt kê những cổng duyệt phải giữ: ký duyệt thay đổi, cho phép release, sửa đường dẫn được bảo vệ.</li>
+<li>Platform engineer viết mỗi cổng thành một hook có thể cho qua, hỏi, hoặc chặn.</li>
+<li>Hook của team để trong <code>.claude/settings.json</code> trong git. <strong>Hook không được thương lượng để trong managed settings</strong> do platform hoặc IT quản lý, engineer không tắt được.</li>
+<li>Hook chặn phải tự giải thích: lý do và cách xin duyệt hiện ra trong output của Claude.</li>
+</ol>
+<p>Ví dụ trong playbook: một hook kiểm mọi lệnh Bash, nếu lệnh chứa "deploy" và "production" mà không có biến môi trường xác nhận release thì chặn, trả thông báo cho Claude.</p>
+<h4>Managed settings cho doanh nghiệp bị quản lý chặt</h4>
+<p>Playbook đưa một cấu hình mẫu đầy đủ, giải thích từng dòng mua được gì:</p>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>Nhóm cấu hình</th>
+<th>Tác dụng</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Danh sách deny / allow</td>
+<td>Giữ secret ngoài context, chặn truy cập mạng qua công cụ. Cho phép sẵn các lệnh an toàn để không phải bấm duyệt liên tục</td>
+</tr>
+<tr>
+<td>Tắt chế độ bỏ qua quyền, chỉ dùng rule được quản lý</td>
+<td>Không engineer, file project hay cờ dòng lệnh nào nới được rule</td>
+</tr>
+<tr>
+<td>Sandbox ở mức hệ điều hành</td>
+<td>Chặn mạng thật sự, vì deny một công cụ không ngăn được lệnh shell gọi ra ngoài</td>
+</tr>
+<tr>
+<td>Bắt buộc sandbox</td>
+<td>Claude Code không khởi động nếu sandbox lỗi, lệnh fail trong sandbox không được chạy lại bên ngoài</td>
+</tr>
+<tr>
+<td>Chặn đọc credential</td>
+<td>Lệnh shell không đọc được <code>~/.ssh</code>, <code>~/.aws/credentials</code>, biến môi trường chứa token</td>
+</tr>
+<tr>
+<td>Chỉ hook được quản lý</td>
+<td>Cổng duyệt của tổ chức là hook duy nhất được chạy</td>
+</tr>
+<tr>
+<td>Chỉ marketplace được duyệt</td>
+<td>Mọi skill, agent, hook, MCP server đến từ kho plugin của tổ chức</td>
+</tr>
+<tr>
+<td>Phiên bản tối thiểu</td>
+<td>Không chạy trên bản Claude Code cũ hơn bản đã được đánh giá</td>
+</tr>
+</tbody>
+</table></div>
+<p>Playbook nhấn mạnh đây là <strong>điểm khởi đầu để chỉnh, không phải để chép</strong>. Mỗi dòng deny đổi lấy một phần năng lực, và mức cân bằng phụ thuộc mức độ nhạy cảm của dữ liệu trong repo.</p></div></details></div></article><article class="play"><div class="pn">2.3</div><div><h3>Claude trong CI/CD</h3><div class="lead"><p>Cách làm theo thứ tự tăng dần rủi ro:</p>
+<ol>
+<li><strong>Bước chỉ đọc trước.</strong> Dùng <code>claude -p</code> trong pipeline để phân loại build fail, tóm tắt test chập chờn, soạn changelog.</li>
+<li><strong>Bước ghi đi qua cổng có sẵn.</strong> Sửa lint, cập nhật tài liệu sinh tự động, xử lý comment review. Mọi thứ agent viết đều thành PR qua branch protection. Agent không có đường đẩy thẳng lên main.</li>
+<li><strong>Sandbox khi chạy.</strong> Job của agent chạy trong container với network policy, token ngắn hạn có phạm vi hẹp, mặc định không có credential production.</li>
+<li><strong>Deploy qua MCP.</strong> Deploy, kiểm trạng thái, rollback trở thành công cụ có phạm vi theo từng môi trường. Quyền deploy của agent là một danh sách cho phép, không phải script cầm credential.</li>
+<li><strong>Mức tự chủ theo môi trường.</strong> Dev: agent deploy tự do. Production: agent chuẩn bị release, release manager cho phép, hook giữ cổng. Staging ở giữa.</li>
+<li><strong>Rollback là đường được tập nhiều nhất.</strong> Một lệnh duy nhất agent chạy được, được tập thường xuyên ở staging. Phase Maintain sẽ gọi lệnh này khi chỉ số vượt ngưỡng, nên nó phải được chứng minh từ trước.</li>
+</ol></div><div class="prose"><p>Mỗi lần chạy không tương tác dùng <strong>danh tính riêng của agent</strong>, nên log phân biệt được việc agent làm với việc của engineer đã kích hoạt.</p></div></div></article></div><div class="side"><div class="sidec"><p class="cmp-l">Đo hiệu quả</p><div class="prose"><div class="tbl"><table>
+<thead>
+<tr>
+<th>Play</th>
+<th>Chỉ số dẫn</th>
+<th>Chỉ số trễ</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>AI review</td>
+<td>Thời gian tới review đầu tiên (kỳ vọng vài phút), tỉ lệ comment được xử lý mà người không phải sửa branch</td>
+<td>Lỗi và lỗ hổng bắt được trước merge so với lọt ra production</td>
+</tr>
+<tr>
+<td>Hook cổng duyệt</td>
+<td>Thời gian chờ ở mỗi cổng (mọi quyết định hook đều có timestamp trong OpenTelemetry)</td>
+<td>Vi phạm cổng lọt ra production trước và sau khi có hook</td>
+</tr>
+<tr>
+<td>CI/CD</td>
+<td>Tỉ lệ pipeline fail được phân loại mà không phải gọi người</td>
+<td>Các chỉ số DORA</td>
+</tr>
+</tbody>
+</table></div></div></div></div></section>
+<section class="blk"><div class="blk-h"><span class="bn">02</span><h2>Chỗ còn hở</h2><span class="badge">Phân tích thêm</span></div><div class="gaps"><div class="gap"><h3>Người review vẫn là trần</h3><div class="prose"><p>AI review làm mỗi lần duyệt nhẹ hơn, nhưng mỗi PR vẫn cần một code owner duyệt. Nếu agent tạo gấp năm lần số PR, hàng đợi duyệt vẫn dài ra. Playbook không đưa cơ chế điều tiết số PR.</p></div></div><div class="gap"><h3>Duyệt cho có</h3><div class="prose"><p>Khi PR đã có AI review, test pass, finding đã được sửa, người duyệt dễ bấm approve mà không thật sự đọc. Đây là thiên kiến tin vào máy (automation bias). Tách bạch nhiệm vụ vẫn đúng trên giấy nhưng rỗng trong thực tế.</p></div></div><div class="gap"><h3>PR lớn làm review vô nghĩa</h3><div class="prose"><p>Agent viết nhanh nên dễ sinh PR vài nghìn dòng. Không ai review tử tế được cỡ đó, dù có AI hỗ trợ.</p></div></div><div class="gap"><h3>Mobile có cổng nằm ngoài tầm tay</h3><div class="prose"><p>Với app di động:</p>
+<ul>
+<li><strong>App Store và Google Play review là một cổng bên ngoài.</strong> Không hook nào thay được, và có thể mất từ vài giờ tới vài ngày.</li>
+<li><strong>Rollback không phải một lệnh.</strong> Bản đã cài trên máy người dùng không gỡ về được. Chỉ có thể dừng phát hành dần, phát hành bản sửa, hoặc tắt tính năng từ xa.</li>
+<li><strong>Chứng chỉ ký app</strong> là loại credential nhạy cảm nhất, không được lọt vào môi trường của agent.</li>
+</ul></div></div></div></section>
+<section class="blk"><div class="blk-h"><span class="bn">03</span><h2>Giải pháp ban đầu</h2><span class="badge">Đề xuất, chưa kiểm chứng</span></div><div class="fixes"><article class="fix"><div class="fx-h"><span class="chip">4.1</span><h3>Số người duyệt theo mức rủi ro</h3></div><div class="lead"><p>Gắn nhãn rủi ro tự động dựa trên đường dẫn PR đụng tới:</p>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>Mức</th>
+<th>Điều kiện</th>
+<th>Duyệt</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Thấp</td>
+<td>Chỉ UI text, test, tài liệu</td>
+<td>1 code owner</td>
+</tr>
+<tr>
+<td>Vừa</td>
+<td>Logic nghiệp vụ, API client</td>
+<td>1 code owner + đọc <code>plan.md</code></td>
+</tr>
+<tr>
+<td>Cao</td>
+<td>Xác thực, thanh toán, lưu trữ dữ liệu, cấu hình build và ký</td>
+<td>2 người, trong đó 1 tech lead</td>
+</tr>
+</tbody>
+</table></div></div><div class="prose"><p>Nhãn do một script gắn, không do agent tự chọn.</p></div></article><article class="fix"><div class="fx-h"><span class="chip">4.2</span><h3>Chống duyệt cho có</h3></div><div class="prose"><ul>
+<li>Khi approve, người duyệt ghi một dòng: đã kiểm điều gì. Ví dụ: "đã chạy thử luồng hết hạn phiên trên simulator".</li>
+<li>Mỗi tháng chọn ngẫu nhiên vài PR đã merge, một người khác review lại. Đếm số vấn đề lẽ ra phải bị bắt.</li>
+</ul></div></article><article class="fix"><div class="fx-h"><span class="chip">4.3</span><h3>Giới hạn kích thước PR</h3></div><div class="prose"><ul>
+<li>Đặt trần, ví dụ 400 dòng thay đổi không tính file sinh tự động.</li>
+<li>Ghi vào <code>CLAUDE.md</code>: thay đổi lớn hơn thì tách thành nhiều PR theo thứ tự trong <code>plan.md</code>.</li>
+<li>Thêm một check trong CI cảnh báo PR vượt trần.</li>
+</ul></div></article><article class="fix"><div class="fx-h"><span class="chip">4.4</span><h3><code>REVIEW.md</code> khởi đầu cho repo mobile</h3></div><details><summary><span class="o">Xem mẫu và chi tiết</span><span class="c">Thu gọn</span></summary><div class="prose"><pre><code class="language-markdown"># Review instructions
+
+## Passes
+
+- Bugs: lỗi logic, trường hợp biên, rò rỉ bộ nhớ, retain cycle
+- Security: lưu token sai chỗ (UserDefaults, SharedPreferences), log dữ liệu cá nhân, deep link không kiểm
+- Compliance: khớp spec.md và plan.md, có xử lý trạng thái tải / rỗng / lỗi / mất mạng
+
+## Important nghĩa là
+Crash, mất dữ liệu người dùng, lộ dữ liệu, vi phạm quy định store.
+Đặt tên, định dạng là nit.
+
+## Tối đa 5 nit mỗi review
+
+## Không báo
+Code sinh tự động, file project của Xcode, những gì lint đã kiểm.
+</code></pre></div></details></article><article class="fix"><div class="fx-h"><span class="chip">4.5</span><h3>Release mobile theo tinh thần "đến trước cổng"</h3></div><details><summary><span class="o">Xem mẫu và chi tiết</span><span class="c">Thu gọn</span></summary><div class="prose"><div class="tbl"><table>
+<thead>
+<tr>
+<th>Agent được làm</th>
+<th>Cần người</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Tăng số build, soạn release note</td>
+<td>Gửi bản lên store review</td>
+</tr>
+<tr>
+<td>Upload bản thử nội bộ (TestFlight nội bộ, internal track)</td>
+<td>Mở phát hành cho người dùng thật</td>
+</tr>
+<tr>
+<td>Tạo cấu hình phát hành dần</td>
+<td>Tăng tỉ lệ phát hành dần</td>
+</tr>
+<tr>
+<td>Đề xuất tắt feature flag khi có sự cố</td>
+<td>Bật lại tính năng cho mọi người</td>
+</tr>
+</tbody>
+</table></div>
+<p>"Rollback" của mobile thực chất là ba thứ cần chuẩn bị trước: <strong>feature flag</strong> cho mọi tính năng mới, <strong>phát hành dần</strong> để dừng được khi thấy vấn đề, và <strong>cấu hình từ xa</strong> để đổi hành vi không cần bản mới. Đây là thứ cần tập dượt, tương đương lệnh rollback trong playbook.</p>
+<p>Chứng chỉ ký app chỉ nằm trong môi trường CI riêng, không bao giờ nằm trong sandbox của agent.</p></div></details></article></div></section>
+<section class="blk"><div class="blk-h"><span class="bn">04</span><h2>Tuần đầu tiên</h2></div><ol class="week"><li><span class="sn">1</span><p>Viết <code>REVIEW.md</code> cho một repo, bật AI review trên repo đó.</p></li><li><span class="sn">2</span><p>Bật branch protection bắt buộc code owner duyệt, nếu chưa có.</p></li><li><span class="sn">3</span><p>Viết một hook duy nhất: chặn lệnh deploy hoặc release lên production khi không có xác nhận.</p></li><li><span class="sn">4</span><p>Thêm một bước chỉ đọc vào CI: khi build fail, Claude tóm tắt nguyên nhân vào PR.</p></li><li><span class="sn">5</span><p>Sau một tuần, đọc lại toàn bộ finding, đánh dấu cái nào hữu ích, cái nào nhiễu. Chỉnh <code>REVIEW.md</code> theo kết quả.</p></li></ol></section></div></div>
+<div class="page dpage" id="pg-06"><div class="wrap"><div class="d-hero"><p class="kick">Phase 06</p><h1 class="d-title">Maintain</h1><p class="d-tag">Khép vòng lặp</p></div>
+<div class="compare">
+<div class="cmp"><p class="cmp-l">Cách cũ</p><div class="lead"><p>Vận hành là giai đoạn bị động. Mọi ticket và sự cố đều chờ một người nhận rồi mới bắt đầu lại quy trình:</p>
+<ul>
+<li>Cảnh báo lúc 3 giờ sáng có thể bị bỏ lỡ.</li>
+<li>Ticket nằm trong backlog tới khi có người để ý.</li>
+<li>Việc cần làm sau post-mortem có khi không bao giờ đến được codebase, vì đã có sự cố mới.</li>
+</ul></div><details><summary><span class="o">Xem chi tiết</span><span class="c">Thu gọn</span></summary><div class="prose"><p>Scan bảo mật cũng bị động theo kiểu khác: nó là một sự kiện. Chạy trước release hoặc trước audit, báo cáo đưa vào tracker, rồi xử lý dần tới lần scan sau. Code viết ra ở giữa hai lần scan chỉ được bảo vệ bởi những gì review PR bắt được.</p></div></details></div>
+<div class="cmp new"><p class="cmp-l">Cách AI-native</p><div class="lead"><p>Đây là phase biến đường thẳng thành vòng lặp. Một điểm kích hoạt gọi Claude mà không cần người khởi động. Claude chẩn đoán, chỉ hành động qua các đường đã có cổng, và ghi những gì tìm thấy thành <code>intent.md</code> mới. File đó quay lại <label class="lnk" for="r-01">Phase 1</label> như mọi ý tưởng khác.</p></div><div class="prose"><p>Phase này có ba play: <strong>khép vòng bằng ngưỡng giám sát</strong>, <strong>scan codebase định kỳ</strong>, và <strong>Claude trực sự cố qua Claude Tag</strong>.</p></div></div>
+</div>
+<section class="blk"><div class="blk-h"><span class="bn">01</span><h2>Playbook làm gì</h2></div><div class="plays"><article class="play"><div class="pn">2.1</div><div><h3>Khép vòng bằng ngưỡng giám sát</h3><div class="lead"><p>Ở các phase trước, mỗi stage đều cần người khởi động. Phase này chuyển sang chạy tự động.</p></div><details><summary><span class="o">Xem chi tiết</span><span class="c">Thu gọn</span></summary><div class="prose"><p>Ý tưởng: một agent giám sát liên tục, khi có bug được báo, tự tạo <code>intent.md</code> rồi đi tiếp qua requirements, plan, build, test, review. Giữa các stage có <strong>một cổng tin cậy độc lập</strong>, có thể là một phép kiểm cố định hoặc một agent review đối kháng, quyết định cho đi tiếp hay chuyển lên người.</p>
+<h4>Cơ chế phát hiện</h4>
+<p>Điểm cần lưu ý trong thiết kế này: <strong>khâu phát hiện hoàn toàn không dùng model.</strong></p>
+<ol>
+<li>Chọn một chỉ số có baseline ổn định, ví dụ tỉ lệ test fail trong CI, tỉ lệ lỗi 5xx sau deploy, thời gian vòng đời PR.</li>
+<li>Viết script phát hiện: trung bình và độ lệch chuẩn trên một cửa sổ trượt, kèm các luật như Western Electric để bắt cả trôi chậm lẫn đột biến. Script có quản lý phiên bản và có unit test.</li>
+<li>Định nghĩa các mức phản ứng trong file cấu hình, ví dụ <code>bands.yaml</code>:</li>
+</ol>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>Mức lệch</th>
+<th>Phản ứng</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1σ</td>
+<td>Chỉ ghi log</td>
+</tr>
+<tr>
+<td>2σ</td>
+<td>Gọi Claude ở chế độ chỉ đọc để chẩn đoán</td>
+</tr>
+<tr>
+<td>3σ</td>
+<td>Claude được hành động, nhưng chỉ qua hai đường: mở PR vào cổng review, hoặc chạy runbook đã duyệt trước (như rollback)</td>
+</tr>
+</tbody>
+</table></div>
+<ol start="4">
+<li>Điểm kích hoạt có thể là workflow chạy theo lịch, webhook từ hệ thống giám sát, hoặc cron trong mạng nội bộ. Claude chạy không trạng thái, không tương tác, trên CI runner hoặc qua Agent SDK trong container có sandbox. Vòng lặp vì vậy bắt đầu và kết thúc mà không ai phải khởi động.</li>
+<li>Agent ghi chẩn đoán thành <code>intent.md</code> theo đúng format Phase 1: bất thường và bằng chứng, kết quả đề xuất, hệ thống bị ảnh hưởng, câu hỏi mở.</li>
+<li>Người trực hoặc service owner phân loại hàng đợi: sửa ngay, xếp lịch, hay bỏ qua. <strong>Việc bỏ qua được dùng để chỉnh lại ngưỡng</strong>, giảm nhiễu.</li>
+<li>Khi bản sửa đã lên, thêm một eval cho sự cố đó (xem <label class="lnk" for="r-04">Phase 4</label>).</li>
+</ol>
+<p>Ba ví dụ trong playbook:</p>
+<ul>
+<li>Tỉ lệ test fail trong CI vượt 3σ → agent cách ly test chập chờn hoặc mở PR revert, cổng review quyết định.</li>
+<li>Tỉ lệ 5xx sau deploy vượt 3σ, có deploy trong khung thời gian đó → agent kích hoạt pipeline rollback có sẵn.</li>
+<li>Thời gian vòng đời PR trôi dần → agent viết báo cáo cho lãnh đạo engineering. Ví dụ này cho thấy cơ chế dùng được cho cả chỉ số quy trình, không chỉ chỉ số production.</li>
+</ul></div></details></div></article><article class="play"><div class="pn">2.2</div><div><h3>Scan codebase định kỳ</h3><div class="lead"><p>Một lần scan bảo mật là một nhận định tại một thời điểm, với một model cụ thể. Cả hai yếu tố đều cũ đi: code thay đổi mỗi tuần, và mỗi thế hệ model tìm ra lỗ hổng mà thế hệ trước bỏ sót.</p></div><details><summary><span class="o">Xem chi tiết</span><span class="c">Thu gọn</span></summary><div class="prose"><p>Cách xử lý của playbook: <strong>scan theo lịch, không cần người khởi động</strong>, và đưa phát hiện qua cùng các cổng như mọi thay đổi khác.</p>
+<p>Công cụ được giới thiệu là Claude Security: kết nối repo GitHub, scan chạy trên Claude Mythos 5 trong hạ tầng của Anthropic, mỗi phát hiện được xác thực trước khi báo và có mức độ tin cậy kèm theo. Bản vá đề xuất được review và áp trong Claude Code on the web. Hiện chỉ có cho gói Enterprise, ở dạng public beta, tính phí theo mức dùng.</p>
+<p>Cách làm:</p>
+<ol>
+<li>Kết nối repo, nhóm theo dự án, dịch vụ hoặc team để rõ ai chịu trách nhiệm phát hiện nào.</li>
+<li>Chạy một lần scan đầy đủ trên các repo quan trọng nhất, kể cả repo đã từng được tool khác scan. Coi đây là baseline. Lần đầu thường tìm ra vấn đề ở chỗ tưởng là sạch.</li>
+<li>Đặt lịch cho từng dự án. Hằng tuần là mặc định hợp lý cho dịch vụ đang phát triển.</li>
+<li>Phân loại phát hiện kèm mức tin cậy. Bỏ qua phải ghi lý do, để lần sau phát hiện đó không quay lại như mới.</li>
+<li>Phát hiện gói gọn trong một bản vá → review và đưa qua cổng PR. Agent đề xuất bản vá không có đường tự duyệt.</li>
+<li>Phát hiện rộng hơn một bản vá (điểm yếu kiến trúc, lỗi lặp lại ở nhiều dịch vụ) → viết thành <code>intent.md</code>, bắt đầu từ Plan.</li>
+<li>Khi bản sửa lên production, thêm eval cho loại lỗ hổng đó.</li>
+<li>Xuất phát hiện ra CSV, Markdown hoặc webhook để hệ thống tracker và audit hiện có vẫn là nơi lưu chính.</li>
+</ol>
+<p>Playbook nói rõ: scan bằng model <strong>bổ sung</strong> cho static analysis và scan phụ thuộc, không thay thế. Kiểm tra cố định vẫn ở trong CI. Scan bằng model nhắm vào lỗ hổng phụ thuộc ngữ cảnh mà các công cụ kia không được thiết kế để tìm.</p></div></details></div></article><article class="play"><div class="pn">2.3</div><div><h3>Claude trực sự cố qua Claude Tag</h3><div class="lead"><p>Sự cố còn đến qua kênh chat: một tin nhắn lúc 10 giờ tối trong kênh sự cố trên Slack. Claude Tag (public beta, hiện có trên Slack) đưa Claude vào kênh với danh tính riêng, nên mỗi sự cố có một người phản hồi đầu tiên ngay lập tức.</p></div><details><summary><span class="o">Xem chi tiết</span><span class="c">Thu gọn</span></summary><div class="prose"><p>Điểm đáng chú ý:</p>
+<ul>
+<li>Cuộc trao đổi và tri thức nằm lại trong kênh. Ai trong kênh cũng dẫn dắt được, thử giả thuyết, điều tra cùng lúc.</li>
+<li>Qua MCP, Claude xác nhận chỉ số đã về baseline và báo trong thread.</li>
+<li>Post-mortem được ghi vào một file bài học có quản lý phiên bản, để những lần điều tra sau đọc được.</li>
+<li><strong>Kênh chính là audit trail</strong>: yêu cầu, chẩn đoán, sự cho phép của người, bản sửa đều nằm ở nơi xử lý sự cố.</li>
+</ul>
+<p>Không chỉ sự cố: được tag vào ticket hoặc được hỏi trong kênh, Claude phân loại việc theo cùng cách. Sửa nhỏ, khoanh vùng rõ thì thành PR qua cổng review. Việc lớn hơn thì viết thành <code>intent.md</code>, và vòng lặp tự nuôi chính nó.</p></div></details></div></article></div><div class="side"><div class="sidec"><p class="cmp-l">Governance</p><div class="prose"><ul>
+<li>Ranh giới các mức được thực thi từ cấu hình có phiên bản. Quyền và managed settings chặn truy cập production.</li>
+<li>Mọi lần gọi, phát hiện, quyết định phân loại đều có timestamp.</li>
+<li>Service owner phân loại và duyệt. Thay đổi phát sinh đi qua cổng review PR bình thường. Runbook agent được phép chạy đã được duyệt từ trước.</li>
+<li>Với scan: repo nào được kết nối, ai có quyền scan, giới hạn chi tiêu đều do admin đặt tập trung. Lịch sử scan là bản ghi audit về thứ đã được tìm thấy, đã sửa, và đã chấp nhận có chủ đích.</li>
+</ul></div></div><div class="sidec"><p class="cmp-l">Đo hiệu quả</p><div class="prose"><div class="tbl"><table>
+<thead>
+<tr>
+<th>Play</th>
+<th>Chỉ số dẫn</th>
+<th>Chỉ số trễ</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Khép vòng</td>
+<td>Thời gian từ lúc vượt ngưỡng tới khi có <code>intent.md</code> trong hàng đợi, so với thời gian từ sự cố tới việc cần làm sau post-mortem trước đây</td>
+<td>Tỉ lệ phát hiện thành bản sửa được merge, số sự cố lặp lại cùng loại</td>
+</tr>
+<tr>
+<td>Scan định kỳ</td>
+<td>Tỉ lệ repo đã có lịch scan, thời gian từ phát hiện tới khi bản vá vào cổng PR</td>
+<td>Lỗ hổng do scan tìm ra so với lỗ hổng lộ ra ở production hoặc do bên ngoài báo, xu hướng số phát hiện mỗi lần scan</td>
+</tr>
+</tbody>
+</table></div></div></div></div></section>
+<section class="blk"><div class="blk-h"><span class="bn">02</span><h2>Chỗ còn hở</h2><span class="badge">Phân tích thêm</span></div><div class="gaps"><div class="gap"><h3>Hàng đợi phân loại thành backlog mới</h3><div class="prose"><p>Vòng lặp tự sinh <code>intent.md</code>, nhưng vẫn cần người phân loại. Nếu ngưỡng chưa được chỉnh tốt, hàng đợi đầy những phát hiện nửa đúng. Người trực bắt đầu bỏ qua cả loạt, và vòng lặp lại quay về đúng tình trạng bị động ban đầu, chỉ là với nhiều file hơn.</p></div></div><div class="gap"><h3>Ai sở hữu hàng đợi</h3><div class="prose"><p>Playbook nói service owner hoặc người trực phân loại. Với team nhỏ không có lịch trực chính thức, hàng đợi rất dễ không có chủ.</p></div></div><div class="gap"><h3>Dịch vụ mới chưa có baseline</h3><div class="prose"><p>Ngưỡng 1σ, 2σ, 3σ cần một baseline ổn định. Dịch vụ mới ra, hoặc chỉ số có tính mùa vụ mạnh, sẽ báo động nhầm liên tục.</p></div></div><div class="gap"><h3>Mobile có nhịp khác</h3><div class="prose"><p>Chỉ số sức khoẻ của app di động không thay đổi theo từng phút như 5xx trên server. Chúng thay đổi theo <strong>từng bản phát hành</strong>, và phải chờ đủ người dùng cập nhật mới có số đáng tin. Rollback cũng không có như server (xem <label class="lnk" for="r-05">Phase 5</label>).</p></div></div><div class="gap"><h3>Chi phí và quyền truy cập</h3><div class="prose"><p>Scan bằng Mythos 5 tính phí theo mức dùng và chỉ có ở gói Enterprise. Team không có gói này cần cách khác cho phần scan định kỳ.</p></div></div></div></section>
+<section class="blk"><div class="blk-h"><span class="bn">03</span><h2>Giải pháp ban đầu</h2><span class="badge">Đề xuất, chưa kiểm chứng</span></div><div class="fixes"><article class="fix"><div class="fx-h"><span class="chip">4.1</span><h3>Bắt đầu bằng chỉ số nội bộ, không phải production</h3></div><div class="lead"><p>Chỉ số đầu tiên nên là <strong>tỉ lệ test fail trong CI</strong>:</p>
+<ul>
+<li>Hậu quả của báo nhầm thấp, không ảnh hưởng người dùng.</li>
+<li>Dữ liệu có sẵn trong CI.</li>
+<li>Hành động ở mức 3σ (cách ly test, mở PR) đều đi qua cổng review.</li>
+</ul></div><div class="prose"><p>Chỉ chuyển sang chỉ số production khi đã chỉnh ngưỡng xong cho chỉ số này.</p></div></article><article class="fix"><div class="fx-h"><span class="chip">4.2</span><h3>Giữ hàng đợi khỏi phình to</h3></div><details><summary><span class="o">Xem mẫu và chi tiết</span><span class="c">Thu gọn</span></summary><div class="prose"><ul>
+<li>Đặt trần số <code>intent.md</code> do agent sinh đang chờ phân loại, ví dụ 5. Vượt trần thì agent gộp phát hiện mới vào file cũ cùng loại thay vì tạo file mới.</li>
+<li>Hẹn thời gian phân loại, ví dụ 2 ngày làm việc.</li>
+<li>Phân công người sở hữu hàng đợi theo tuần, kể cả khi team không có lịch trực.</li>
+</ul></div></details></article><article class="fix"><div class="fx-h"><span class="chip">4.3</span><h3>Phân loại lý do bỏ qua</h3></div><div class="lead"><p>Mỗi lần bỏ qua, chọn một lý do từ danh sách cố định:</p>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>Lý do</th>
+<th>Hành động tiếp theo</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Báo nhầm, chỉ số dao động bình thường</td>
+<td>Nới ngưỡng</td>
+</tr>
+<tr>
+<td>Đúng nhưng đã biết, đang xử lý</td>
+<td>Gộp vào intent có sẵn</td>
+</tr>
+<tr>
+<td>Đúng nhưng chấp nhận được</td>
+<td>Ghi lý do chấp nhận, tắt cảnh báo loại này trong thời hạn nhất định</td>
+</tr>
+<tr>
+<td>Chẩn đoán sai nguyên nhân</td>
+<td>Cải thiện prompt chẩn đoán, thêm eval</td>
+</tr>
+</tbody>
+</table></div></div><div class="prose"><p>Đếm theo lý do mỗi tháng. Tỉ lệ "báo nhầm" cao nghĩa là ngưỡng chưa đúng. Tỉ lệ "chẩn đoán sai" cao nghĩa là agent thiếu ngữ cảnh.</p></div></article><article class="fix"><div class="fx-h"><span class="chip">4.4</span><h3>Ngưỡng cho app mobile</h3></div><div class="lead"><p>Theo dõi theo <strong>từng phiên bản phát hành</strong>, không theo thời gian thực:</p>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>Chỉ số</th>
+<th>Nguồn thường dùng</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Tỉ lệ người dùng không gặp crash</td>
+<td>Crashlytics, Xcode Organizer, Play Console</td>
+</tr>
+<tr>
+<td>Tỉ lệ ANR (Android)</td>
+<td>Play Console</td>
+</tr>
+<tr>
+<td>Thời gian khởi động lạnh</td>
+<td>Công cụ đo hiệu năng của từng nền tảng</td>
+</tr>
+<tr>
+<td>Đánh giá trên store sau phát hành</td>
+<td>App Store Connect, Play Console</td>
+</tr>
+</tbody>
+</table></div></div><details><summary><span class="o">Xem mẫu và chi tiết</span><span class="c">Thu gọn</span></summary><div class="prose"><p>Gắn ngưỡng 3σ với hành động: <strong>dừng phát hành dần</strong> và <strong>đề xuất tắt feature flag</strong> của tính năng mới nhất. Cả hai cần người xác nhận theo bảng ở Phase 5.</p>
+<p>Với dịch vụ chưa có baseline, dùng ngưỡng cố định do team đặt trong vài tuần đầu, rồi mới chuyển sang ngưỡng thống kê.</p></div></details></article><article class="fix"><div class="fx-h"><span class="chip">4.5</span><h3>File bài học sau sự cố</h3></div><div class="lead"><p>Playbook nhắc tới file bài học nhưng không đưa format. Một format gọn:</p>
+<pre><code class="language-markdown">## 2026-10-02 · Crash khi token hết hạn giữa lúc tải hồ sơ
+Dấu hiệu: crash-free users bản 3.4.1 giảm 1.2% so với bản trước
+Nguyên nhân: completion handler gọi sau khi màn hình đã bị huỷ
+Sửa: PR #482
+Eval: inc-2026-031-null-session
+Bài học: mọi request gắn với vòng đời màn hình phải huỷ được
+</code></pre></div><div class="prose"><p>Dòng cuối là thứ có thể chuyển lên <code>CLAUDE.md</code> hoặc thành skill nếu lặp lại.</p></div></article><article class="fix"><div class="fx-h"><span class="chip">4.6</span><h3>Scan định kỳ khi chưa có Claude Security</h3></div><div class="lead"><p>Có thể dựng phiên bản đơn giản bằng công cụ sẵn có:</p>
+<ul>
+<li>Workflow chạy hằng tuần, gọi <code>claude -p</code> với một skill review bảo mật, chỉ đọc, trên các thư mục thay đổi trong tuần.</li>
+<li>Kết quả ghi thành một issue tổng hợp, không tự sửa.</li>
+<li>Giữ nguyên các scan cố định đã có (static analysis, scan phụ thuộc) trong CI.</li>
+</ul></div><div class="prose"><p>Phiên bản này không có bước xác thực phát hiện như Claude Security, nên tỉ lệ báo nhầm sẽ cao hơn. Áp dụng bảng phân loại lý do ở 4.3 ngay từ đầu.</p></div></article></div></section>
+<section class="blk"><div class="blk-h"><span class="bn">04</span><h2>Tuần đầu tiên</h2></div><ol class="week"><li><span class="sn">1</span><p>Lấy dữ liệu tỉ lệ test fail của CI trong 30 ngày qua.</p></li><li><span class="sn">2</span><p>Viết script tính trung bình và độ lệch chuẩn, có unit test.</p></li><li><span class="sn">3</span><p>Viết <code>bands.yaml</code> chỉ với mức 1σ ghi log và 2σ chẩn đoán chỉ đọc. Chưa bật mức 3σ.</p></li><li><span class="sn">4</span><p>Chạy một tuần, đọc mọi chẩn đoán agent viết ra, phân loại theo bảng lý do.</p></li><li><span class="sn">5</span><p>Chỉ bật mức 3σ khi tỉ lệ báo nhầm đủ thấp để team tin vào nó.</p></li></ol><p class="wnote">Vòng lặp khép được khi team tin vào cảnh báo. Niềm tin đó cần vài tuần dữ liệu thật, không bật một lần là có.</p></section></div></div>
+<footer><div class="wrap">Mục lục<ol start="0"><li><label class="lnk" for="r-00">Tổng quan</label></li><li><label class="lnk" for="r-01">Plan</label></li><li><label class="lnk" for="r-02">Design</label></li><li><label class="lnk" for="r-03">Build</label></li><li><label class="lnk" for="r-04">Test</label></li><li><label class="lnk" for="r-05">Deploy</label></li><li><label class="lnk" for="r-06">Maintain</label></li></ol>
+Nguồn: <em>The AI-native SDLC playbook</em>, Anthropic (claude.com/resources). Nội dung viết lại và phân tích thêm, không phải bản dịch. Tài liệu độc lập, mở được khi không có mạng.</div></footer>
+</div>
+<script>document.addEventListener('change',function(e){if(e.target&&e.target.name==='tab')window.scrollTo(0,0)});</script>
+</body>
+</html>

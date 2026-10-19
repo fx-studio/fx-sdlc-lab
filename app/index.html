@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Todo</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <main>
+    <h1>Todo</h1>
+    <form id="add">
+      <input id="title" placeholder="Việc cần làm…" autocomplete="off" required>
+      <button>Thêm</button>
+    </form>
+    <nav id="filters">
+      <button data-filter="all" class="on">Tất cả</button>
+      <button data-filter="open">Chưa xong</button>
+      <button data-filter="done">Đã xong</button>
+    </nav>
+    <ul id="list"></ul>
+    <p id="count"></p>
+  </main>
+  <script src="store.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
