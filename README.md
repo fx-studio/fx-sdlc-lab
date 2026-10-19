@@ -1,5 +1,7 @@
 # fx-sdlc-lab
 
+![fx-sdlc-lab: AI-Native SDLC, workspace demo của Fx Studio](docs/cover.png)
+
 **AI-Native SDLC · workspace demo của Fx Studio.**
 
 Workspace đi kèm loạt video **AI-Native SDLC** của [Fx Studio](https://fxstudio.dev/): đọc *The AI-native SDLC playbook*
