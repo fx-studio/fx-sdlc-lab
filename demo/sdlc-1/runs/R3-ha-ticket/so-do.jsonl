@@ -1,0 +1,5 @@
+{"ai": "Claude (lượt 1)", "giay": 24.5, "usd": 0.23994120000000002, "model": ["claude-opus-5-5"], "tu_choi": ["Bash"]}
+{"ai": "Người kể (lượt 1)", "giay": 7.3, "usd": 0.0619934, "model": ["claude-haiku-4-5-20251001", "claude-sonnet-5-5"], "tu_choi": []}
+{"ai": "Claude (lượt 2)", "giay": 12.9, "usd": 0.2880916, "model": ["claude-opus-5-5"], "tu_choi": []}
+{"ai": "Người kể (lượt 2)", "giay": 6.3, "usd": 0.079415, "model": ["claude-haiku-4-5-20251001", "claude-sonnet-5-5"], "tu_choi": []}
+{"ai": "Claude (lượt 3)", "giay": 42.5, "usd": 0.455438, "model": ["claude-opus-5-5"], "tu_choi": []}
