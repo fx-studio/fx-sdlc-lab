@@ -18,6 +18,7 @@ khoản. Mỗi tập của loạt thêm vào repo những thứ một bước SD
 |---|---|---|---|---|
 | SDLC-0 | Tổng quan: code nhanh rồi, sao team vẫn chậm? | `docs/`: ghi chép đọc playbook theo sáu bước, kèm chỗ còn hở và cách vá ban đầu | không có demo (tập bản đồ) | [Code nhanh rồi, sao team vẫn chậm?](https://fxstudio.dev/ai-native-sdlc-code-nhanh-team-van-cham/) |
 | SDLC-1 | Plan: ý tưởng thành `intent.md` | skill `write-intent`, subagent `intent-reviewer`, hook `no-self-approve`, thư mục `intent/` | [demo/sdlc-1/](demo/sdlc-1/README.md) | [Ý tưởng thành intent.md](https://fxstudio.dev/ai-native-sdlc-plan-y-tuong-thanh-intent/) |
+| SDLC-2 | Design: `intent.md` thành `spec.md` | skill `write-spec`, ba skill `policy-*` có phiên bản, subagent `spec-reviewer`, spec job (git `post-commit`), hook `no-self-approve` bản 2, thư mục `spec/` | [demo/sdlc-2/](demo/sdlc-2/README.md) | [intent.md thành spec.md](https://fxstudio.dev/ai-native-sdlc-design-intent-thanh-spec/) |
 
 Các bài của loạt trên blog: https://fxstudio.dev/tag/ai-native-sdlc/
 
@@ -38,18 +39,42 @@ Cần Claude Code và `python3` (cho hook).
 ```
 
 Claude kiểm trùng với các intent đã có, đọc code trước, hỏi tối đa bốn câu mỗi lượt, rồi viết `intent/<ngày>-<slug>.md` ở trạng thái
-`draft`, mỗi dòng bằng chứng ghi nguồn. Thứ chưa biết thành câu hỏi mở, không bị điền bừa. Commit lên một nhánh; **product owner duyệt
-bằng cách merge**.
+`draft`, mỗi dòng bằng chứng ghi nguồn. Thứ chưa biết thành câu hỏi mở, không bị điền bừa. Ở SDLC-1, intent nằm trên một nhánh và **product owner duyệt
+bằng cách merge**. Từ SDLC-2, repo này để mọi thứ ở `main`: **product owner duyệt bằng cách tự đổi `Status: draft` thành
+`Status: accepted` rồi commit**. Hook bản 2 chặn agent làm việc đó. Team của bạn quen pull request thì giữ cách merge, cả hai đều được.
+
+## Mang về repo của bạn (bước Design)
+
+Cần Claude Code, `python3` (cho hook) và `bash` (cho spec job).
+
+1. Viết policy của team thành skill theo khuôn `.claude/skills/policy-*/SKILL.md`: mỗi luật một mã, có `version` và `owner`. Ba policy
+   trong repo là **mẫu**, đừng dùng nguyên. Bắt đầu từ policy hay bị nhắc nhất trong các lần review gần đây.
+2. Chép `.claude/skills/write-spec/` và `.claude/agents/spec-reviewer.md`. Sửa `risk-list.md` cho hợp với team: demo cho thấy danh sách
+   mẫu gắn nhãn rủi ro cao cho mọi spec của một app nhỏ.
+3. Có intent đã `Status: accepted`, gõ trong Claude Code:
+
+```
+/write-spec intent/2026-10-19-khach-khong-mat-viec.md
+```
+
+Claude đọc intent, code và mọi policy, viết `spec/<cùng tên>.md` ở trạng thái `draft`: dòng đầu ghi phiên bản từng policy, mục
+**Assumptions** gồm các câu có/không có tên người trả lời, chỗ hai policy mâu thuẫn thành một mục Concerns có phương án nhưng không chọn.
+4. Muốn chấp nhận intent là tự có spec nháp: chép `scripts/` rồi chạy `scripts/install-hooks.sh` (git `post-commit`, chỉ ở máy bạn).
+5. Muốn chặn agent tự duyệt: hook `no-self-approve.py` bản 2 chặn cả việc ghi `Status: accepted` vào `intent/`, `spec/`.
 
 ## Bố cục
 
 ```
 app/                    sản phẩm: app todo
-intent/                 intent.md đã được duyệt (trống: chưa có intent nào được merge; bản nháp của demo ở demo/sdlc-1/drafts/)
+intent/                 intent.md, mọi thứ ở main; Status: draft hoặc accepted (người đổi, người commit)
+spec/                   spec.md của bước Design, cùng tên với intent
+scripts/                spec job: install-hooks.sh, on-intent-accepted.sh
 tickets/                ticket mẫu
 .claude/
   skills/write-intent/  SKILL.md · template.md · checklist.md
-  agents/               intent-reviewer.md (chỉ đọc)
+  skills/write-spec/    SKILL.md · template.md · risk-list.md · checklist.md
+  skills/policy-*/      policy mẫu của team (privacy, security, ux), có phiên bản
+  agents/               intent-reviewer.md · spec-reviewer.md (chỉ đọc)
   hooks/                no-self-approve.py
   settings.json         gắn hook
 demo/sdlc-<n>/          bằng chứng của từng tập: nhân vật giả lập, script chạy lại, transcript nguyên văn, kết luận

@@ -66,3 +66,7 @@ Transcript nguyên văn ở `runs/<run>/transcript.md`, số đo ở `so-do.json
 
 Trong repo làm việc, mỗi file nằm trên một nhánh `intent/<slug>` và chỉ vào `intent/` khi product owner merge. Thư mục `intent/` ở đây
 để trống vì chưa intent nào được duyệt: bạn thử đóng vai product owner, chép một bản nháp vào `intent/` trên một nhánh rồi tự merge.
+
+> **Cập nhật 2026-10-20 (SDLC-2):** repo chuyển sang để mọi thứ ở `main`. Ba bản nháp trên đã được đưa vào `intent/` (vẫn `draft`), riêng
+> intent của Lan và ticket T-012 được product owner giả lập chuyển sang `accepted`. Duyệt bây giờ là người đổi `Status` rồi commit, xem
+> [demo/sdlc-2/README.md](../sdlc-2/README.md). Phần trên giữ nguyên làm hồ sơ của SDLC-1.
