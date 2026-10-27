@@ -1,0 +1,4 @@
+ M app/app.js
+ M app/index.html
+ M app/store.js
+ M app/style.css

@@ -21,9 +21,9 @@ Lần này (product owner chốt): khách tự sao lưu danh sách ra một file
 đầy. Đồng bộ hai máy để một intent sau.
 
 ## Success criteria
-- Khách đổi sang điện thoại mới vẫn thấy đủ các việc đã có trước đó.
-- Khách xoá dữ liệu trình duyệt xong vẫn thấy đủ các việc đã có trước đó.
-- Khách thêm, đánh dấu xong hoặc xoá một việc trên máy này thì máy kia cũng thấy đúng như vậy.
+- Khách đổi sang điện thoại mới vẫn thấy đủ các việc đã có trước đó, **khi đã sao lưu trước** [product owner, 2026-10-27, C1 của spec]
+- Khách xoá dữ liệu trình duyệt xong vẫn thấy đủ các việc đã có trước đó, **khi đã sao lưu trước** [product owner, 2026-10-27, C1 của spec]
+- ~~Khách thêm, đánh dấu xong hoặc xoá một việc trên máy này thì máy kia cũng thấy đúng như vậy.~~ Chuyển sang intent đồng bộ sau [product owner, 2026-10-27]
 - Email than mất việc giảm từ 23 email / 2 tuần xuống dưới 5 email / 2 tuần, trong 6 tuần sau khi ra bản mới [product owner]
 - Không còn lần lưu lỗi nào mà khách không được báo [product owner]
 

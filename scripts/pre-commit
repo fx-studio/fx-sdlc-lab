@@ -1,0 +1,12 @@
+#!/usr/bin/env bash
+# Plan sync (Build stage): "When implementation departs from the plan, update plan.md in the same commit."
+# A commit that changes app/ must also change plan/ — unless it says why not.
+# Override for trivial changes (the change-size table in CLAUDE.md): PLAN_SKIP="<reason>" git commit ...
+set -euo pipefail
+app=$(git diff --cached --name-only -- app/ | wc -l | tr -d ' ')
+plan=$(git diff --cached --name-only -- plan/ | wc -l | tr -d ' ')
+if [ "$app" -gt 0 ] && [ "$plan" -eq 0 ] && [ -z "${PLAN_SKIP:-}" ]; then
+  echo "pre-commit: this commit changes app/ ($app file) but no plan/ file." >&2
+  echo "  Update the plan in the same commit, or for a tiny change: PLAN_SKIP=\"<why>\" git commit ..." >&2
+  exit 1
+fi

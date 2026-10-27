@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
 """PreToolUse hook (Bash, Write, Edit): drafting is the agent's job, approving is a human act.
 
-Everything lives on main. Approving an intent or a spec = a person changes `Status: draft` to `Status: accepted` and commits.
+Everything lives on main. Approving an intent, a spec or a plan = a person changes `Status: draft` to `Status: accepted` and commits.
 So the agent is denied:
   - git merge / git rebase / git push (any target)
   - git commit while the current branch is main (on main, the agent never commits; people and the spec job do)
-  - writing `Status: accepted` into intent/ or spec/, by Write, Edit, or a Bash command
+  - writing `Status: accepted` into intent/, spec/ or plan/ (plan/ since SDLC-3), by Write, Edit, or a Bash command
 Fails closed: if the input cannot be read, the action is denied.
 """
 import json, re, subprocess, sys
@@ -29,7 +29,7 @@ except Exception:
 if tool in ("Write", "Edit", "MultiEdit"):
     path = inp.get("file_path", "")
     text = inp.get("content", "") + inp.get("new_string", "") + "".join(e.get("new_string", "") for e in inp.get("edits", []))
-    if re.search(r"(^|/)(intent|spec)/", path) and ACCEPT.search(text):
+    if re.search(r"(^|/)(intent|spec|plan)/", path) and ACCEPT.search(text):
         decide("deny", "no-self-approve: setting Status: accepted is the product owner's approval. Leave the file as draft.")
     sys.exit(0)
 

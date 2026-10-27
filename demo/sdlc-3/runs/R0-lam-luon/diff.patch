@@ -1,0 +1,290 @@
+diff --git a/app/app.js b/app/app.js
+index 5068eab..9e1b49e 100644
+--- a/app/app.js
++++ b/app/app.js
+@@ -1,9 +1,18 @@
+ // A todo has: id, title, done, createdAt. No due date, no tags, no owner.
+-let todos = store.load();
++const FIELDS = ['id', 'title', 'done', 'createdAt'];
++const MAX_IMPORT_BYTES = 1024 * 1024; // policy-security S1
++
++const loaded = store.load();
++let todos = loaded.ok ? loaded.todos : [];
++// The saved list could not be read: never write to it until the user agrees to replace it with a file. Kept in page memory only.
++let loadFailed = !loaded.ok;
++let saveFailed = false;
+ let filter = 'all';
+ 
+ const $ = (sel) => document.querySelector(sel);
+ 
++const SAVE_FAILED = 'Thay đổi vừa rồi chưa được lưu, có thể vì trình duyệt đã hết chỗ. Hãy sao lưu ra file, rồi xoá bớt việc đã xong.';
++
+ function add(title) {
+   todos.push({ id: crypto.randomUUID(), title: title.trim(), done: false, createdAt: Date.now() });
+   commit();
+@@ -21,10 +30,26 @@ function remove(id) {
+ }
+ 
+ function commit() {
+-  store.save(todos);
++  // While the saved list is unreadable, changes stay on screen only (the banner says so).
++  if (!loadFailed) {
++    if (store.save(todos)) {
++      if (saveFailed) showMessage('');
++      saveFailed = false;
++    } else {
++      saveFailed = true;
++      showMessage(SAVE_FAILED, true);
++    }
++  }
+   render();
+ }
+ 
++function showMessage(text, isError = false) {
++  const m = $('#message');
++  m.textContent = text;
++  m.classList.toggle('error', isError);
++  m.hidden = !text;
++}
++
+ function visible() {
+   if (filter === 'open') return todos.filter((t) => !t.done);
+   if (filter === 'done') return todos.filter((t) => t.done);
+@@ -45,6 +70,127 @@ function render() {
+   }
+   const open = todos.filter((t) => !t.done).length;
+   $('#count').textContent = `${open} việc chưa xong`;
++  $('#load-error').hidden = !loadFailed;
++  // An unreadable list is not an empty one: show only the banner.
++  $('#empty').hidden = todos.length > 0 || loadFailed;
++}
++
++// --- Backup to file (F1) ---
++
++function today() {
++  const d = new Date();
++  const pad = (n) => String(n).padStart(2, '0');
++  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
++}
++
++function exportFile() {
++  if (todos.length === 0) {
++    showMessage('Chưa có việc nào để sao lưu');
++    return;
++  }
++  const data = { version: 1, todos: todos.map((t) => Object.fromEntries(FIELDS.map((f) => [f, t[f]]))) };
++  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
++  const url = URL.createObjectURL(blob);
++  const a = document.createElement('a');
++  a.href = url;
++  a.download = `todo-sao-luu-${today()}.json`;
++  a.click();
++  setTimeout(() => URL.revokeObjectURL(url), 0);
++  if (blob.size > MAX_IMPORT_BYTES) {
++    showMessage('File sao lưu đã lưu, nhưng quá lớn nên app không nhập lại được.', true);
++  } else {
++    showMessage(`Đã sao lưu ${todos.length} việc.`);
++  }
++}
++
++// --- Import from file (F2, F5 step 6) ---
++
++const isPlainObject = (v) => typeof v === 'object' && v !== null && !Array.isArray(v);
++const hasExactKeys = (obj, keys) => Object.keys(obj).length === keys.length && keys.every((k) => Object.hasOwn(obj, k));
++
++// Returns the list of todos, or a reason string. Content is only parsed as data, never run.
++function parseBackup(text) {
++  let data;
++  try {
++    data = JSON.parse(text);
++  } catch {
++    return 'not-backup';
++  }
++  if (!isPlainObject(data) || !hasExactKeys(data, ['version', 'todos']) || data.version !== 1 || !Array.isArray(data.todos)) {
++    return 'not-backup';
++  }
++  if (data.todos.length === 0) return 'empty';
++  const ids = new Set();
++  for (const t of data.todos) {
++    if (!isPlainObject(t) || !hasExactKeys(t, FIELDS)) return 'not-backup';
++    if (typeof t.id !== 'string' || typeof t.title !== 'string' || typeof t.done !== 'boolean') return 'not-backup';
++    if (typeof t.createdAt !== 'number' || !Number.isFinite(t.createdAt)) return 'damaged';
++    if (t.id === '' || ids.has(t.id) || t.title.trim() === '') return 'damaged';
++    ids.add(t.id);
++  }
++  return data.todos.map((t) => ({ id: t.id, title: t.title, done: t.done, createdAt: t.createdAt }));
++}
++
++const KEEP = 'Danh sách của bạn vẫn giữ nguyên.';
++const REJECTED = {
++  'too-big': `File này quá lớn (hơn 1 MB) nên không nhập được. ${KEEP} Hãy chọn một file sao lưu khác.`,
++  'unreadable': `Không đọc được file này. ${KEEP} Hãy thử lại, hoặc chọn một file sao lưu khác.`,
++  'not-backup': `File này không phải file sao lưu của app nên không nhập được. ${KEEP} Hãy chọn file "todo-sao-luu-…" do app tạo ra.`,
++  'damaged': `File sao lưu này bị lỗi (có việc trùng nhau, thiếu tiêu đề hoặc sai ngày tạo) nên không nhập được. ${KEEP} Hãy chọn một file sao lưu khác.`,
++  'empty': `File sao lưu này không có việc nào nên không nhập. ${KEEP}`,
++};
++
++function confirmText(count) {
++  if (loadFailed && todos.length === 0) return `Thay danh sách đã lưu không đọc được bằng ${count} việc trong file?`;
++  if (loadFailed) return `Thay danh sách đã lưu không đọc được và ${todos.length} việc bạn vừa thêm (chưa lưu) bằng ${count} việc trong file?`;
++  if (todos.length > 0) return `Thay ${todos.length} việc hiện có bằng ${count} việc trong file?`;
++  return null; // empty list: nothing is lost, no confirmation (policy-security S2)
++}
++
++function askConfirm(text) {
++  const dialog = $('#confirm');
++  $('#confirm-text').textContent = text;
++  dialog.returnValue = '';
++  return new Promise((resolve) => {
++    dialog.addEventListener('close', () => resolve(dialog.returnValue === 'ok'), { once: true });
++    dialog.showModal();
++  });
++}
++
++async function importFile(file) {
++  if (file.size > MAX_IMPORT_BYTES) {
++    showMessage(REJECTED['too-big'], true);
++    return;
++  }
++  showMessage('Đang đọc file…');
++  let text;
++  try {
++    text = await file.text();
++  } catch {
++    showMessage(REJECTED.unreadable, true);
++    return;
++  }
++  const imported = parseBackup(text);
++  if (typeof imported === 'string') {
++    showMessage(REJECTED[imported], true);
++    return;
++  }
++  const question = confirmText(imported.length);
++  if (question && !(await askConfirm(question))) {
++    showMessage('');
++    return;
++  }
++  // The only write allowed while the saved list is unreadable. On failure the old list stays on screen and in memory.
++  if (!store.save(imported)) {
++    saveFailed = true;
++    showMessage(SAVE_FAILED, true);
++    return;
++  }
++  todos = imported;
++  loadFailed = false;
++  saveFailed = false;
++  showMessage(`Đã nhập ${imported.length} việc.`);
++  render();
+ }
+ 
+ $('#add').onsubmit = (e) => {
+@@ -62,4 +208,12 @@ $('#filters').onclick = (e) => {
+   render();
+ };
+ 
++$('#export').onclick = exportFile;
++$('#import').onclick = () => $('#import-file').click();
++$('#import-file').onchange = (e) => {
++  const file = e.target.files[0];
++  e.target.value = ''; // lets the same file be picked again
++  if (file) importFile(file);
++};
++
+ render();
+diff --git a/app/index.html b/app/index.html
+index 1e06321..ccf63e2 100644
+--- a/app/index.html
++++ b/app/index.html
+@@ -9,6 +9,10 @@
+ <body>
+   <main>
+     <h1>Todo</h1>
++    <div id="notices" role="status" aria-live="polite">
++      <p id="load-error" class="banner" hidden>Không đọc được danh sách đã lưu trên trình duyệt này. Việc bạn thêm hoặc sửa lúc này sẽ không được lưu. Nếu có file sao lưu, hãy bấm "Nhập từ file".</p>
++      <p id="message" hidden></p>
++    </div>
+     <form id="add">
+       <input id="title" placeholder="Việc cần làm…" autocomplete="off" required>
+       <button>Thêm</button>
+@@ -18,9 +22,25 @@
+       <button data-filter="open">Chưa xong</button>
+       <button data-filter="done">Đã xong</button>
+     </nav>
++    <p id="empty" hidden>Chưa có việc nào. Nếu có file sao lưu, hãy bấm "Nhập từ file".</p>
+     <ul id="list"></ul>
+     <p id="count"></p>
++    <section id="backup">
++      <button id="export" type="button">Sao lưu ra file</button>
++      <button id="import" type="button">Nhập từ file</button>
++      <input id="import-file" type="file" accept=".json,application/json" aria-label="Nhập từ file" hidden>
++      <p class="note">Danh sách chỉ được giữ trên trình duyệt này. Nếu xoá dữ liệu trình duyệt, đổi trình duyệt hoặc đổi máy, danh sách sẽ mất, trừ khi bạn đã sao lưu ra file.</p>
++    </section>
+   </main>
++  <dialog id="confirm" aria-labelledby="confirm-text">
++    <form method="dialog">
++      <p id="confirm-text"></p>
++      <div class="actions">
++        <button value="cancel" autofocus>Huỷ</button>
++        <button value="ok">Thay</button>
++      </div>
++    </form>
++  </dialog>
+   <script src="store.js"></script>
+   <script src="app.js"></script>
+ </body>
+diff --git a/app/store.js b/app/store.js
+index 7ce1963..2f615a7 100644
+--- a/app/store.js
++++ b/app/store.js
+@@ -3,19 +3,33 @@
+ const STORE_KEY = 'todo.v1';
+ 
+ const store = {
++  // Returns { ok: true, todos } or { ok: false } when the saved list cannot be read.
++  // No key yet is a normal empty list. A value that does not parse, is not an array, or storage that throws is a read error:
++  // the caller must not overwrite it.
+   load() {
++    let raw;
+     try {
+-      return JSON.parse(localStorage.getItem(STORE_KEY)) || [];
++      raw = localStorage.getItem(STORE_KEY);
+     } catch {
+-      return [];
++      return { ok: false };
+     }
++    if (raw === null) return { ok: true, todos: [] };
++    let todos;
++    try {
++      todos = JSON.parse(raw);
++    } catch {
++      return { ok: false };
++    }
++    return Array.isArray(todos) ? { ok: true, todos } : { ok: false };
+   },
++  // Returns true on success, false when the write fails (localStorage is capped per origin, about 5 MB in most browsers).
+   save(todos) {
+-    // localStorage is capped per origin (about 5 MB in most browsers). A failed write is only logged.
+     try {
+       localStorage.setItem(STORE_KEY, JSON.stringify(todos));
++      return true;
+     } catch (err) {
+       console.error('save failed', err);
++      return false;
+     }
+   },
+ };
+diff --git a/app/style.css b/app/style.css
+index 01530bd..5ef8cc2 100644
+--- a/app/style.css
++++ b/app/style.css
+@@ -7,3 +7,10 @@ nav button.on { font-weight: 700; }
+ ul { list-style: none; padding: 0; }
+ li { display: flex; justify-content: space-between; padding: .4rem 0; border-bottom: 1px solid #ddd; }
+ li.done span { text-decoration: line-through; color: #888; }
++#notices p { margin: 0 0 1rem; padding: .5rem .75rem; border-radius: 4px; background: #e8eef6; }
++#notices p.error, #notices .banner { background: #fbe9e7; color: #8a1c0c; }
++#empty { color: #666; }
++#backup { margin-top: 1.5rem; display: flex; flex-wrap: wrap; gap: .5rem; }
++#backup .note { flex-basis: 100%; margin: 0; font-size: .875rem; color: #666; }
++dialog form { display: block; }
++dialog .actions { display: flex; justify-content: flex-end; gap: .5rem; }
