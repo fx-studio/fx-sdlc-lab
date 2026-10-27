@@ -1,0 +1,7 @@
+{"hook": "no-secrets", "tool": "Edit", "path": "spec/2026-10-19-khach-khong-mat-viec.md", "decision": "allow", "ms": 0.3}
+{"hook": "protect-paths", "tool": "Edit", "path": "spec/2026-10-19-khach-khong-mat-viec.md", "decision": "deny", "ms": 0.5}
+{"hook": "no-secrets", "tool": "Edit", "path": "app/store.js", "decision": "deny", "ms": 0.1}
+{"hook": "protect-paths", "tool": "Edit", "path": "app/store.js", "decision": "allow", "ms": 0.3}
+{"hook": "no-secrets", "tool": "Edit", "path": "app/app.js", "decision": "allow", "ms": 0.3}
+{"hook": "protect-paths", "tool": "Edit", "path": "app/app.js", "decision": "allow", "ms": 0.2}
+{"hook": "check-js", "tool": "Edit", "path": "app/app.js", "decision": "block", "ms": 133.0}

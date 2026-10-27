@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Install the git post-commit hook that runs the spec job. Local only; remove .git/hooks/post-commit to turn it off.
+# Install the git hooks: post-commit runs the spec job (SDLC-2), pre-commit checks plan sync (SDLC-3). Local only; remove .git/hooks/post-commit to turn it off.
 set -euo pipefail
 cd "$(git rev-parse --show-toplevel)"
 cat > .git/hooks/post-commit <<'H'
@@ -9,4 +9,5 @@ cat > .git/hooks/post-commit <<'H'
 exec "$(git rev-parse --show-toplevel)/scripts/on-intent-accepted.sh"
 H
 chmod +x .git/hooks/post-commit scripts/on-intent-accepted.sh
-echo "post-commit hook installed"
+cp scripts/pre-commit .git/hooks/pre-commit && chmod +x .git/hooks/pre-commit
+echo "post-commit + pre-commit hooks installed"

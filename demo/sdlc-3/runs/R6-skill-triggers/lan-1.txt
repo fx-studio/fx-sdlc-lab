@@ -1,0 +1,6 @@
+MISSED   1. Plan how to let users import their todo list from a JSON file.
+MISSED   2. Add a "clear completed" button that removes every finished task at once.
+MISSED   3. Show the task title in a tooltip when the mouse hovers over it.
+MISSED   4. Can we pull in a date-picker library from a CDN for the due-date field?
+MISSED   5. Khách muốn dán một danh sách việc từ Excel vào app, làm sao cho nhanh?
+policy-security: 0/5 · 0.0 USD

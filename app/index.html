@@ -9,6 +9,10 @@
 <body>
   <main>
     <h1>Todo</h1>
+    <div id="notices" role="status" aria-live="polite">
+      <p id="unreadable" class="banner" hidden></p>
+      <p id="message"></p>
+    </div>
     <form id="add">
       <input id="title" placeholder="Việc cần làm…" autocomplete="off" required>
       <button>Thêm</button>
@@ -19,9 +23,23 @@
       <button data-filter="done">Đã xong</button>
     </nav>
     <ul id="list"></ul>
+    <p id="empty" hidden></p>
     <p id="count"></p>
+    <div id="backup">
+      <button type="button" id="export">Sao lưu ra file</button>
+      <label id="import-label">Nhập từ file<input type="file" id="import"></label>
+    </div>
+    <p id="where-kept" class="note">Danh sách chỉ được lưu trên trình duyệt này, nên xoá dữ liệu trang web, đổi trình duyệt hoặc đổi máy là mất, trừ khi bạn đã sao lưu ra file.</p>
   </main>
+  <dialog id="confirm" aria-labelledby="confirm-text">
+    <form method="dialog">
+      <p id="confirm-text"></p>
+      <button value="yes">Thay</button>
+      <button value="no" autofocus>Huỷ</button>
+    </form>
+  </dialog>
   <script src="store.js"></script>
+  <script src="backup.js"></script>
   <script src="app.js"></script>
 </body>
 </html>

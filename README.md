@@ -19,6 +19,7 @@ khoản. Mỗi tập của loạt thêm vào repo những thứ một bước SD
 | SDLC-0 | Tổng quan: code nhanh rồi, sao team vẫn chậm? | `docs/`: ghi chép đọc playbook theo sáu bước, kèm chỗ còn hở và cách vá ban đầu | không có demo (tập bản đồ) | [Code nhanh rồi, sao team vẫn chậm?](https://fxstudio.dev/ai-native-sdlc-code-nhanh-team-van-cham/) |
 | SDLC-1 | Plan: ý tưởng thành `intent.md` | skill `write-intent`, subagent `intent-reviewer`, hook `no-self-approve`, thư mục `intent/` | [demo/sdlc-1/](demo/sdlc-1/README.md) | [Ý tưởng thành intent.md](https://fxstudio.dev/ai-native-sdlc-plan-y-tuong-thanh-intent/) |
 | SDLC-2 | Design: `intent.md` thành `spec.md` | skill `write-spec`, ba skill `policy-*` có phiên bản, subagent `spec-reviewer`, spec job (git `post-commit`), hook `no-self-approve` bản 2, thư mục `spec/` | [demo/sdlc-2/](demo/sdlc-2/README.md) | [intent.md thành spec.md](https://fxstudio.dev/ai-native-sdlc-design-intent-thanh-spec/) |
+| SDLC-3 | Build: plan trước, code sau | `CLAUDE.md` mục Build (bảng phân hạng, plan bốn mục, Things Claude gets wrong), thư mục `plan/`, ba hook build (`protect-paths`, `no-secrets`, `check-js`), subagent `verifier`, git `pre-commit` đòi plan đi cùng code, bộ thử kích hoạt skill; **tính năng sao lưu / nhập lại** trong `app/` và bộ test đầu tiên (`tests/`, 42 test) | [demo/sdlc-3/](demo/sdlc-3/README.md) | chưa đăng |
 
 Các bài của loạt trên blog: https://fxstudio.dev/tag/ai-native-sdlc/
 
@@ -62,20 +63,44 @@ Claude đọc intent, code và mọi policy, viết `spec/<cùng tên>.md` ở t
 4. Muốn chấp nhận intent là tự có spec nháp: chép `scripts/` rồi chạy `scripts/install-hooks.sh` (git `post-commit`, chỉ ở máy bạn).
 5. Muốn chặn agent tự duyệt: hook `no-self-approve.py` bản 2 chặn cả việc ghi `Status: accepted` vào `intent/`, `spec/`.
 
+## Mang về repo của bạn (bước Build)
+
+Cần Claude Code, `python3` (cho hook), Node (cho `node --test` của app mẫu; repo của bạn dùng test runner của nó).
+
+1. Thêm vào `CLAUDE.md` của bạn ba thứ, theo mục **Build** của `CLAUDE.md` repo này: lệnh chạy app / test / lint; **bảng phân hạng
+   thay đổi** (hạng nào cần plan mode, hạng nào cần `plan/<tên>.md`, hạng nào cần tech lead duyệt trước); mục **Things Claude gets
+   wrong**, chỉ thêm một dòng khi **cùng một lỗi** đã xảy ra hai lần. Có thể bắt đầu bằng `/init`, nhưng soát lại: demo thấy `/init`
+   viết phần kiến trúc tốt, bỏ luật của người, và tự bịa lỗi chưa xảy ra.
+2. Bắt đầu mỗi thay đổi bằng plan mode (`Shift+Tab` hai lần, hoặc `claude --permission-mode plan`). Trước khi duyệt, hỏi plan ít nhất
+   câu này: *"Test nào fail nếu bước rủi ro nhất làm sai?"*. Đưa plan cho người **không xem hội thoại** đọc; người đó làm theo được thì
+   lưu vào `plan/<tên>.md` ở `Status: draft`, rồi một người đổi `accepted` và commit.
+3. Chép `.claude/hooks/protect-paths.py`, `no-secrets.py`, `check-js.py` (sửa danh sách đường dẫn và lệnh kiểm cho hợp repo bạn) và khối
+   `hooks` trong `.claude/settings.json`. Hook ghi thời gian vào `.hook-timing.log` (đã ignore) để bạn biết nó có làm chậm không.
+4. Chép `.claude/agents/verifier.md`. Nó chỉ có Bash + Read nên không tự dựng được script giả lập; nếu repo bạn cần, cho nó thêm Write
+   vào một thư mục tạm, hoặc viết sẵn test để nó chạy.
+5. Muốn commit code phải kèm plan: chép `scripts/pre-commit` rồi chạy `scripts/install-hooks.sh`. Thay đổi nhỏ thì
+   `PLAN_SKIP="<lý do>" git commit …`.
+6. Viết `triggers.md` cho từng skill policy rồi chạy `scripts/skill-triggers.sh <skill>`. Demo ra 0/5 cho `policy-security`: đừng tin
+   skill tự kích hoạt ở bước Build, hãy gọi tên nó trong prompt hoặc trong plan.
+7. Chạy song song: trước khi mở hai worktree, hỏi một phiên plan mode *"hai việc này đụng chung file nào?"*. Mỗi worktree một nhánh tạm,
+   người commit và gộp về `main`, rồi xoá nhánh.
+
 ## Bố cục
 
 ```
 app/                    sản phẩm: app todo
 intent/                 intent.md, mọi thứ ở main; Status: draft hoặc accepted (người đổi, người commit)
 spec/                   spec.md của bước Design, cùng tên với intent
-scripts/                spec job: install-hooks.sh, on-intent-accepted.sh
+plan/                   plan.md của bước Build, cùng tên; người đổi Status: accepted
+tests/                  node --test, không package
+scripts/                spec job (on-intent-accepted.sh), pre-commit, install-hooks.sh, skill-triggers.sh
 tickets/                ticket mẫu
 .claude/
   skills/write-intent/  SKILL.md · template.md · checklist.md
   skills/write-spec/    SKILL.md · template.md · risk-list.md · checklist.md
   skills/policy-*/      policy mẫu của team (privacy, security, ux), có phiên bản
-  agents/               intent-reviewer.md · spec-reviewer.md (chỉ đọc)
-  hooks/                no-self-approve.py
+  agents/               intent-reviewer.md · spec-reviewer.md · verifier.md (chỉ đọc, chỉ báo)
+  hooks/                no-self-approve.py · protect-paths.py · no-secrets.py · check-js.py
   settings.json         gắn hook
 demo/sdlc-<n>/          bằng chứng của từng tập: nhân vật giả lập, script chạy lại, transcript nguyên văn, kết luận
 docs/                   ghi chép của tác giả về playbook, theo từng bước
