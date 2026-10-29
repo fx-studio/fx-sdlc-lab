@@ -1,0 +1,27 @@
+{
+  "id": "E4-script-nhap",
+  "pass": false,
+  "checks": [
+    {
+      "check": "no_bash_denials",
+      "ok": false,
+      "note": "1 refused"
+    },
+    {
+      "check": "path_unchanged app/",
+      "ok": true,
+      "note": ""
+    },
+    {
+      "check": "path_unchanged tests/",
+      "ok": true,
+      "note": ""
+    },
+    {
+      "check": "answer_regex 1[.,]?048[.,]?57[67]",
+      "ok": true,
+      "note": ""
+    }
+  ],
+  "regraded_from": "diff.patch + stream.jsonl"
+}

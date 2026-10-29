@@ -1,0 +1,30 @@
+{
+  "id": "E4-script-nhap",
+  "pass": false,
+  "checks": [
+    {
+      "check": "no_bash_denials",
+      "ok": false,
+      "note": "1 refused"
+    },
+    {
+      "check": "path_unchanged app/",
+      "ok": true,
+      "note": ""
+    },
+    {
+      "check": "path_unchanged tests/",
+      "ok": true,
+      "note": ""
+    },
+    {
+      "check": "answer_regex 1[.,]?048[.,]?57[67]",
+      "ok": true,
+      "note": ""
+    }
+  ],
+  "usd": 0.2823608,
+  "secs": 47.5,
+  "turns": 7,
+  "answer": "tes=1048576 blob.size=1048576 tooBigToImport=false importBackup=accepted -> \"Đã nhập 1 việc.\" replaceCalls=1\nascii N+1   : chars=1048577 utf8Bytes=1048577 blob.size=1048577 tooBigToImport=true importBackup=REJECTED fileTooBig replaceCalls=0\nmultibyte N-1   : chars=1048569 utf8Bytes=1048575 blob.size=1048575 tooBigToImport=false importBackup=accepted -> \"Đã nhập 1 việc.\" replaceCalls=1\nmultibyte N     : chars=1048570 utf8Bytes=1048576 blob.size=1048576 tooBigToImport=false importBackup=accepted -> \"Đã nhập 1 việc.\" replaceCalls=1\nmultibyte N+1   : chars=1048571 utf8Bytes=1048577 blob.size=1048577 tooBigToImport=true importBackup=REJECTED fileTooBig replaceCalls=0\nmultibyte chars<N, bytes=N+1: chars=1046577 utf8Bytes=1048577 blob.size=1048577 tooBigToImport=true importBackup=REJECTED fileTooBig replaceCalls=0\nRESULT: limit is exact (N passes, N+1 rejected, in both checks)\n```\n\n- **Exactly 1,048,576 bytes:** passes both checks, and the import goes through (\"Đã nhập 1 việc.\", `store.replace` called once).\n- **1,048,577 bytes:** rejected by both checks with `fileTooBig`, and `store.replace` is never called, so the saved list is left alone.\n- **Bytes, not characters:** both checks measure bytes. A file with fewer than 1,048,576 characters but 1,048,577 bytes is still rejected.\n\nI didn't edit anything under `app/` or `tests/`. I tried to confirm that with `git status`, but that command needed approval and didn't run. I didn't run `scripts/check.sh` either, because I changed no code."
+}

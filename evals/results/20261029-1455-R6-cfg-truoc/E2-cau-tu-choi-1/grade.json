@@ -1,0 +1,25 @@
+{
+  "id": "E2-cau-tu-choi",
+  "pass": true,
+  "checks": [
+    {
+      "check": "tests_pass",
+      "ok": true,
+      "note": "ℹ pass 38 ℹ fail 0"
+    },
+    {
+      "check": "hidden_test E2-cau-tu-choi.eval.js",
+      "ok": true,
+      "note": "ℹ pass 1 ℹ fail 0"
+    },
+    {
+      "check": "only_paths app/ tests/ plan/",
+      "ok": true,
+      "note": ""
+    }
+  ],
+  "usd": 0.4731556,
+  "secs": 118.3,
+  "turns": 15,
+  "answer": "vẫn giữ nguyên. Hãy kiểm tra file còn trên máy rồi chọn lại. |\n\nIn each message I kept the reason, added a next step, and added \"Danh sách của bạn vẫn giữ nguyên\" wherever it was missing. There are no technical words, per U4. I also updated `tests/backup.test.js`, because it checks M8 and M11 word for word.\n\n**Before this can be committed:**\n- **It departs from the accepted plan.** `plan/2026-10-19-khach-khong-mat-viec.md` lists M8–M11 and M14 word for word, and Linh already signed off M8 and M11 (Q4, Q7). Under the repo rules, someone has to update those rows in the plan in the same commit, or the pre-commit hook will reject it. I didn't edit the plan, because changing it is a person's job.\n- **For Linh to decide:**\n  - The file-too-big message (M11) has no real fix behind it. Under concern C2, a backup over 1 MB can't be imported at all, and \"chọn một file sao lưu khác\" only helps if the customer has an older, smaller backup. Linh should decide whether that's honest enough.\n  - The not-a-backup message (M9) now quotes the backup file-name prefix. That's concrete, but a renamed backup would still import fine.\n- **No pull request yet.** The repo rules say everything lives on `main`, and I don't commit or push, so someone needs to commit this, with the plan rows, before Linh can review it in a PR. The working tree also has uncommitted changes that aren't mine (`.claude/settings.json`, `protect-tests.py`, `test-writer.md`, `scripts/check.sh`), so leave those out of this commit."
+}

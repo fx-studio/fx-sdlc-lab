@@ -1,0 +1,23 @@
+{
+  "version": 1,
+  "todos": [
+    {
+      "id": "442a59f3-e632-45b6-9bb6-3e07b663a84f",
+      "title": "Việc 0",
+      "done": true,
+      "createdAt": 1793262333091
+    },
+    {
+      "id": "37d67773-4770-4af8-a092-86fa990a0fa3",
+      "title": "Việc 1",
+      "done": false,
+      "createdAt": 1793262333090
+    },
+    {
+      "id": "7cc1c6ff-ba71-43dc-acc1-fe8e1bb6bf7e",
+      "title": "Việc 2",
+      "done": false,
+      "createdAt": 1793262333089
+    }
+  ]
+}

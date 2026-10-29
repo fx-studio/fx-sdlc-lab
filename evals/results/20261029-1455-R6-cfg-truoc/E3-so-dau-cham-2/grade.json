@@ -1,0 +1,25 @@
+{
+  "id": "E3-so-dau-cham",
+  "pass": true,
+  "checks": [
+    {
+      "check": "tests_pass",
+      "ok": true,
+      "note": "ℹ pass 43 ℹ fail 0"
+    },
+    {
+      "check": "hidden_test E3-so-dau-cham.eval.js",
+      "ok": true,
+      "note": "ℹ pass 3 ℹ fail 0"
+    },
+    {
+      "check": "only_paths app/ tests/ plan/",
+      "ok": true,
+      "note": ""
+    }
+  ],
+  "usd": 0.39089860000000004,
+  "secs": 53.8,
+  "turns": 14,
+  "answer": "0 → `1.000` and 12500 → `12.500`. It builds the dots itself instead of relying on the browser's number formatting, so it looks the same in every browser. `fill()` now passes every number through `formatCount`, which covers all the messages with counts in them: \"Đã sao lưu {n} việc\", \"Đã nhập {n} việc\", and the three \"Thay … việc …?\" confirmation questions.\n- **`app/app.js:52`**: the open-todo line now reads `${formatCount(open)} việc chưa xong`. This was the only count that didn't go through `fill()`.\n- **Years and dates are unchanged.** The backup file name builds its date separately and never goes through `fill()`, so it stays `todo-sao-luu-2026-10-29.json`. A test checks this.\n\n**Tests**: they are in a new file, `tests/count-format.test.js`. They check 999 / 1,000 / 2,001 / 12,500, every message with a count, the year in the file name, and the open-todo line in the real `app.js`. I put them in a new file because the `protect-tests` hook makes existing test files read-only when a session runs as a fix task.\n\n**Decision for you:** because `fill()` now formats every number, any number put into a message gets the dots, not just todo counts. Today all of them are counts, and there's a comment above `fill()` saying so. If someone later puts a year or another non-count number into a message, it would come out as `2.026`. To avoid that, the year would need to be passed as text, or `fill()` would need to stop formatting numbers so each count is formatted where the message is built."
+}

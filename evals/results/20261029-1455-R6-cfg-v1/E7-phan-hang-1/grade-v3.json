@@ -1,0 +1,27 @@
+{
+  "id": "E7-phan-hang",
+  "pass": true,
+  "checks": [
+    {
+      "check": "answer_regex ^\\W*1\\W+Trivial",
+      "ok": true,
+      "note": ""
+    },
+    {
+      "check": "answer_regex ^\\W*2\\W+Small",
+      "ok": true,
+      "note": ""
+    },
+    {
+      "check": "answer_regex ^\\W*3\\W+Medium",
+      "ok": true,
+      "note": ""
+    },
+    {
+      "check": "answer_regex ^\\W*4\\W+Large",
+      "ok": true,
+      "note": ""
+    }
+  ],
+  "regraded_from": "diff.patch + stream.jsonl"
+}

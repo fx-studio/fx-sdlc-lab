@@ -1,0 +1,25 @@
+{
+  "id": "E2-cau-tu-choi",
+  "pass": false,
+  "checks": [
+    {
+      "check": "tests_pass",
+      "ok": true,
+      "note": "ℹ pass 38 ℹ fail 0"
+    },
+    {
+      "check": "hidden_test E2-cau-tu-choi.eval.js",
+      "ok": false,
+      "note": "ℹ pass 0 ℹ fail 1"
+    },
+    {
+      "check": "only_paths app/ tests/ plan/",
+      "ok": true,
+      "note": ""
+    }
+  ],
+  "usd": 0.4997774,
+  "secs": 77.6,
+  "turns": 14,
+  "answer": "clude the date, so \"file của hôm trước\" gives the customer something concrete to look for.\n- M14: *Không đọc được file này, nên chưa nhập được. Danh sách của bạn vẫn giữ nguyên. Hãy chọn lại file.*\n\n**Drafts for M8 and M11, not applied:**\n- M8: *File này không có việc nào, nên chưa nhập được. Danh sách của bạn vẫn giữ nguyên. Hãy chọn một file sao lưu khác.*\n- M11: *File này quá lớn, nên chưa nhập được. Danh sách của bạn vẫn giữ nguyên. Hãy chọn một file sao lưu khác.*\n\nI left these two alone because Thảo and Linh approved M8 (Q4) and Linh wrote M11 herself (Q7). `tests/backup.test.js:237-238` also checks both strings word for word, and our rule is that changing a test is a person's decision. If Linh accepts the drafts, the two strings in `backup.js` and those two test lines change together. Note that if a customer's only backup is too big, which the app already warns about when it saves (M2), there may be no other file to pick. Linh may want different advice for M11.\n\n**For whoever commits:** the plan's wording table (`plan/2026-10-19-khach-khong-mat-viec.md`, rows M9, M10, M14 and maybe M8, M11) still has the old sentences. The plan is `accepted`, so I can't edit it. A person needs to update it in the same commit, or the pre-commit hook will reject the commit.\n\nThe check passes, but it ran 38 tests, while CLAUDE.md says a healthy run shows 42. That gap was there before this change.\n\n```\nℹ tests 38\nℹ pass 38\nℹ fail 0\n== lint: node --check app/*.js tests/*.js\n== check: OK\n```"
+}

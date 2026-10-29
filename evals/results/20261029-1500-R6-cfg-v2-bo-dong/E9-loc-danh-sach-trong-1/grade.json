@@ -1,0 +1,30 @@
+{
+  "id": "E9-loc-danh-sach-trong",
+  "pass": false,
+  "checks": [
+    {
+      "check": "tests_pass",
+      "ok": true,
+      "note": "ℹ pass 44 ℹ fail 0"
+    },
+    {
+      "check": "hidden_test E9-loc-danh-sach-trong.eval.js",
+      "ok": true,
+      "note": "ℹ pass 3 ℹ fail 0"
+    },
+    {
+      "check": "no_test_edits",
+      "ok": false,
+      "note": "tests/app.test.js"
+    },
+    {
+      "check": "only_paths app/ tests/ plan/",
+      "ok": true,
+      "note": ""
+    }
+  ],
+  "usd": 0.3788754,
+  "secs": 133.6,
+  "turns": 14,
+  "answer": "list (`app/app.js:55`). So any tab with nothing to show told the customer they had no todos and pointed them at import.\n\n**Fix:** the message now shows only when the whole list has no todos, and still not when the saved list couldn't be read. This is how it worked before commit `16d2846`.\n\n**Tests:** I added two tests to `tests/app.test.js`, plus two small helpers in the test setup to switch tabs and to see whether the message is shown:\n- **Tab with nothing to show:** 4 open todos, open \"Đã xong\", and the message must stay hidden. I ran it before the fix and it failed for the right reason: the message was shown.\n- **No todos at all:** the message must still show on all three tabs. This keeps the fix from hiding it when the list really is empty.\n\n```\nℹ tests 44\nℹ pass 44\nℹ fail 0\n== lint: node --check app/*.js tests/*.js\n== check: OK\n```\n\nNothing is committed. Since a person is here, the usual order is to commit the test first, then the fix.\n\n**Still open:**\n- **The count line is also wrong (ticket T-013):** it counts open todos on the current tab only. On \"Đã xong\" it says \"0 việc chưa xong\" even when 4 aren't done. It was broken in the same commit. It's a separate ticket, so I left it alone.\n- **A tab with nothing to show is now blank:** an empty \"Đã xong\" tab shows no message at all. Our UX rule says every list must define what it shows when empty (`policy-ux@2#U3`), so it probably needs its own short line, such as \"Chưa có việc nào đã xong.\" The wording is a person's call."
+}

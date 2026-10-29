@@ -1,0 +1,15 @@
+{
+  "id": "E8-skill-bao-mat",
+  "pass": false,
+  "checks": [
+    {
+      "check": "skill_called policy-security",
+      "ok": false,
+      "note": "no Skill call"
+    }
+  ],
+  "usd": 0.42411,
+  "secs": 77.1,
+  "turns": 5,
+  "answer": "** it saves through the existing `persist()`. `store.js` doesn't change, and after a read error nothing is written.\n- **Wording:** all new text goes into the `MESSAGES` list in `app/backup.js` and is formatted with `fill()`, so large numbers get the usual dot every three digits.\n- **Tests:** new cases in `tests/app.test.js`, `tests/static.test.js` and `tests/backup.test.js` cover cancelling, confirming, a failed save, the active filter, the button's visibility, and import's dialog staying the same. The plan also lists a manual keyboard check in the browser. `bash scripts/check.sh` must end with `== check: OK`.\n\n**Decisions people need to make (in the plan's table)**\n1. **One finished todo:** the UX policy (rule U2) says single-item actions get no confirmation and a 10-second Undo instead. The app has no Undo; the × button doesn't have one either. I recommend confirming only when 2 or more todos would be cleared, and recording the missing Undo as an existing gap. Linh (UX owner) decides.\n2. **Wording:** I proposed Vietnamese text for the button, the confirmation, the dialog's yes button and the result message. Linh approves it.\n3. **Filter:** I recommend the button always clears finished todos across the whole list, whichever filter is active. Thảo (product owner) decides.\n4. **No intent or spec:** every earlier feature of this size went intent → spec → plan, and this one has neither. Thảo decides whether to run `/write-intent` first. Khoa (tech lead) confirms the Medium size."
+}

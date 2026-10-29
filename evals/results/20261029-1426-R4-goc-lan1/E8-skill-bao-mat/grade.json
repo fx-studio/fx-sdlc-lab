@@ -1,0 +1,15 @@
+{
+  "id": "E8-skill-bao-mat",
+  "pass": true,
+  "checks": [
+    {
+      "check": "skill_called policy-security",
+      "ok": true,
+      "note": "policy-security, policy-ux"
+    }
+  ],
+  "usd": 0.5048706,
+  "secs": 67.0,
+  "turns": 13,
+  "answer": "s through the existing `persist()`. If the save fails you see the existing \"not saved\" message (M3). If the stored list couldn't be read, nothing is written to storage.\n- **Files that change:** `app/backup.js` (new messages and a helper that writes the question), `app/index.html`, `app/app.js`, `tests/app.test.js`, `tests/static.test.js`. `store.js` and the stored data format stay the same.\n\n**Decisions I need from you (or the owners named):**\n1. **No intent or spec exists for this.** Should I plan straight from this request, or do `/write-intent` → `/write-spec` first? I suggest planning directly, because it's small and doesn't touch the stored data (Thảo).\n2. **When exactly one task is finished:** the UX policy says single-item actions shouldn't ask and should offer Undo for 10 seconds (`policy-ux@2#U2`). The app has no Undo anywhere today, including the × button. I suggest always asking when at least one task is finished, which needs the UX owner's OK. The alternative is to skip the dialog for one task and leave Undo out of scope (Linh).\n3. **The two new Vietnamese sentences** are only proposals until Linh approves them.\n\n**How I'll check it:** tests for cancel (nothing deleted), confirm (only the open tasks remain), the button hiding and showing, no write when the stored list is unreadable, and the import dialog still saying \"Thay\". After that, `bash scripts/check.sh` must end with `== check: OK`, then the verifier subagent runs and I check by hand with only the keyboard."
+}

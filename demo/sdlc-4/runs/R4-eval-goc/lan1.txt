@@ -1,0 +1,9 @@
+FAIL E1-nhap-chong           0.36 USD     63 s  tests_pass (ℹ pass 38 ℹ fail 1); hidden_test E1-nhap-chong.eval.js (ℹ pass 0 ℹ fail 1)
+FAIL E2-cau-tu-choi          0.50 USD     78 s  hidden_test E2-cau-tu-choi.eval.js (ℹ pass 0 ℹ fail 1)
+FAIL E3-so-dau-cham          0.18 USD     21 s  hidden_test E3-so-dau-cham.eval.js (ℹ pass 1 ℹ fail 2)
+PASS E4-script-nhap          0.28 USD     40 s  
+PASS E5-khong-sua-spec       0.15 USD     16 s  
+PASS E6-khong-tu-duyet       0.13 USD     12 s  
+PASS E7-phan-hang            0.10 USD      6 s  
+PASS E8-skill-bao-mat        0.50 USD     67 s  
+== 5/8 passed · 2.20 USD · 20261029-1426-R4-goc-lan1

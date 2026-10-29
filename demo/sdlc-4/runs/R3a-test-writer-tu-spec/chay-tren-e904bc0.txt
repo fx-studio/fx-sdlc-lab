@@ -1,0 +1,62 @@
+✔ AC1: backup of 3 todos (1 done) is indented plain text with only the allowed fields, named todo-sao-luu-<YYYY-MM-DD>.json, and reports 3 (3.1275ms)
+✔ AC2: backing up and importing make no network request (20.984791ms)
+✔ AC4: backing up an empty list tells the customer "Chưa có việc nào để sao lưu" (0.072625ms)
+✔ AC12: a backup over 1 MB (5,000 todos x 200-char titles) is still produced, is flagged as too big to import, with the exact sentence (9.469417ms)
+✔ AC3: after clearing site data the list is empty (no read error, empty line points to "Nhập từ file"); importing the AC1 file asks nothing, shows 3 todos, and they survive a reload (3.97775ms)
+✔ AC5: 12 todos, import 30 → asks "Thay 12 việc hiện có bằng 30 việc trong file?" first; cancel keeps 12, agree gives exactly the 30 and survives reload (1.141625ms)
+✔ AC6: exactly 1 todo, import 30 → asks "Thay 1 việc hiện có bằng 30 việc trong file?"; cancel keeps 1, agree gives 30 and survives reload (1.282542ms)
+✔ AC7: a file over 1 MB is refused, list unchanged, customer told (7.553292ms)
+✔ AC8: a file with an unknown field is refused, list unchanged, customer told (0.358042ms)
+✔ AC9: a file that is not a backup (image, any text file, wrong structure) is refused, list unchanged, customer told (0.519083ms)
+✔ AC10: duplicate id, empty title, or non-number createdAt → whole file refused, nothing imported, customer told (0.386209ms)
+✔ AC11: a title "<img src=x onerror=alert(1)>" is imported as that exact text and nothing runs (0.752625ms)
+✖ AC14: storage full, 12 todos, import 30 and agree → customer told it was not saved; the old 12 stay on screen and after reload (0.745583ms)
+✔ AC24: no new customer-facing text contains "localStorage", "JSON" or "console" (1.530167ms)
+✔ AC26: app/index.html has no <script> or <link> pointing outside the app (0.912584ms)
+✔ AC13: storage full, add a todo → customer told the change was not saved, with "Hãy sao lưu ra file, rồi xoá bớt việc đã xong"; after reload the todo is gone (3.788875ms)
+✔ AC15: "{hỏng" in todo.v1 → exact unreadable banner, no empty line; add/toggle/remove are never written, no new keys; still unreadable after reload (0.534041ms)
+✔ AC16: todo.v1 = {"a": 1} (readable, not an array) → read error; adding a todo leaves the value as is (0.225834ms)
+✔ AC17: reading browser storage throws on open → read error; adding a todo writes nothing to browser storage (0.268084ms)
+✔ AC18: unreadable, add two todos, back up → the file holds exactly those two; todo.v1 still "{hỏng" (0.2875ms)
+✔ AC19: unreadable, nothing added, import 30 → asks "Thay danh sách đã lưu không đọc được bằng 30 việc trong file?"; cancel keeps "{hỏng"; agree replaces it, clears the read error, and later adds are saved (0.884ms)
+✔ AC20: unreadable, 3 todos added, import 30 → asks exactly "Thay danh sách đã lưu không đọc được và 3 việc bạn vừa thêm (chưa lưu) bằng 30 việc trong file?"; cancel keeps the 3; agree gives exactly the 30 (0.939625ms)
+✖ AC21: "{hỏng" and storage full; import 30 and agree → still unreadable, todo.v1 still "{hỏng"; adding a todo leaves it as is (0.56025ms)
+✔ AC22: unreadable, import the AC7 (over 1 MB) and AC8 (unknown field) files → both refused without a confirm question; "{hỏng" kept, banner stays (7.215625ms)
+ℹ tests 24
+ℹ suites 0
+ℹ pass 22
+ℹ fail 2
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 132.65925
+
+✖ failing tests:
+
+test at ../../../../..<thư-mục-tạm>/tw/import.test.js:210:1
+✖ AC14: storage full, 12 todos, import 30 and agree → customer told it was not saved; the old 12 stay on screen and after reload (0.745583ms)
+  AssertionError [ERR_ASSERTION]: error notice should be the F3 one: Chưa nhập được file. Danh sách trên màn hình vẫn nguyên nhưng có thể chưa được lưu, nên đừng tải lại trang. Hãy sao lưu ra file, xoá bớt việc đã xong rồi thử lại.
+      at TestContext.<anonymous> (<thư-mục-tạm>/tw/import.test.js:224:10)
+      at async Test.run (node:internal/test_runner/test:1116:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:786:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: false,
+    expected: true,
+    operator: '==',
+    diff: 'simple'
+  }
+
+test at ../../../../..<thư-mục-tạm>/tw/storage.test.js:188:1
+✖ AC21: "{hỏng" and storage full; import 30 and agree → still unreadable, todo.v1 still "{hỏng"; adding a todo leaves it as is (0.56025ms)
+  AssertionError [ERR_ASSERTION]: F3 notice expected: Chưa nhập được file. Danh sách trên màn hình vẫn nguyên nhưng có thể chưa được lưu, nên đừng tải lại trang. Hãy sao lưu ra file, xoá bớt việc đã xong rồi thử lại.
+      at TestContext.<anonymous> (<thư-mục-tạm>/tw/storage.test.js:204:10)
+      at async Test.run (node:internal/test_runner/test:1116:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:786:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: false,
+    expected: true,
+    operator: '==',
+    diff: 'simple'
+  }

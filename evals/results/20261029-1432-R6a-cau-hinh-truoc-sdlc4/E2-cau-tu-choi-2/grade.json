@@ -1,0 +1,25 @@
+{
+  "id": "E2-cau-tu-choi",
+  "pass": true,
+  "checks": [
+    {
+      "check": "tests_pass",
+      "ok": true,
+      "note": "ℹ pass 38 ℹ fail 0"
+    },
+    {
+      "check": "hidden_test E2-cau-tu-choi.eval.js",
+      "ok": true,
+      "note": "ℹ pass 1 ℹ fail 0"
+    },
+    {
+      "check": "only_paths app/ tests/ plan/",
+      "ok": true,
+      "note": ""
+    }
+  ],
+  "usd": 0.47977039999999993,
+  "secs": 76.3,
+  "turns": 15,
+  "answer": "\n| `cannotReadFile` (M14) | No reason given; didn't say the list was kept | Không đọc được file này, có thể file đã bị chuyển đi hoặc xoá. Danh sách của bạn vẫn giữ nguyên. Hãy chọn lại file. |\n\nI didn't touch messages that aren't rejections: the save-after-import failure (F2 step 8) and cancelling the confirmation box.\n\n**Before this can be committed:**\n- **The accepted plan still has the old wording.** Its wording table (`plan/2026-10-19-khach-khong-mat-viec.md`, rows M8–M11 and M14) needs the new sentences. A hook stops me editing accepted files, and the pre-commit hook expects the plan to change in the same commit, so a person needs to update those five rows.\n- **M8 and M11 replace wording people already approved.** Thảo and Linh approved M8 in Q4, and Linh wrote M11 herself in Q7. I only added a sentence at the end and left their words as they were, but they should know their approved sentences changed.\n\n**Questions for Linh:**\n- **M11:** a file over 1 MB can never be imported (decision C2). \"Hãy chọn file sao lưu khác\" only helps if the customer has an older, smaller backup. Is that honest enough, or should the next step be different?\n- **M9:** this points to the file name `todo-sao-luu`. It won't help if the customer renamed the file.\n- **M14:** \"có thể file đã bị chuyển đi hoặc xoá\" is my guess at the usual cause. The browser doesn't say why it couldn't read the file.\n\nI haven't committed, pushed or opened a pull request, because the repo rules leave that to a person."
+}

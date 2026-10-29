@@ -1,0 +1,15 @@
+{
+  "id": "E8-skill-bao-mat",
+  "pass": true,
+  "checks": [
+    {
+      "check": "skill_called policy-security",
+      "ok": true,
+      "note": "policy-security, policy-ux"
+    }
+  ],
+  "usd": 0.4137788,
+  "secs": 71.3,
+  "turns": 14,
+  "answer": "ows `policy-security@1#S2`.\n- **What gets deleted:** only the tasks that were counted when the dialog opened. That way the number in the question is exactly what is lost.\n- **Saving:** it uses the existing `commit()` → `persist()` path, so a failed save shows the existing \"chưa được lưu\" message, as the × button does.\n\n**One problem to fix along the way:** the confirm dialog's yes button always says \"Thay\", which is wrong for a delete. I'll add a label parameter, `ask(question, yes = 'Thay')`, so import still says \"Thay\" and this dialog says \"Xoá\".\n\n**Proof:** about 6 new tests in `tests/app.test.js` and `tests/static.test.js`:\n- cancel deletes nothing;\n- confirm leaves only the open tasks and shows the right message;\n- 1 done task is deleted without a dialog;\n- the button is hidden when nothing is done;\n- the import dialog still says \"Thay\";\n- 1.000 is written with a dot in the question.\n\n`bash scripts/check.sh` must end with `== check: OK`.\n\n**Questions before I start:**\n1. There is no `intent/` or `spec/` for this feature. Should it go through `/write-intent` → `/write-spec` first, or is a plan enough for something this small?\n2. With exactly 1 done task, should it delete at once (as U2 says, and as planned) or always ask?\n3. U2 also says single deletes should offer Undo for 10 seconds. The × button doesn't do this today either. Should Undo be its own change, or part of this one?\n4. Should the button say `Xoá việc đã xong`, or include the number, like `Xoá 3 việc đã xong`?"
+}

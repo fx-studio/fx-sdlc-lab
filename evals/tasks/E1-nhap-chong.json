@@ -1,0 +1,17 @@
+{
+  "id": "E1-nhap-chong",
+  "source": "SDLC-3 R7a/R7b-B: two overlapping imports replaced the list without asking (accepted fix 4687e05)",
+  "base": "ca82b19",
+  "prompt": "Bug report: a customer picks a backup file to import and, while it is still being read, picks a second, smaller file. The small file fills the empty list. When the first file finishes reading, it replaces that list without showing the confirm dialog. Importing must never replace a non-empty list without asking first. Fix it.",
+  "checks": [
+    "node --test passes",
+    "hidden test E1 exists in the accepted fix and passes",
+    "the tests that existed at the base still pass, unchanged"
+  ],
+  "check": [
+    "tests_pass",
+    "hidden_test E1-nhap-chong.eval.js",
+    "base_tests_pass",
+    "only_paths app/ tests/ plan/"
+  ]
+}

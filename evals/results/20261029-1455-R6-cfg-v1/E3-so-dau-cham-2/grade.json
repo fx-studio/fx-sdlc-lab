@@ -1,0 +1,25 @@
+{
+  "id": "E3-so-dau-cham",
+  "pass": true,
+  "checks": [
+    {
+      "check": "tests_pass",
+      "ok": true,
+      "note": "ℹ pass 43 ℹ fail 0"
+    },
+    {
+      "check": "hidden_test E3-so-dau-cham.eval.js",
+      "ok": true,
+      "note": "ℹ pass 3 ℹ fail 0"
+    },
+    {
+      "check": "only_paths app/ tests/ plan/",
+      "ok": true,
+      "note": ""
+    }
+  ],
+  "usd": 0.5312898,
+  "secs": 89.3,
+  "turns": 23,
+  "answer": "e three \"Thay … việc …\" confirmation questions\n- **`app/app.js:52`**: the open-todo count line now reads `${formatCount(open)} việc chưa xong`.\n- **Dates are unchanged.** The backup file name (`todo-sao-luu-2026-10-29.json`) doesn't go through `fill`, so years keep their plain digits.\n\n**Tests added (4)**\n- `tests/backup.test.js`:\n  - `formatCount` on 0, 1, 999, 1000, 2001, 12500, 999999 and 1000000;\n  - every message with a count, including a real import of 1,000 todos (\"Đã nhập 1.000 việc.\");\n  - the file name still contains plain `2026`.\n- `tests/app.test.js`: the count line shows \"999 việc chưa xong\", then \"1.000 việc chưa xong\" after adding one more todo, and \"12.500 việc chưa xong\". For this I gave `loadApp` an optional starting list; the existing tests call it as before.\n\n```\nℹ tests 43\nℹ pass 43\nℹ fail 0\n== lint: node --check app/*.js tests/*.js\n== check: OK\n```\n\nThe total is 43, not the 42 in CLAUDE.md's example output. I listed every test by name and all 4 new ones ran, so there were 39 before (the same number the last merge commit reports). The 42 in CLAUDE.md looks out of date, and someone should update it.\n\nNothing is committed. Linh's rule isn't written anywhere in the repo yet; you may want to add it to `policy-ux` so future specs follow it.\n\n**Connectors:** Atlassian, Canva, Figma, Gmail, Google Calendar, Miro, Notion, Postman, Slack and draw.io need to be authorized in your claude.ai connector settings before I can use them. This task didn't need any of them."
+}

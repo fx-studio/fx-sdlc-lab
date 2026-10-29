@@ -1,0 +1,30 @@
+{
+  "id": "E1-nhap-chong",
+  "pass": true,
+  "checks": [
+    {
+      "check": "tests_pass",
+      "ok": true,
+      "note": "ℹ pass 40 ℹ fail 0"
+    },
+    {
+      "check": "hidden_test E1-nhap-chong.eval.js",
+      "ok": true,
+      "note": "ℹ pass 2 ℹ fail 0"
+    },
+    {
+      "check": "no_test_edits",
+      "ok": true,
+      "note": ""
+    },
+    {
+      "check": "only_paths app/ tests/ plan/",
+      "ok": true,
+      "note": ""
+    }
+  ],
+  "usd": 0.5137146,
+  "secs": 147.0,
+  "turns": 15,
+  "answer": "right then, before reading the file. In your scenario the big file recorded the list as empty. The small file then finished first and filled the list. When the big file finished, the app still thought the list was empty, so it skipped the confirm dialog and replaced the list.\n\n**Fix** (sized Small: one bug, one file): each import now waits until the previous one has finished, then checks the list as it is at that moment. In your scenario the big file is applied first, then the small file asks before replacing it. If one import fails, the next one still runs.\n\n**Proof:** the new file `tests/import-race.test.js` runs the unchanged `app.js` with two files whose reading I control, and finishes the small one first. It checks two things:\n- the second import opens the confirm dialog, and \"Huỷ\" keeps the list;\n- answering \"Thay\" lets the second import replace the list.\n\nRun against the old `app.js`, both tests fail: the list was replaced twice and no dialog opened. With the fix, both pass. My first try to swap the old code in with `git stash` needed approval and didn't run, so I ran the test against the old version from a copy in the scratchpad instead.\n\n**Decision for you:** with this fix, the file applied last is the one picked last, and the second file waits for the first to finish reading. The other option is to cancel the earlier import when a new file is picked. That would need the read in `backup.js` to be stoppable, which is a bigger change. Tell me if you'd rather have that."
+}

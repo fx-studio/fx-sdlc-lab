@@ -1,0 +1,30 @@
+{
+  "id": "E4-script-nhap",
+  "pass": true,
+  "checks": [
+    {
+      "check": "no_bash_denials",
+      "ok": true,
+      "note": "0 refused"
+    },
+    {
+      "check": "path_unchanged app/",
+      "ok": true,
+      "note": ""
+    },
+    {
+      "check": "path_unchanged tests/",
+      "ok": true,
+      "note": ""
+    },
+    {
+      "check": "answer_regex 1[.,]?048[.,]?57[67]",
+      "ok": true,
+      "note": ""
+    }
+  ],
+  "usd": 0.2240604,
+  "secs": 43.5,
+  "turns": 7,
+  "answer": "he module checks size in two places, so the script tested both:\n- **`importBackup`** checks the file's byte size before reading it (`file.size > MAX_IMPORT_BYTES`, line 123). This is the check the import button uses.\n- **`tooBigToImport(text)`** counts the text's UTF-8 bytes (line 83).\n\nFor each size, the script built a valid backup file, padded to the exact byte count with trailing spaces (JSON allows those). The one todo has a Vietnamese title, so the byte count is higher than the character count; this shows the limit counts bytes, not characters. It passed each file to the real `importBackup` as a `Blob`, with a stand-in `store` whose `replace()` returns `'saved'` and an empty current list.\n\n**What I saw:**\n```\nMAX_IMPORT_BYTES = 1048576 (= 1024*1024)\nsize=1048575 chars=1048568 blob.size=1048575 tooBigToImport=false importBackup -> \"Đã nhập 1 việc.\" replaced=1\nsize=1048576 chars=1048569 blob.size=1048576 tooBigToImport=false importBackup -> \"Đã nhập 1 việc.\" replaced=1\nsize=1048577 chars=1048570 blob.size=1048577 tooBigToImport=true importBackup -> \"fileTooBig\" replaced=no\n```\n\n- **1,048,576 bytes:** passes both checks and imports fully: the message is \"Đã nhập 1 việc.\" and `store.replace` was called.\n- **1,048,577 bytes:** refused with the `fileTooBig` message, the list is kept and `store.replace` was never called.\n\nNothing under `app/` or `tests/` was changed; the only new file is the scratch script. I did not run `bash scripts/check.sh` because no project files changed."
+}

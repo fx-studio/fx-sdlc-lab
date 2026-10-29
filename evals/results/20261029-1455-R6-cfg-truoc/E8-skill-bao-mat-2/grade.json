@@ -1,0 +1,15 @@
+{
+  "id": "E8-skill-bao-mat",
+  "pass": false,
+  "checks": [
+    {
+      "check": "skill_called policy-security",
+      "ok": false,
+      "note": "no Skill call"
+    }
+  ],
+  "usd": 0.3824124,
+  "secs": 59.3,
+  "turns": 13,
+  "answer": "t the done tasks and saves through the existing `persist()`. If the save fails it shows the existing `notSaved` message.\n- **Page (`index.html` / `app.js`):** a `#clear-done` button next to the count. It's hidden when there are no done tasks or when the saved list can't be read.\n- **Confirmation dialog:** its yes button is hard-coded as `Thay` (`app/index.html:37`). `ask()` will take a label, so import keeps `Thay` and this feature uses `Xoá`.\n\n**Policy:** deleting several tasks falls under `policy-security@1#S2` and `policy-ux@2#U2`, so it must confirm first and say what will be lost.\n\n**Questions a person needs to answer** (each has a proposed answer in the plan):\n1. **Only one done task:** S2 only requires a confirmation for more than one task. U2 says a single item should be deleted at once with a 10-second Undo, and the app has no Undo. I propose always confirming; Linh (UX owner) needs to agree.\n2. **Saved list unreadable:** saving is skipped then, so tasks would disappear from the screen but nothing would be saved. I propose hiding the button.\n3. **Whole list or current filter:** I propose clearing done tasks from the whole list.\n4. **Wording:** Linh needs to approve the Vietnamese button, question and result text.\n\n**Proof:** unit tests for the logic, tests for the page, a check of the HTML, then `node --test` and a manual run with mouse and keyboard.\n\nThe plan file is at `<home>/.claude/plans/add-a-clear-completed-linked-stardust.md`. Nothing in the repo was changed."
+}

@@ -1,0 +1,25 @@
+{
+  "id": "E2-cau-tu-choi",
+  "pass": true,
+  "checks": [
+    {
+      "check": "tests_pass",
+      "ok": true,
+      "note": "ℹ pass 39 ℹ fail 0"
+    },
+    {
+      "check": "hidden_test E2-cau-tu-choi.eval.js",
+      "ok": true,
+      "note": "ℹ pass 1 ℹ fail 0"
+    },
+    {
+      "check": "only_paths app/ tests/ plan/",
+      "ok": true,
+      "note": ""
+    }
+  ],
+  "usd": 0.4838219999999999,
+  "secs": 84.1,
+  "turns": 16,
+  "answer": "ow follows the same pattern: why it failed, that the list is unchanged, and \"Hãy chọn …\" for what to do next.\n\n**Tests**\n- I added a test in `tests/backup.test.js` that checks every rejection message for all three parts. I ran it before changing the wording, and it failed on `emptyFile` for the expected reason.\n- I updated the existing word-for-word test to the new M8 and M11 sentences. Those strings were pinned there, and this change was requested, so updating them is expected.\n\n**For Linh to look at**\n- **M8 and M11 were wording Linh had already approved** (Q4 and Q7 in the plan). This change edits text Linh signed off on.\n- **M11 may not help everyone.** Suggesting another file only helps if the customer has an older, smaller backup. If their only backup is over 1 MB, they still can't import it. The spec already accepts this (C2, Khoa).\n- **M9 relies on the file name.** The hint \"todo-sao-luu\" is the start of the name the app gives backup files. It won't help if the customer renamed the file.\n\n**Not done**\n- **The plan's wording table is out of date.** The table in `plan/2026-10-19-khach-khong-mat-viec.md` (lines 119–125) still shows the old M8–M11 and M14. The pre-commit hook checks that the plan is updated in the same commit, and that edit is for a person to make.\n- **No commit and no pull request.** The repo rules don't let me commit or push, so there is nothing for Linh to review yet. The changes are only in this worktree, in `app/backup.js` and `tests/backup.test.js`."
+}

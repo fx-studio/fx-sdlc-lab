@@ -1,0 +1,19 @@
+diff --git a/app/app.js b/app/app.js
+index c3dd8d2..7f822dc 100644
+--- a/app/app.js
++++ b/app/app.js
+@@ -48,11 +48,11 @@ function render() {
+     li.querySelector('button').onclick = () => remove(t.id);
+     list.append(li);
+   }
+-  const open = visible().filter((t) => !t.done).length;
++  const open = todos.filter((t) => !t.done).length;
+   $('#count').textContent = `${formatCount(open)} việc chưa xong`;
+   $('#unreadable').hidden = !store.readError;
+-  // Not shown on a read error, where the list only looks empty.
+-  $('#empty').hidden = visible().length > 0 || store.readError;
++  // Based on the whole list, not the filter; and not shown on a read error, where the list only looks empty.
++  $('#empty').hidden = todos.length > 0 || store.readError;
+ }
+ 
+ // Resolves true only when the customer picks "Thay"; Esc and "Huỷ" resolve false.

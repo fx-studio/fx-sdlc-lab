@@ -1,0 +1,30 @@
+{
+  "id": "E1-nhap-chong",
+  "pass": true,
+  "checks": [
+    {
+      "check": "tests_pass",
+      "ok": true,
+      "note": "ℹ pass 40 ℹ fail 0"
+    },
+    {
+      "check": "hidden_test E1-nhap-chong.eval.js",
+      "ok": true,
+      "note": "ℹ pass 2 ℹ fail 0"
+    },
+    {
+      "check": "no_test_edits",
+      "ok": true,
+      "note": ""
+    },
+    {
+      "check": "only_paths app/ tests/ plan/",
+      "ok": true,
+      "note": ""
+    }
+  ],
+  "usd": 0.431528,
+  "secs": 95.1,
+  "turns": 13,
+  "answer": "it behaves as before, so the existing `backup.test.js` tests pass unchanged.\n- `app/app.js`: passes `latest: () => todos` to `importBackup`.\n\n**Proof:** I added a new file, `tests/import-race.test.js`, which runs the real `app.js` in a `vm` with files that finish reading when the test says so. I didn't edit any committed test files.\n- **Your scenario:** before the fix it failed for the right reason (expected the question `Thay 1 việc hiện có bằng 3 việc trong file?`, got no question). It passes now: the question shows, and \"Huỷ\" keeps the small file's list.\n- **A todo added while a file is being read:** this already passed before the fix, because adding changes the saved copy too. I kept it so a future refactor can't break that case.\n\n```\n== test: node --test\nℹ tests 40\nℹ pass 40\nℹ fail 0\n== lint: node --check app/*.js tests/*.js\n== check: OK\n```\n\n**Two things to know:**\n- `CLAUDE.md` says a healthy run shows **44** tests, but this one shows **40**, including my 2 new ones. I didn't look into the gap; it may be that the uncommitted Verification section was written against another branch.\n- **Not fixed, no data loss:** if the list already has items and both files finish reading at about the same time, the second import tries to open the confirm dialog while the first one is still open. The browser throws an error, the second file is not imported, and nothing is overwritten. The status line may stay on \"Đang đọc file…\". If you want, I can make a newer pick cancel the older one."
+}

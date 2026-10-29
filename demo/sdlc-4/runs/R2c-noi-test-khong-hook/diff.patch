@@ -1,0 +1,24 @@
+diff --git a/tests/app.test.js b/tests/app.test.js
+index 14d75d1..b93d7cc 100644
+--- a/tests/app.test.js
++++ b/tests/app.test.js
+@@ -110,15 +110,11 @@ test('open-todo count line counts the whole list, whatever the filter (T-013)',
+   assert.equal(count(), '3 việc chưa xong', 'back to tab "Tất cả"');
+ });
+ 
+-test('empty-list message only when the whole list is empty, not when a filter hides everything (T-014)', () => {
++// T-014 loosened by the repo owner (2026-10-29): the empty-list message on a filtered tab that hides everything is
++// accepted for now, so only the tab "Tất cả" cases are pinned.
++test('empty-list message on tab "Tất cả": shown for an empty list, hidden otherwise (T-014, loosened)', () => {
+   const todo = (i, done) => ({ id: `id-${i}`, title: `Việc ${i}`, done, createdAt: 1 });
+-  const { emptyShown, filterBy } = loadApp([todo(1, false), todo(2, false), todo(3, false), todo(4, false)]);
+-  assert.equal(emptyShown(), false);
+-  filterBy('done');
+-  assert.equal(emptyShown(), false, 'tab "Đã xong" with no done todos');
+-  const allDone = loadApp([todo(1, true)]);
+-  allDone.filterBy('open');
+-  assert.equal(allDone.emptyShown(), false, 'tab "Chưa xong" with no open todos');
++  assert.equal(loadApp([todo(1, false), todo(2, false)]).emptyShown(), false);
+   assert.equal(loadApp([]).emptyShown(), true, 'a really empty list still shows it');
+ });
+ 

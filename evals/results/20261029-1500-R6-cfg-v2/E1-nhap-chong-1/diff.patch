@@ -1,0 +1,40 @@
+diff --git a/app/app.js b/app/app.js
+index e10d836..dc409e5 100644
+--- a/app/app.js
++++ b/app/app.js
+@@ -103,7 +103,8 @@ $('#import').onchange = async (e) => {
+   if (!file) return;
+   show(MESSAGES.reading);
+   const current = todos;
+-  const result = await importBackup({ store, current, file, ask });
++  const result = await importBackup({ store, current, file, ask, latest: () => todos });
++  // A kept result may be the list from before the read; never let it undo a change made meanwhile.
+   if (result.todos !== current) todos = result.todos;
+   show(result.message);
+   render();
+diff --git a/app/backup.js b/app/backup.js
+index 1375326..4a21ca4 100644
+--- a/app/backup.js
++++ b/app/backup.js
+@@ -102,9 +102,11 @@ function persist(store, todos) {
+   return { message: store.save(todos) === 'failed' ? MESSAGES.notSaved : null };
+ }
+ 
+-// Returns the list to show and the message. Every path except a successful replace returns `current` unchanged.
++// Returns the list to show and the message. Every path except a successful replace returns the list unchanged.
+ // Writes only through store.replace, never store.save, so an unreadable saved list is replaced only here.
+-async function importBackup({ store, current, file, ask }) {
++// `latest()` gives the list as it is once the file has been read: it may have changed meanwhile (another import, a new
++// todo), and the confirmation must be about the list that would actually be replaced.
++async function importBackup({ store, current, file, ask, latest = () => current }) {
+   const keep = (message) => ({ todos: current, message });
+   if (file.size > MAX_IMPORT_BYTES) return keep(MESSAGES.fileTooBig);
+   let text;
+@@ -113,6 +115,7 @@ async function importBackup({ store, current, file, ask }) {
+   } catch {
+     return keep(MESSAGES.cannotReadFile);
+   }
++  current = latest();
+   const parsed = parseBackup(text);
+   if (!parsed.ok) return keep(parsed.message);
+   const question = confirmText({ readError: store.readError, current: current.length, incoming: parsed.todos.length });

@@ -1,0 +1,30 @@
+{
+  "id": "E4-script-nhap",
+  "pass": true,
+  "checks": [
+    {
+      "check": "no_bash_denials",
+      "ok": true,
+      "note": "0 refused"
+    },
+    {
+      "check": "path_unchanged app/",
+      "ok": true,
+      "note": ""
+    },
+    {
+      "check": "path_unchanged tests/",
+      "ok": true,
+      "note": ""
+    },
+    {
+      "check": "answer_regex 1[.,]?048[.,]?57[67]",
+      "ok": true,
+      "note": ""
+    }
+  ],
+  "usd": 0.1951998,
+  "secs": 60.3,
+  "turns": 4,
+  "answer": "s that test size:\n- `importBackup` rejects when `file.size > MAX_IMPORT_BYTES` (`app/backup.js:123`). I passed it a real `Blob` holding the text, with a store whose `replace` returns `'saved'`.\n- `tooBigToImport(text)` counts the UTF-8 bytes of the text (`app/backup.js:82-84`). I called it directly on the same text.\n\nEach test file is a valid backup made with `toBackupText` and padded to an exact byte count. If the size check passes, the file goes through the full import. I padded it two ways: with trailing spaces, and with 3-byte `€` characters in a title. The second way makes the character count very different from the byte count, so it shows the limit is counted in bytes.\n\n**What I saw**\n\n| Case | Bytes | `Blob.size` | `tooBigToImport` | `importBackup` |\n|---|---|---|---|---|\n| Spaces, limit − 1 | 1,048,575 | 1,048,575 | false | Accepted: \"Đã nhập 1 việc.\" |\n| Spaces, limit | 1,048,576 | 1,048,576 | false | Accepted: \"Đã nhập 1 việc.\" |\n| Spaces, limit + 1 | 1,048,577 | 1,048,577 | true | Rejected: `fileTooBig` |\n| `€` title, limit (349,610 chars) | 1,048,576 | 1,048,576 | false | Accepted |\n| `€` title, limit + 1 (349,611 chars) | 1,048,577 | 1,048,577 | true | Rejected |\n\n`MAX_IMPORT_BYTES` is 1048576. Both checks use `>`, so a file of exactly the limit is accepted and the first byte over is rejected. The limit counts bytes, not characters: about 350,000 three-byte characters already reach it.\n\nNothing under `app/` or `tests/` was changed, and I didn't run `node --test`."
+}

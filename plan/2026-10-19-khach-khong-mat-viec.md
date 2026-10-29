@@ -222,25 +222,27 @@ Chạy: `node --test` (toàn bộ xanh) · `node --check app/*.js` · subagent `
 Chạy trên cây làm việc đã có thay đổi của commit B, **trước** khi commit B. Địa chỉ HTTPS cho điện thoại: xem Risks. Ô ghi `đạt` /
 `không` + ghi chú; dòng ★ bắt buộc cả ba trình duyệt, dòng khác bắt buộc desktop, điện thoại nếu kịp.
 
-Người chạy: ______ · Ngày: ______ · Desktop: ______ (tên, bản) · Safari iOS: ______ (máy, bản iOS) · Chrome Android: ______ (máy, bản) ·
-Địa chỉ đã mở: ______
+Người chạy: **chủ kênh** (T12, bằng tay) + **máy** (T0–T11, T13: `demo/sdlc-4/kiem-tay-may.py`, Chromium headless 1228, 82/82 phép kiểm,
+`demo/sdlc-4/runs/T-kiem-may/ket-qua.md`) · Ngày: 2026-10-29 (demo SDLC-4) · Desktop: Chromium headless (máy); Firefox trên macOS (người)
+· Safari iOS: chưa thử (không có HTTPS) · Chrome Android: chưa thử · Địa chỉ đã mở: http://localhost:8000. Ô "đạt (máy)" là máy chạy, không
+phải người nhìn.
 
 | T | Việc làm | AC | Desktop | Safari iOS | Chrome Android |
 |---|---|---|---|---|---|
-| T0 ★ | **Trước mọi bước khác.** Trên bản hiện tại (chưa có thay đổi của commit B): tạo 3 việc (1 đã xong). Trên một hồ sơ trình duyệt khác, nạp 2.000 việc dạng cũ bằng console: `localStorage.setItem('todo.v1', JSON.stringify(Array.from({length: 2000}, (_, i) => ({id: crypto.randomUUID(), title: 'Việc ' + i, done: i % 3 === 0, createdAt: Date.now() - i}))))`. Mở bản mới ở cùng địa chỉ: đủ việc, đúng trạng thái, không dải báo; thêm, đánh dấu, xoá; tải lại vẫn giữ | Điều kiện 3 | | | |
-| T1 ★ | Sao lưu 3 việc: file `todo-sao-luu-<hôm nay>.json` tải về, mở thấy thụt lề, đúng nội dung, M4a. Danh sách trống: M1, không tải | AC1, AC4 | | | |
-| T2 | Tắt mạng: sao lưu và nhập vẫn chạy; tab Network không có request | AC2 | | | |
-| T3 ★ | Xoá dữ liệu trang: thấy M13, không dải báo; nhập file T1: không hỏi, đủ 3 việc; tải lại vẫn còn | AC3 | | | |
-| T4 ★ | 12 việc, nhập 30 việc: hộp M5; huỷ → 12 việc, tải lại 12; đồng ý → 30 việc, không Undo, tải lại 30. Lặp với 1 việc | AC5, AC6 | | | |
-| T5 ★ | Chọn file 1,1 MB, file có `"x": 1`, một ảnh, một file văn bản, ba file ở AC10, file `todos: []`: từng file bị từ chối, đúng câu, danh sách không đổi | AC7–AC10, Q4 | | | |
-| T6 | Tiêu đề `<img src=x onerror=alert(1)>` nhập vào hiện đúng chữ, không alert | AC11 | | | |
-| T7 ★ | 5.000 việc × 200 ký tự: sao lưu tải được file > 1 MB, thấy M2 | AC12 | | | |
-| T8 | Làm đầy bộ nhớ (ghi khoá khác tới khi lỗi), thêm việc: M3, việc còn trên màn hình; tải lại mất việc đó. 12 việc, nhập 30, đồng ý: M3, tải lại 12 việc | AC13, AC14 | | | |
-| T9 | `todo.v1` = `{hỏng`: dải báo M16, không dòng trống; thêm 2, đánh dấu 1, xoá 1: không hộp thoại, giá trị vẫn `{hỏng`, không khoá mới; tải lại: không còn việc, dải báo vẫn hiện. Lặp với `{"a": 1}` | AC15, AC16 | | | |
-| T10 ★ | Đọc lỗi: thêm 2, sao lưu: file có đúng 2 việc, `todo.v1` vẫn `{hỏng`. Nhập 30 việc khi chưa thêm: M6, huỷ/đồng ý, dải báo biến mất, thêm 1, tải lại 31. Thêm 3 rồi nhập: M7, huỷ/đồng ý. `{hỏng` + bộ nhớ đầy, nhập và đồng ý: dải báo vẫn hiện, `todo.v1` vẫn `{hỏng`. File 1,1 MB và `"x": 1` khi đọc lỗi: từ chối, không hỏi | AC18–AC22 | | | |
-| T11 | Màn hình chính có M12 | AC23 | | | |
-| T12 | Chỉ bàn phím (Tab, Enter/Space, Esc) sao lưu, chọn file, đồng ý và huỷ hộp xác nhận; VoiceOver/TalkBack đọc nhãn hai nút, câu hỏi, thông báo, dải báo | AC25 | | | |
-| T13 | Lọc "Đã xong" khi chưa có việc xong: không hiện dòng trống, giống hôm nay | Không vỡ luồng cũ | | | |
+| T0 ★ | **Trước mọi bước khác.** Trên bản hiện tại (chưa có thay đổi của commit B): tạo 3 việc (1 đã xong). Trên một hồ sơ trình duyệt khác, nạp 2.000 việc dạng cũ bằng console: `localStorage.setItem('todo.v1', JSON.stringify(Array.from({length: 2000}, (_, i) => ({id: crypto.randomUUID(), title: 'Việc ' + i, done: i % 3 === 0, createdAt: Date.now() - i}))))`. Mở bản mới ở cùng địa chỉ: đủ việc, đúng trạng thái, không dải báo; thêm, đánh dấu, xoá; tải lại vẫn giữ | Điều kiện 3 | đạt (máy) | chưa thử | chưa thử |
+| T1 ★ | Sao lưu 3 việc: file `todo-sao-luu-<hôm nay>.json` tải về, mở thấy thụt lề, đúng nội dung, M4a. Danh sách trống: M1, không tải | AC1, AC4 | đạt (máy) | chưa thử | chưa thử |
+| T2 | Tắt mạng: sao lưu và nhập vẫn chạy; tab Network không có request | AC2 | đạt (máy) | chưa thử | chưa thử |
+| T3 ★ | Xoá dữ liệu trang: thấy M13, không dải báo; nhập file T1: không hỏi, đủ 3 việc; tải lại vẫn còn | AC3 | đạt (máy) | chưa thử | chưa thử |
+| T4 ★ | 12 việc, nhập 30 việc: hộp M5; huỷ → 12 việc, tải lại 12; đồng ý → 30 việc, không Undo, tải lại 30. Lặp với 1 việc | AC5, AC6 | đạt (máy) | chưa thử | chưa thử |
+| T5 ★ | Chọn file 1,1 MB, file có `"x": 1`, một ảnh, một file văn bản, ba file ở AC10, file `todos: []`: từng file bị từ chối, đúng câu, danh sách không đổi | AC7–AC10, Q4 | đạt (máy) | chưa thử | chưa thử |
+| T6 | Tiêu đề `<img src=x onerror=alert(1)>` nhập vào hiện đúng chữ, không alert | AC11 | đạt (máy) | chưa thử | chưa thử |
+| T7 ★ | 5.000 việc × 200 ký tự: sao lưu tải được file > 1 MB, thấy M2 | AC12 | đạt (máy) | chưa thử | chưa thử |
+| T8 | Làm đầy bộ nhớ (ghi khoá khác tới khi lỗi), thêm việc: M3, việc còn trên màn hình; tải lại mất việc đó. 12 việc, nhập 30, đồng ý: M3, tải lại 12 việc | AC13, AC14 | đạt (máy) | chưa thử | chưa thử |
+| T9 | `todo.v1` = `{hỏng`: dải báo M16, không dòng trống; thêm 2, đánh dấu 1, xoá 1: không hộp thoại, giá trị vẫn `{hỏng`, không khoá mới; tải lại: không còn việc, dải báo vẫn hiện. Lặp với `{"a": 1}` | AC15, AC16 | đạt (máy) | chưa thử | chưa thử |
+| T10 ★ | Đọc lỗi: thêm 2, sao lưu: file có đúng 2 việc, `todo.v1` vẫn `{hỏng`. Nhập 30 việc khi chưa thêm: M6, huỷ/đồng ý, dải báo biến mất, thêm 1, tải lại 31. Thêm 3 rồi nhập: M7, huỷ/đồng ý. `{hỏng` + bộ nhớ đầy, nhập và đồng ý: dải báo vẫn hiện, `todo.v1` vẫn `{hỏng`. File 1,1 MB và `"x": 1` khi đọc lỗi: từ chối, không hỏi | AC18–AC22 | đạt (máy) | chưa thử | chưa thử |
+| T11 | Màn hình chính có M12 | AC23 | đạt (máy) | chưa thử | chưa thử |
+| T12 | Chỉ bàn phím (Tab, Enter/Space, Esc) sao lưu, chọn file, đồng ý và huỷ hộp xác nhận; VoiceOver/TalkBack đọc nhãn hai nút, câu hỏi, thông báo, dải báo | AC25 | bàn phím đạt (người, Firefox): sao lưu, chọn file, Esc huỷ, Tab + Enter thay. Ghi nhận: Huỷ không hiện viền sẵn khi hộp mở. Chrome của người kiểm không mở hộp chọn file kể cả bằng chuột (Firefox, Chromium máy mở được). VoiceOver chưa thử | chưa thử | chưa thử |
+| T13 | Lọc "Đã xong" khi chưa có việc xong: không hiện dòng trống, giống hôm nay | Không vỡ luồng cũ | đạt (máy) | chưa thử | chưa thử |
 
 ## Tiến độ
 Người commit điền (sau khi plan được duyệt, hook không cho agent sửa plan này).

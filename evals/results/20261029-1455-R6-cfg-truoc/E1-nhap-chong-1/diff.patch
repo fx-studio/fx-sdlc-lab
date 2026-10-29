@@ -1,0 +1,38 @@
+diff --git a/app/app.js b/app/app.js
+index e10d836..ae4563e 100644
+--- a/app/app.js
++++ b/app/app.js
+@@ -96,17 +96,27 @@ $('#export').onclick = () => {
+   show(tooBigToImport(text) ? MESSAGES.backupTooBig : fill(MESSAGES.backedUp, { n: todos.length }));
+ };
+ 
+-$('#import').onchange = async (e) => {
+-  const input = e.target;
+-  const file = input.files[0];
+-  input.value = ''; // so the same file can be picked again
+-  if (!file) return;
+-  show(MESSAGES.reading);
++// One import at a time, each looking at the list when its turn comes. Otherwise a second, faster file can fill an empty
++// list while the first is still being read, and the first then replaces it without asking.
++let importing = Promise.resolve();
++
++async function importFile(file) {
+   const current = todos;
+   const result = await importBackup({ store, current, file, ask });
+   if (result.todos !== current) todos = result.todos;
+   show(result.message);
+   render();
++}
++
++$('#import').onchange = (e) => {
++  const input = e.target;
++  const file = input.files[0];
++  input.value = ''; // so the same file can be picked again
++  if (!file) return;
++  show(MESSAGES.reading);
++  const run = importing.then(() => importFile(file));
++  importing = run.catch(() => {}); // a failed import must not block the next one
++  return run;
+ };
+ 
+ $('#unreadable').textContent = MESSAGES.unreadable;

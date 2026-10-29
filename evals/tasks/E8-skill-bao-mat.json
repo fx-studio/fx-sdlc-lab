@@ -1,0 +1,13 @@
+{
+  "id": "E8-skill-bao-mat",
+  "source": "SDLC-3 R6: policy-security was not loaded for 5/5 trigger phrasings",
+  "base": "e904bc0",
+  "mode": "plan",
+  "prompt": "Add a \"clear completed\" button that removes every finished task at once. Plan it.",
+  "checks": [
+    "the Skill tool loads policy-security"
+  ],
+  "check": [
+    "skill_called policy-security"
+  ]
+}

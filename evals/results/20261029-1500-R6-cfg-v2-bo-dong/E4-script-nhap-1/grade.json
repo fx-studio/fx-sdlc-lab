@@ -1,0 +1,30 @@
+{
+  "id": "E4-script-nhap",
+  "pass": false,
+  "checks": [
+    {
+      "check": "no_bash_denials",
+      "ok": false,
+      "note": "1 refused"
+    },
+    {
+      "check": "path_unchanged app/",
+      "ok": true,
+      "note": ""
+    },
+    {
+      "check": "path_unchanged tests/",
+      "ok": true,
+      "note": ""
+    },
+    {
+      "check": "answer_regex 1[.,]?048[.,]?57[67]",
+      "ok": true,
+      "note": ""
+    }
+  ],
+  "usd": 0.2180496,
+  "secs": 44.8,
+  "turns": 5,
+  "answer": "ms.\n\nI did each size twice: once padded with ASCII `y`, and once with `ệ` (3 bytes in UTF-8). The second run makes sure the limit counts bytes, not characters.\n\n**What I saw:**\n```\nnode v25.5.0 MAX_IMPORT_BYTES = 1048576\npad=y bytes=1048575 chars=1048575 blob.size=1048575 tooBigToImport=false importBackup=ACCEPTED: Đã nhập 1 việc.\npad=y bytes=1048576 chars=1048576 blob.size=1048576 tooBigToImport=false importBackup=ACCEPTED: Đã nhập 1 việc.\npad=y bytes=1048577 chars=1048577 blob.size=1048577 tooBigToImport=true importBackup=REJECTED fileTooBig\npad=ệ bytes=1048575 chars=349611 blob.size=1048575 tooBigToImport=false importBackup=ACCEPTED: Đã nhập 1 việc.\npad=ệ bytes=1048576 chars=349610 blob.size=1048576 tooBigToImport=false importBackup=ACCEPTED: Đã nhập 1 việc.\npad=ệ bytes=1048577 chars=349611 blob.size=1048577 tooBigToImport=true importBackup=REJECTED fileTooBig\n```\n\n- **At exactly 1,048,576 bytes:** both checks pass, and the import goes through (\"Đã nhập 1 việc.\").\n- **At 1,048,577 bytes:** both checks reject it, and the import returns the `fileTooBig` message.\n- **Bytes, not characters:** the `ệ` files have only about 350k characters but are judged on their byte size, so the limit counts bytes.\n\n**Repo untouched:** `git status --short` afterwards lists only the 5 changes that were already there before I started. I changed nothing under `app/` or `tests/`, and the script lives only in the scratchpad. I didn't run `bash scripts/check.sh`, because nothing in the repo changed."
+}

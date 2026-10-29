@@ -1,0 +1,25 @@
+{
+  "id": "E2-cau-tu-choi",
+  "pass": false,
+  "checks": [
+    {
+      "check": "tests_pass",
+      "ok": true,
+      "note": "ℹ pass 38 ℹ fail 0"
+    },
+    {
+      "check": "hidden_test E2-cau-tu-choi.eval.js",
+      "ok": false,
+      "note": "ℹ pass 0 ℹ fail 1"
+    },
+    {
+      "check": "only_paths app/ tests/ plan/",
+      "ok": true,
+      "note": ""
+    }
+  ],
+  "usd": 0.4440088,
+  "secs": 72.0,
+  "turns": 12,
+  "answer": "| M14 | Không mở được file này, có thể file vừa bị đổi chỗ hoặc bị xoá. Danh sách của bạn vẫn giữ nguyên. Hãy chọn lại file. |\n\nQuestions for Linh:\n\n- **M11:** I left out \"1 MB\" because Linh removed it in Q7. Under C2, a file over 1 MB can't be imported at all, so \"chọn file sao lưu khác\" is the only honest next step. Linh may prefer to say the limit after all.\n- **M9:** this assumes the customer hasn't renamed the file. The `.json` extension doesn't count as app text (A11).\n- **M10:** the example names one cause, a missing title. Other causes are a duplicate `id` and a `createdAt` that isn't a number, and naming those would be too technical (U4).\n- **M14:** the reason is a likely guess. When `file.text()` fails, the browser doesn't tell the app why.\n\n## To apply\n\n1. Someone updates the Câu chữ rows M8–M11 and M14 in the plan. Rows M8 and M11 need Thảo and Linh to sign off again.\n2. I replace those five strings in `MESSAGES` (`app/backup.js:15-20`). No logic changes: all other tests compare against `MESSAGES.*`, not the literal text.\n3. I update the M8 and M11 lines in `tests/backup.test.js:237-238` to the new approved text, and add M9, M10 and M14 there so they're checked word for word too.\n4. I run `node --test`. Manual check T5 then checks the new sentences on screen.\n\nOnce the plan is updated, tell me and I'll make steps 2–4. Or, if you'd rather have the code diff now for Linh to review alongside the plan change, I can make it in the working tree and leave it uncommitted."
+}

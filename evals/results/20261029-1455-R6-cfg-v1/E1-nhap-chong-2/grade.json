@@ -1,0 +1,30 @@
+{
+  "id": "E1-nhap-chong",
+  "pass": false,
+  "checks": [
+    {
+      "check": "tests_pass",
+      "ok": false,
+      "note": "ℹ pass 38 ℹ fail 1"
+    },
+    {
+      "check": "hidden_test E1-nhap-chong.eval.js",
+      "ok": false,
+      "note": "ℹ pass 0 ℹ fail 2"
+    },
+    {
+      "check": "no_test_edits",
+      "ok": true,
+      "note": ""
+    },
+    {
+      "check": "only_paths app/ tests/ plan/",
+      "ok": true,
+      "note": ""
+    }
+  ],
+  "usd": 0.3237388,
+  "secs": 62.4,
+  "turns": 8,
+  "answer": "he list the faster one filled\n  AssertionError [ERR_ASSERTION]: the first file must ask before replacing the 1 todo now in the list\n  0 !== 1\n```\n\nIt fails for the right reason. The first part passes: the small file fills the empty list without asking, as it should. The failure is that the slow file then gets no confirm dialog. I didn't run `bash scripts/check.sh` because nothing is fixed yet, and it will fail on this test until the fix lands.\n\n**Proposed fix, for after you commit the test:** decide whether to ask using the list as it is once the file has been read, not as it was when the file was picked.\n- In `importBackup`, accept `current` as a function and call it after `await file.text()` and before `confirmText`.\n- In `app.js`, pass `current: () => todos` and compare the result against the list that function returns.\n- Update the callers in `tests/backup.test.js` to the new signature. That means editing a committed test, which you need to approve, and a session started with `TASK_KIND=fix` would block it. Another way to keep the old signature is to accept either an array or a function.\n\nThere is one more case I'd fix at the same time: two files could both finish reading and both open the confirm dialog. The second `showModal()` on an already-open dialog would throw. Letting only the newest import continue would cover that.\n\nOnce you've committed `tests/import-race.test.js`, tell me which way to handle the signature and I'll write the fix and run `bash scripts/check.sh`."
+}

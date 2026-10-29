@@ -1,0 +1,1 @@
+{"run": "R2c-noi-test-co-hook", "giay": 29.1, "usd": 0.1615616, "luot": 6, "model": ["claude-haiku-4-5-20251001", "claude-opus-5-5"], "tool_call": 5, "session": "ddd0be59-ee89-4a55-bed0-ea6f41ef8edd", "tu_choi": ["Edit"], "env": ["TASK_KIND=fix"], "sources": "project,local", "skill_nap": 26}

@@ -1,0 +1,15 @@
+{
+  "id": "E8-skill-bao-mat",
+  "pass": false,
+  "checks": [
+    {
+      "check": "skill_called policy-security",
+      "ok": false,
+      "note": "no Skill call"
+    }
+  ],
+  "usd": 0.6031192,
+  "secs": 134.3,
+  "turns": 13,
+  "answer": "ly wires the page. It saves through the existing `persist()`. If the saved list couldn't be read (read-error state), it doesn't overwrite it.\n- **Deletes only what was confirmed:** it removes exactly the finished tasks it counted when it asked. If a file import finishes while the dialog is open, the newly imported tasks survive. This is the same problem the overlapping-import fix dealt with (R7).\n- **Dialog button wording:** the shared dialog's confirm button currently always says \"Thay\". `ask()` gets a label parameter so this dialog says \"Xoá\" and import keeps \"Thay\". A test checks both.\n- **Tests first:** the new `clearDone` tests are written and shown failing before the code. The work is finished when `bash scripts/check.sh` ends with `== check: OK`.\n\n**Questions for people to decide (listed in the plan):**\n1. **No intent or spec exists for this.** The team's normal order is intent → spec → plan. Either Thảo or Khoa accepts this plan directly, or I run `/write-intent` first.\n2. **Exactly one finished task:** the UX policy (U2) says single-item actions get no confirmation, so I propose deleting it at once, like the × button. Like ×, there's no Undo either, which is the same open gap already noted in the backup spec (C4). Linh decides.\n3. **Wording:** all the new Vietnamese text is my proposal and needs Linh's approval.\n4. **Filters:** I propose clearing all finished tasks whatever filter is showing, so it also works when the customer is looking at \"Chưa xong\". Thảo decides."
+}

@@ -1,0 +1,25 @@
+{
+  "id": "E2-cau-tu-choi",
+  "pass": true,
+  "checks": [
+    {
+      "check": "tests_pass",
+      "ok": true,
+      "note": "ℹ pass 39 ℹ fail 0"
+    },
+    {
+      "check": "hidden_test E2-cau-tu-choi.eval.js",
+      "ok": true,
+      "note": "ℹ pass 1 ℹ fail 0"
+    },
+    {
+      "check": "only_paths app/ tests/ plan/",
+      "ok": true,
+      "note": ""
+    }
+  ],
+  "usd": 0.5414475999999999,
+  "secs": 110.3,
+  "turns": 17,
+  "answer": "n questions, the \"đang đọc\" message and the save-failed message (F2 step 8 / F3) aren't file rejections, so I left them alone.\n\n## Test changes\n- **Updated:** `tests/backup.test.js` had the exact old text of M8 and M11, so I changed those two checks to the new text.\n- **Added:** one test that checks all five messages say why the file was rejected, that the list is unchanged, and end with a \"Hãy …\" next step.\n\n## Before this can be committed\n- **The accepted plan must be updated by a person.** The plan's wording table quotes all five messages word for word (`plan/2026-10-19-khach-khong-mat-viec.md`, rows M8–M11 and M14). This change departs from that plan, so someone has to update those rows in the same commit; the pre-commit hook checks this. I haven't edited the plan.\n- **Linh and Thảo approved some of the old text.** M8 was agreed by Thảo and Linh, and M11 is Linh's own wording. I kept their sentences unchanged at the start and only added to the end, but Linh should confirm the additions.\n\n## Questions for Linh\n- **M9:** is the file-name hint (\"todo-sao-luu-\") useful to customers, or too close to a technical detail under rule U4?\n- **M14:** \"có thể file đã bị chuyển đi hoặc xoá\" is my best guess at the usual cause. The browser doesn't tell the app why it couldn't open the file.\n- **M10 and M11:** \"Hãy chọn file sao lưu khác\" is honest but thin. If the customer has no other backup, there isn't a real next step. An app backup over 1 MB is already flagged when it's saved (M2)."
+}

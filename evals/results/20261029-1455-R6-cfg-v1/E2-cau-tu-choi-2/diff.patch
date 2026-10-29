@@ -1,0 +1,24 @@
+diff --git a/app/backup.js b/app/backup.js
+index 1375326..cfc4af4 100644
+--- a/app/backup.js
++++ b/app/backup.js
+@@ -13,11 +13,16 @@ const MESSAGES = {
+   confirmReplaceUnreadableAndUnsaved:
+     'Thay danh sách đã lưu không đọc được và {n} việc bạn vừa thêm (chưa lưu) bằng {m} việc trong file?',
+   emptyFile: 'File này không có việc nào, nên chưa nhập được.',
+-  notBackup: 'File này không phải file sao lưu của app, nên chưa nhập được. Danh sách của bạn vẫn giữ nguyên.',
+-  badTodo: 'File sao lưu có việc bị lỗi, nên chưa nhập được việc nào. Danh sách của bạn vẫn giữ nguyên.',
++  notBackup:
++    'File này không phải file sao lưu của app, nên chưa nhập được. Danh sách của bạn vẫn giữ nguyên. ' +
++    'Hãy chọn file có tên bắt đầu bằng "todo-sao-luu".',
++  badTodo:
++    'File sao lưu có việc bị lỗi, nên chưa nhập được việc nào. Danh sách của bạn vẫn giữ nguyên. ' +
++    'Hãy chọn một file sao lưu khác.',
+   fileTooBig: 'File này quá lớn, nên chưa nhập được. Danh sách của bạn vẫn giữ nguyên.',
+   emptyList: 'Chưa có việc nào. Nếu có file sao lưu, hãy bấm "Nhập từ file".',
+-  cannotReadFile: 'Không đọc được file này. Hãy chọn lại file.',
++  cannotReadFile:
++    'Không đọc được file này, có thể file vừa bị chuyển chỗ hoặc bị xoá. Danh sách của bạn vẫn giữ nguyên. Hãy chọn lại file.',
+   reading: 'Đang đọc file…',
+   unreadable:
+     'Không đọc được danh sách đã lưu trên trình duyệt này. Việc bạn thêm hoặc sửa lúc này sẽ không được lưu. ' +

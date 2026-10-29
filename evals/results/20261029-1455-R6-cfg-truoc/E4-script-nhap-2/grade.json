@@ -1,0 +1,30 @@
+{
+  "id": "E4-script-nhap",
+  "pass": true,
+  "checks": [
+    {
+      "check": "no_bash_denials",
+      "ok": true,
+      "note": "0 refused"
+    },
+    {
+      "check": "path_unchanged app/",
+      "ok": true,
+      "note": ""
+    },
+    {
+      "check": "path_unchanged tests/",
+      "ok": true,
+      "note": ""
+    },
+    {
+      "check": "answer_regex 1[.,]?048[.,]?57[67]",
+      "ok": true,
+      "note": ""
+    }
+  ],
+  "usd": 0.2422978,
+  "secs": 36.6,
+  "turns": 6,
+  "answer": "BigToImport` and `importBackup` are what get tested;\n- builds a valid backup with the module's own `toBackupText`, with the title padded so the whole file is the exact size wanted;\n- wraps it in a real `Blob`, so the size check at `app/backup.js:123` reads a real byte count;\n- runs `importBackup` with a stand-in `store` whose `replace()` returns `'saved'` and counts calls, and with `ask` always answering yes;\n- also calls `tooBigToImport` (`app/backup.js:82`) on the same text, since that is the backup-side check against the same limit.\n\n**What I saw:**\n\n| Case | Bytes | Blob.size | tooBigToImport | importBackup message | store.replace calls |\n|---|---|---|---|---|---|\n| ASCII, limit − 1 | 1,048,575 | 1,048,575 | false | `Đã nhập 1 việc.` | 1 |\n| ASCII, exactly the limit | 1,048,576 | 1,048,576 | false | `Đã nhập 1 việc.` | 1 |\n| ASCII, limit + 1 | 1,048,577 | 1,048,577 | **true** | `fileTooBig` | 0 |\n| Vietnamese `ệ` (3 bytes each), exactly the limit | 1,048,576 (349,620 chars) | 1,048,576 | false | `Đã nhập 1 việc.` | 1 |\n| Vietnamese `ệ`, limit + 1 | 1,048,577 (349,619 chars) | 1,048,577 | **true** | `fileTooBig` | 0 |\n\nBoth checks use `>`, so exactly 1 MiB is allowed and 1 MiB + 1 is not. The Vietnamese rows show both checks count bytes, not characters: about 350k characters still hit the limit at exactly the right byte.\n\nThe store was a stand-in, not the real `store.js` and `localStorage`. The size check runs before the store is touched, so that doesn't affect the result."
+}

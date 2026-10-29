@@ -1,0 +1,139 @@
+diff --git a/app/app.js b/app/app.js
+index e10d836..790389c 100644
+--- a/app/app.js
++++ b/app/app.js
+@@ -102,9 +102,9 @@ $('#import').onchange = async (e) => {
+   input.value = ''; // so the same file can be picked again
+   if (!file) return;
+   show(MESSAGES.reading);
+-  const current = todos;
+-  const result = await importBackup({ store, current, file, ask });
+-  if (result.todos !== current) todos = result.todos;
++  // Pass the live list, not a copy taken now: another import may replace it while this file is still being read.
++  const result = await importBackup({ store, current: () => todos, file, ask });
++  todos = result.todos;
+   show(result.message);
+   render();
+ };
+diff --git a/app/backup.js b/app/backup.js
+index 1375326..eefd0b8 100644
+--- a/app/backup.js
++++ b/app/backup.js
+@@ -104,8 +104,11 @@ function persist(store, todos) {
+ 
+ // Returns the list to show and the message. Every path except a successful replace returns `current` unchanged.
+ // Writes only through store.replace, never store.save, so an unreadable saved list is replaced only here.
+-async function importBackup({ store, current, file, ask }) {
+-  const keep = (message) => ({ todos: current, message });
++// `current` is the list, or a function returning the list as it is now: reading a file takes time, and another import
++// may replace the list meanwhile, so the confirm question must be based on the list after the read, not before it.
++async function importBackup({ store, current: list, file, ask }) {
++  const now = () => (typeof list === 'function' ? list() : list);
++  const keep = (message) => ({ todos: now(), message });
+   if (file.size > MAX_IMPORT_BYTES) return keep(MESSAGES.fileTooBig);
+   let text;
+   try {
+@@ -115,6 +118,7 @@ async function importBackup({ store, current, file, ask }) {
+   }
+   const parsed = parseBackup(text);
+   if (!parsed.ok) return keep(parsed.message);
++  const current = now();
+   const question = confirmText({ readError: store.readError, current: current.length, incoming: parsed.todos.length });
+   if (question !== null && !(await ask(question))) return keep(null);
+   if (store.replace(parsed.todos) !== 'saved') return keep(MESSAGES.notSaved);
+diff --git a/tests/app.test.js b/tests/app.test.js
+index 71181b8..db46b3a 100644
+--- a/tests/app.test.js
++++ b/tests/app.test.js
+@@ -17,19 +17,25 @@ function fakeElement() {
+     append() {},
+     querySelector(sel) { return (el.children[sel] ||= fakeElement()); },
+     children: {},
++    shown: 0,
++    listeners: [],
++    showModal() { el.shown++; },
++    addEventListener(type, fn) { el.listeners.push(fn); },
++    close(returnValue) { el.returnValue = returnValue; el.listeners.splice(0).forEach((fn) => fn()); },
+   };
+   return el;
+ }
+ 
+-// Loads app.js on an empty, readable list and returns the add form plus every list the app tried to save.
++// Loads app.js on an empty, readable list and returns the add form plus every list the app tried to save or import.
+ function loadApp() {
+   const elements = {};
+   const saved = [];
++  const replaced = [];
+   const store = {
+     readError: false,
+     load() { return { todos: [], readError: false }; },
+     save(todos) { saved.push(todos.map((t) => ({ ...t }))); return 'saved'; },
+-    replace() { return 'saved'; },
++    replace(todos) { replaced.push(todos); return 'saved'; },
+   };
+   const document = {
+     querySelector(sel) { return (elements[sel] ||= fakeElement()); },
+@@ -41,9 +47,21 @@ function loadApp() {
+     document.querySelector('#title').value = value;
+     document.querySelector('#add').onsubmit({ preventDefault() {} });
+   };
+-  return { submit, saved };
++  const pick = (file) => document.querySelector('#import').onchange({ target: { files: [file], value: '' } });
++  return { submit, saved, replaced, pick, document };
+ }
+ 
++// A backup file whose text() resolves only when finish() is called, to control which of two reads ends first.
++function slowFile(n) {
++  const todos = Array.from({ length: n }, (_, i) => ({ id: `id-${i}`, title: `Việc ${i}`, done: false, createdAt: 1 }));
++  const text = backup.toBackupText(todos);
++  let finish;
++  const read = new Promise((resolve) => { finish = () => resolve(text); });
++  return { size: text.length, text: () => read, finish };
++}
++
++const settle = () => new Promise((resolve) => setImmediate(resolve));
++
+ test('add form: trims the title and makes a string id', () => {
+   const { submit, saved } = loadApp();
+   submit('  Mua sữa  ');
+@@ -72,3 +90,40 @@ test('a backup of todos the app made imports again', () => {
+   assert.equal(parsed.ok, true, parsed.message);
+   assert.deepEqual(parsed.todos, todos);
+ });
++
++// Bug: the first file decided "list is empty, no need to ask" from the list as it was when the file was picked.
++test('a second file picked while the first is still reading: the first asks before replacing the list', async () => {
++  const { replaced, pick, document } = loadApp();
++  const dialog = document.querySelector('#confirm');
++  const big = slowFile(30);
++  const small = slowFile(2);
++  const first = pick(big);
++  const second = pick(small);
++  small.finish();
++  await second;
++  assert.equal(replaced.length, 1, 'the small file fills the empty list without asking');
++  big.finish();
++  await settle();
++  assert.equal(replaced.length, 1, 'the big file replaced the 2 todos without asking');
++  assert.equal(dialog.shown, 1);
++  assert.equal(document.querySelector('#confirm-text').textContent, 'Thay 2 việc hiện có bằng 30 việc trong file?');
++  dialog.close(''); // Huỷ
++  await first;
++  assert.equal(replaced.length, 1);
++  assert.equal(document.querySelector('#count').textContent, '2 việc chưa xong');
++});
++
++test('a todo added while a file is still reading: the import asks before replacing it', async () => {
++  const { submit, replaced, pick, document } = loadApp();
++  const dialog = document.querySelector('#confirm');
++  const file = slowFile(3);
++  const done = pick(file);
++  submit('Mua sữa');
++  file.finish();
++  await settle();
++  assert.equal(replaced.length, 0, 'the import replaced the new todo without asking');
++  assert.equal(document.querySelector('#confirm-text').textContent, 'Thay 1 việc hiện có bằng 3 việc trong file?');
++  dialog.close(''); // Huỷ
++  await done;
++  assert.equal(document.querySelector('#count').textContent, '1 việc chưa xong');
++});

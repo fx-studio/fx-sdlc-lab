@@ -1,0 +1,30 @@
+{
+  "id": "E1-nhap-chong",
+  "pass": true,
+  "checks": [
+    {
+      "check": "tests_pass",
+      "ok": true,
+      "note": "ℹ pass 41 ℹ fail 0"
+    },
+    {
+      "check": "hidden_test E1-nhap-chong.eval.js",
+      "ok": true,
+      "note": "ℹ pass 2 ℹ fail 0"
+    },
+    {
+      "check": "no_test_edits",
+      "ok": true,
+      "note": ""
+    },
+    {
+      "check": "only_paths app/ tests/ plan/",
+      "ok": true,
+      "note": ""
+    }
+  ],
+  "usd": 0.7338596,
+  "secs": 280.6,
+  "turns": 19,
+  "answer": " while another is still being read waits its turn, then decides based on the list as it is at that moment. Only one dialog can be open, and the \"Thay n việc…\" count is always current. If one import fails, later ones still run.\n- One effect for customers: the second file now waits until the first finishes reading instead of being read at the same time. In your example, the big file fills the empty list first, then the small file asks before replacing it.\n\n**Proof.** I wrote the test `tests/import-race.test.js` first and ran it against the old code:\n- **Your example:** failed with `2 !== 1`, meaning both files replaced the list and the second did so without asking.\n- **Two imports waiting at the same time:** failed with `InvalidStateError: dialog already open`.\n- **Adding a todo while a file is being read:** already passed before the fix, because adding changes the remembered list in place. I kept it to guard against this coming back.\n\nAll three pass now. Output of `bash scripts/check.sh`:\n\n```\nℹ tests 41\nℹ pass 41\nℹ fail 0\n== lint: node --check app/*.js tests/*.js\n== check: OK\n```\n\n**Mismatch in CLAUDE.md:** the new Verification section (an uncommitted edit) says a healthy run shows `tests 44`. The suite had 38 tests before this change and has 41 now, with these 3 added. The number in CLAUDE.md looks out of date; I didn't edit it, so someone should correct it.\n\nTo check in the browser, pick a large backup file and then a small one into an empty list. I didn't try this by hand."
+}

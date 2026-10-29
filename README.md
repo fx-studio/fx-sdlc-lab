@@ -19,7 +19,8 @@ khoản. Mỗi tập của loạt thêm vào repo những thứ một bước SD
 | SDLC-0 | Tổng quan: code nhanh rồi, sao team vẫn chậm? | `docs/`: ghi chép đọc playbook theo sáu bước, kèm chỗ còn hở và cách vá ban đầu | không có demo (tập bản đồ) | [Code nhanh rồi, sao team vẫn chậm?](https://fxstudio.dev/ai-native-sdlc-code-nhanh-team-van-cham/) |
 | SDLC-1 | Plan: ý tưởng thành `intent.md` | skill `write-intent`, subagent `intent-reviewer`, hook `no-self-approve`, thư mục `intent/` | [demo/sdlc-1/](demo/sdlc-1/README.md) | [Ý tưởng thành intent.md](https://fxstudio.dev/ai-native-sdlc-plan-y-tuong-thanh-intent/) |
 | SDLC-2 | Design: `intent.md` thành `spec.md` | skill `write-spec`, ba skill `policy-*` có phiên bản, subagent `spec-reviewer`, spec job (git `post-commit`), hook `no-self-approve` bản 2, thư mục `spec/` | [demo/sdlc-2/](demo/sdlc-2/README.md) | [intent.md thành spec.md](https://fxstudio.dev/ai-native-sdlc-design-intent-thanh-spec/) |
-| SDLC-3 | Build: plan trước, code sau | `CLAUDE.md` mục Build (bảng phân hạng, plan bốn mục, Things Claude gets wrong), thư mục `plan/`, ba hook build (`protect-paths`, `no-secrets`, `check-js`), subagent `verifier`, git `pre-commit` đòi plan đi cùng code, bộ thử kích hoạt skill; **tính năng sao lưu / nhập lại** trong `app/` và bộ test đầu tiên (`tests/`, 42 test) | [demo/sdlc-3/](demo/sdlc-3/README.md) | chưa đăng |
+| SDLC-3 | Build: plan trước, code sau | `CLAUDE.md` mục Build (bảng phân hạng, plan bốn mục, Things Claude gets wrong), thư mục `plan/`, ba hook build (`protect-paths`, `no-secrets`, `check-js`), subagent `verifier`, git `pre-commit` đòi plan đi cùng code, bộ thử kích hoạt skill; **tính năng sao lưu / nhập lại** trong `app/` và bộ test đầu tiên (`tests/`, 42 test) | [demo/sdlc-3/](demo/sdlc-3/README.md) | [Build: plan trước, code sau](https://fxstudio.dev/ai-native-sdlc-build-plan-truoc-code-sau/) |
+| SDLC-4 | Test: agent tự kiểm, cấu hình cũng phải test | `CLAUDE.md` mục Verification, `scripts/check.sh` (một lệnh kiểm), hook `protect-tests`, `scripts/flaky.sh`, subagent `test-writer`, **bộ eval** `evals/` (9 task từ lịch sử repo, test ẩn, chấm bằng máy, đo A/B cấu hình), workflow `evals.yml` (chưa bật), `scripts/shot.py` cho vòng kiểm bằng hình; sửa T-013, T-014 (bug gài có chủ ý), 44 test | [demo/sdlc-4/](demo/sdlc-4/README.md) | [Test: agent tự kiểm, cấu hình cũng phải test](https://fxstudio.dev/ai-native-sdlc-test-agent-tu-kiem/) |
 
 Các bài của loạt trên blog: https://fxstudio.dev/tag/ai-native-sdlc/
 
@@ -85,6 +86,25 @@ Cần Claude Code, `python3` (cho hook), Node (cho `node --test` của app mẫu
 7. Chạy song song: trước khi mở hai worktree, hỏi một phiên plan mode *"hai việc này đụng chung file nào?"*. Mỗi worktree một nhánh tạm,
    người commit và gộp về `main`, rồi xoá nhánh.
 
+## Mang về repo của bạn (bước Test)
+
+Cần Claude Code, `python3`, Node (app mẫu). Eval tốn tiền mỗi lần chạy (demo: ~2,9 USD cho 9 task).
+
+1. Gói việc kiểm thành **một lệnh** (`bash scripts/check.sh` ở đây) và chép mục **Verification** của `CLAUDE.md`: output mẫu khi ổn,
+   "chạy trước khi báo xong và dán output", "check fail thì sửa code, không sửa test". Giữ đúng giới hạn của câu cuối: nó nói về lúc
+   check fail, **không** cấm cập nhật test khi chính yêu cầu đổi. Bản đầu của demo viết rộng hơn và làm tụt eval (R6).
+2. Sửa bug: test tái hiện trước, người commit, rồi mở phiên `TASK_KIND=fix`. Chép `.claude/hooks/protect-tests.py` + khối của nó trong
+   `settings.json`. Demo: agent không tự làm yếu test, nhưng bị **bảo** nới test thì nới; hook là thứ chặn (R2c).
+3. Chạy `bash scripts/flaky.sh 10` trước khi bật vòng tự kiểm. Test nào đổi kết quả thì ghi vào danh sách cách ly trong `CLAUDE.md`.
+4. Bộ eval: chép `evals/`. Mỗi task là một việc thật đã có kết quả được chấp nhận: `base` (commit bắt đầu), `prompt`, `check` (xem đầu
+   `evals/check.py`), test ẩn đặt tên `*.eval.js` để `node --test` không tự chạy. Viết xong, **thử test ẩn trên bản lỗi (phải fail), bản
+   đã sửa, và ít nhất một lời giải đúng khác (phải pass)**: demo có ba chỗ chấm sai do người viết eval.
+5. Đo một thay đổi cấu hình: `python3 evals/run.py --label <tên> --repeat 2 --config-from <thư-mục có CLAUDE.md và .claude mới>`. Đọc
+   **từng task** trong `evals/results/history.jsonl`, không chỉ tổng: ở demo tổng đứng yên 12–13/16 trong khi từng task lên xuống 2/2 ↔ 0/2.
+6. Sự cố thành eval: đưa ticket + commit sửa cho Claude, bảo viết theo khuôn `evals/tasks/*.json`; người kiểm fail/pass trên hai commit.
+7. CI: `.github/workflows/evals.yml` chạy khi PR đụng `CLAUDE.md` / `.claude/` / `evals/` và mỗi tuần. Cần `ANTHROPIC_API_KEY` trong
+   GitHub Secrets. Chạy thử ở máy trước bằng đúng lệnh trong đó.
+
 ## Bố cục
 
 ```
@@ -93,14 +113,15 @@ intent/                 intent.md, mọi thứ ở main; Status: draft hoặc ac
 spec/                   spec.md của bước Design, cùng tên với intent
 plan/                   plan.md của bước Build, cùng tên; người đổi Status: accepted
 tests/                  node --test, không package
-scripts/                spec job (on-intent-accepted.sh), pre-commit, install-hooks.sh, skill-triggers.sh
+evals/                  bộ eval: tasks/*.json, hidden/*.eval.js, check.py (chấm), run.py (chạy, đo A/B cấu hình), results/
+scripts/                spec job (on-intent-accepted.sh), pre-commit, install-hooks.sh, skill-triggers.sh, check.sh, flaky.sh, shot.py
 tickets/                ticket mẫu
 .claude/
   skills/write-intent/  SKILL.md · template.md · checklist.md
   skills/write-spec/    SKILL.md · template.md · risk-list.md · checklist.md
   skills/policy-*/      policy mẫu của team (privacy, security, ux), có phiên bản
-  agents/               intent-reviewer.md · spec-reviewer.md · verifier.md (chỉ đọc, chỉ báo)
-  hooks/                no-self-approve.py · protect-paths.py · no-secrets.py · check-js.py
+  agents/               intent-reviewer.md · spec-reviewer.md · verifier.md (chỉ đọc, chỉ báo) · test-writer.md (chỉ từ spec)
+  hooks/                no-self-approve.py · protect-paths.py · no-secrets.py · check-js.py · protect-tests.py
   settings.json         gắn hook
 demo/sdlc-<n>/          bằng chứng của từng tập: nhân vật giả lập, script chạy lại, transcript nguyên văn, kết luận
 docs/                   ghi chép của tác giả về playbook, theo từng bước

@@ -1,0 +1,35 @@
+diff --git a/app/app.js b/app/app.js
+index e10d836..f63ddd6 100644
+--- a/app/app.js
++++ b/app/app.js
+@@ -96,17 +96,24 @@ $('#export').onclick = () => {
+   show(tooBigToImport(text) ? MESSAGES.backupTooBig : fill(MESSAGES.backedUp, { n: todos.length }));
+ };
+ 
+-$('#import').onchange = async (e) => {
++// One import at a time: a file picked while another is still being read waits its turn, then decides (and asks) against
++// the list as the earlier import left it. Otherwise it would compare against a stale, empty list and replace without asking.
++let importing = Promise.resolve();
++
++$('#import').onchange = (e) => {
+   const input = e.target;
+   const file = input.files[0];
+   input.value = ''; // so the same file can be picked again
+   if (!file) return;
+   show(MESSAGES.reading);
+-  const current = todos;
+-  const result = await importBackup({ store, current, file, ask });
+-  if (result.todos !== current) todos = result.todos;
+-  show(result.message);
+-  render();
++  importing = importing.catch(() => {}).then(async () => {
++    const current = todos;
++    const result = await importBackup({ store, current, file, ask });
++    if (result.todos !== current) todos = result.todos;
++    show(result.message);
++    render();
++  });
++  return importing;
+ };
+ 
+ $('#unreadable').textContent = MESSAGES.unreadable;

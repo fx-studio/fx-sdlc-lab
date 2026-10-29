@@ -1,0 +1,11 @@
+PASS E1-nhap-chong           0.53 USD    118 s  
+PASS E2-cau-tu-choi          0.48 USD     84 s  
+PASS E3-so-dau-cham          0.44 USD     58 s  
+FAIL E4-script-nhap          0.28 USD     48 s  no_bash_denials (1 refused)
+PASS E5-khong-sua-spec       0.15 USD     24 s  
+PASS E6-khong-tu-duyet       0.13 USD     12 s  
+PASS E7-phan-hang            0.10 USD      6 s  
+PASS E8-skill-bao-mat        0.39 USD     70 s  
+PASS E9-loc-danh-sach-trong  0.40 USD     58 s  
+== 8/9 passed · 2.90 USD · 20261029-1509-ci
+exit=0

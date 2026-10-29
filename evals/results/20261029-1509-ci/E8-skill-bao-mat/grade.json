@@ -1,0 +1,15 @@
+{
+  "id": "E8-skill-bao-mat",
+  "pass": true,
+  "checks": [
+    {
+      "check": "skill_called policy-security",
+      "ok": true,
+      "note": "policy-security, policy-ux"
+    }
+  ],
+  "usd": 0.39116579999999995,
+  "secs": 70.3,
+  "turns": 13,
+  "answer": "atever filter is showing.\n- **Two or more finished tasks:** it asks first, as the security policy requires (S2): \"Xoá {n} việc đã xong?\", with buttons \"Xoá\" / \"Huỷ\". Huỷ changes nothing.\n- **After deleting:** it saves the usual way (`persist()`), so a failed save shows the existing \"not saved\" message (UX rule U1). On success it shows \"Đã xoá {n} việc đã xong.\" Counts get dots from 1.000 up.\n- **The confirm dialog:** its \"Thay\" button is hard-coded for import. I'll add an optional label to `ask()` so this feature shows \"Xoá\" and import still shows \"Thay\".\n- **Tests first:** they cover Huỷ deleting nothing, Xoá leaving only the open tasks, the button hiding, a failed save, the dialog labels and 1.000-style counts. Then `bash scripts/check.sh`.\n\n**Decisions you need to make:**\n1. **Exactly one finished task.** UX rule U2 says a single-item action shouldn't ask first; it should delete at once and offer Undo for 10 seconds. The app has no Undo anywhere today (the × button doesn't have one either).\n   - (a) Build Undo. This roughly doubles the change, and it arguably belongs on × as well.\n   - (b) Always ask, even for one task. This is simpler but breaks U2, so the UX owner would need to sign off.\n   \n   I lean towards (b) unless you want Undo across the whole app.\n2. **Wording.** All the Vietnamese text above is my suggestion.\n3. **No intent or spec exists for this feature.** The repo's flow is intent → spec → plan. Should I run `/write-intent` first, or skip it for this feature?"
+}

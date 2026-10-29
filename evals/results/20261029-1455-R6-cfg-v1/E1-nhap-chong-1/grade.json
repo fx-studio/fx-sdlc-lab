@@ -1,0 +1,30 @@
+{
+  "id": "E1-nhap-chong",
+  "pass": false,
+  "checks": [
+    {
+      "check": "tests_pass",
+      "ok": false,
+      "note": "ℹ pass 39 ℹ fail 1"
+    },
+    {
+      "check": "hidden_test E1-nhap-chong.eval.js",
+      "ok": false,
+      "note": "ℹ pass 0 ℹ fail 2"
+    },
+    {
+      "check": "no_test_edits",
+      "ok": true,
+      "note": ""
+    },
+    {
+      "check": "only_paths app/ tests/ plan/",
+      "ok": true,
+      "note": ""
+    }
+  ],
+  "usd": 0.35176139999999995,
+  "secs": 91.4,
+  "turns": 6,
+  "answer": "g the 1 todo now on screen\n  0 !== 1\n✔ a todo added while the file is being read: the import asks before replacing it\nℹ tests 2  ℹ pass 1  ℹ fail 1\n```\n\nThe second test already passes, and I've kept it on purpose. Adding a todo changes the same array in place, so the import sees the new todo and asks. The test stops the fix from breaking that by copying the list.\n\n**Next step for you:** review and commit `tests/import-race.test.js`. Then I'll fix the code without touching the test. That works with `TASK_KIND=fix` too.\n\n**Fix plan:**\n- **Files that change:** `app/backup.js` and `app/app.js`.\n- **Order of work:**\n  1. Have `importBackup` check the current list *after* the file has been read, just before deciding whether to ask. It can take an optional `getCurrent` that falls back to `current`, so the existing `tests/backup.test.js` calls keep working.\n  2. In `app.js`, pass `getCurrent: () => todos`, and don't use the old list when handling the result.\n- **Risks:** two files could both finish reading while the list isn't empty. Both would try to open the confirm dialog, and the second `showModal()` throws. No data is lost, but the \"Đang đọc file…\" message stays on screen. I'd handle that by making a second import wait until the first one is done. Say if you'd rather keep it out of this fix.\n- **Proof:** `tests/import-race.test.js` goes green, and `bash scripts/check.sh` ends with `check: OK`.\n\nI haven't run `scripts/check.sh` yet. I'll run it after the fix and paste its output."
+}

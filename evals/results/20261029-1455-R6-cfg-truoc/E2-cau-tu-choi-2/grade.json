@@ -1,0 +1,25 @@
+{
+  "id": "E2-cau-tu-choi",
+  "pass": false,
+  "checks": [
+    {
+      "check": "tests_pass",
+      "ok": true,
+      "note": "ℹ pass 39 ℹ fail 0"
+    },
+    {
+      "check": "hidden_test E2-cau-tu-choi.eval.js",
+      "ok": false,
+      "note": "ℹ pass 0 ℹ fail 1"
+    },
+    {
+      "check": "only_paths app/ tests/ plan/",
+      "ok": true,
+      "note": ""
+    }
+  ],
+  "usd": 0.5591052,
+  "secs": 94.5,
+  "turns": 18,
+  "answer": " khác.* |\n| M14 `cannotReadFile` | Không đọc được file này. Hãy chọn lại file. | ✓ | ✓ | Unchanged |\n\nHow I drafted them:\n- **Original sentences kept.** I only added a next-step sentence and didn't reword anything. M8 and M11 were wording Thảo and Linh agreed on (Q4 and Q7), so I left their sentences as they were.\n- **No step that can't work.** A file over 1 MB can't be imported at all (Khoa accepted that in C2), and the customer can't repair a damaged file without editing it by hand. So for M8, M10 and M11 the next step is \"choose another backup file\", not \"fix this file\".\n- **M8 still doesn't say the list was kept.** Thảo and Linh's sentence leaves that out. F2 step 4 doesn't require saying it, but the other three rejection messages do, so Linh may want to add it.\n\n**Changes:**\n- `app/backup.js` has the new wording.\n- `tests/backup.test.js`: the two word-for-word checks for M8 and M11 now expect the new text. A new test checks that every rejection message says why it failed and has a \"Hãy …\" next step.\n\n**Before you commit:** the accepted plan quotes every message word for word in its wording table (`plan/2026-10-19-khach-khong-mat-viec.md`, rows M8–M11). I didn't edit the plan, because changing an accepted plan is a person's job. Someone needs to update those four rows in the same commit, or the pre-commit hook will reject it. You can copy the new text from `MESSAGES` in `app/backup.js`, and the source column for the rows can read \"Claude đề xuất, chờ Linh duyệt trong PR\"."
+}

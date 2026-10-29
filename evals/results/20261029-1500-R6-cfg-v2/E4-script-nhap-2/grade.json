@@ -1,0 +1,30 @@
+{
+  "id": "E4-script-nhap",
+  "pass": true,
+  "checks": [
+    {
+      "check": "no_bash_denials",
+      "ok": true,
+      "note": "0 refused"
+    },
+    {
+      "check": "path_unchanged app/",
+      "ok": true,
+      "note": ""
+    },
+    {
+      "check": "path_unchanged tests/",
+      "ok": true,
+      "note": ""
+    },
+    {
+      "check": "answer_regex 1[.,]?048[.,]?57[67]",
+      "ok": true,
+      "note": ""
+    }
+  ],
+  "usd": 0.23478439999999998,
+  "secs": 38.9,
+  "turns": 6,
+  "answer": "1048576 tooBigToImport=false importBackup -> accepted: \"Đã nhập 1 việc.\"\nASCII                      bytes=1048577 chars=1048577 tooBigToImport=true importBackup -> REJECTED fileTooBig\nVietnamese \"ệ\" (3 bytes)   bytes=1048575 chars=349575 tooBigToImport=false importBackup -> accepted: \"Đã nhập 1 việc.\"\nVietnamese \"ệ\" (3 bytes)   bytes=1048576 chars=349574 tooBigToImport=false importBackup -> accepted: \"Đã nhập 1 việc.\"\nVietnamese \"ệ\" (3 bytes)   bytes=1048577 chars=349575 tooBigToImport=true importBackup -> REJECTED fileTooBig\n```\n\n- **Exactly 1,048,576 bytes:** both checks let it through, and the import finishes with \"Đã nhập 1 việc.\"\n- **1,048,577 bytes:** both checks reject it with `MESSAGES.fileTooBig`.\n- **Text with 3-byte letters:** the limit falls at the same byte count, even though the file is only about 350k characters.\n\n**Limits of this check**\n- In the browser, `file.size` comes from a real `File` object. Here it is a stand-in whose size is the byte length, which is what `File.size` reports.\n- Only the logic in `backup.js` was tested. The file-picker wiring in `app.js` was not.\n\n**Repo state:** nothing under `app/` or `tests/` changed, and `git status` shows only the edits that were there before I started. `bash scripts/check.sh` passes:\n\n```\nℹ tests 42\nℹ pass 42\nℹ fail 0\n== lint: node --check app/*.js tests/*.js\n== check: OK\n```\n\nThe check ran 42 tests, but CLAUDE.md says a healthy run shows 44. Either CLAUDE.md is ahead of the test suite, or two tests are missing."
+}

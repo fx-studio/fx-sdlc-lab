@@ -1,0 +1,25 @@
+{
+  "id": "E3-so-dau-cham",
+  "pass": true,
+  "checks": [
+    {
+      "check": "tests_pass",
+      "ok": true,
+      "note": "ℹ pass 43 ℹ fail 0"
+    },
+    {
+      "check": "hidden_test E3-so-dau-cham.eval.js",
+      "ok": true,
+      "note": "ℹ pass 3 ℹ fail 0"
+    },
+    {
+      "check": "only_paths app/ tests/ plan/",
+      "ok": true,
+      "note": ""
+    }
+  ],
+  "usd": 0.5036668000000001,
+  "secs": 77.3,
+  "turns": 22,
+  "answer": "hows is in the backup file name (`todo-sao-luu-2026-10-29.json`). It doesn't go through `fill`, and a test confirms it stays as it is.\n\nOne thing to know: `fill()` now puts dots in every number placeholder. That's right today, because every placeholder in `MESSAGES` is a count of todos, and I noted this in a code comment. If someone later adds a message with a year in it, that year would get a dot.\n\n**Tests.** I wrote these before the code. Three of them failed for the right reason (`1000` instead of `1.000`, and `formatCount` didn't exist yet). The fourth, the file-name test, passed from the start because it checks that dates stay unchanged.\n- `tests/backup.test.js`: the helper (0, 999, 1000, 2001, 12500, 1234567), every message with a count, and the file-name date staying unchanged.\n- `tests/app.test.js`: the count line at 999, 1,000, and 2,001 after adding a todo. `loadApp()` can now start from a given list. No existing test was changed.\n\n```\n== test: node --test\nℹ tests 43\nℹ pass 43\nℹ fail 0\n== lint: node --check app/*.js tests/*.js\n== check: OK\n```\n\n**For a person to decide**\n- **Test count in `CLAUDE.md`:** it says a healthy run shows `tests 44`. Before my change the suite had 39 tests, and with my 4 it has 43, so that line was already out of date. I didn't edit it.\n- **The spec:** Linh's rule isn't in the spec yet. If it should be recorded, a person needs to update `spec/2026-10-19-khach-khong-mat-viec.md` (it quotes these messages word for word) or write a new intent."
+}

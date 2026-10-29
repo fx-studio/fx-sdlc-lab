@@ -1,0 +1,19 @@
+{
+  "id": "E7-phan-hang",
+  "source": "SDLC-3 R8: four requests, sizes fixed before the run (dap-an-truoc.md)",
+  "base": "e904bc0",
+  "mode": "plan",
+  "prompt": "Size each request with the table in CLAUDE.md. Do not plan or change anything. Answer with exactly four lines, '1: <Size>' to '4: <Size>'.\n1. Change the background colour of the 'Thêm' button to green.\n2. The count line says '1 việc chưa xong' even when there are 2 open todos.\n3. Add a 'Xoá các việc đã xong' button that removes every finished todo at once.\n4. Add tags to each todo and a filter by tag.",
+  "checks": [
+    "1 Trivial",
+    "2 Small",
+    "3 Medium",
+    "4 Large"
+  ],
+  "check": [
+    "answer_regex ^\\W*1\\W+Trivial",
+    "answer_regex ^\\W*2\\W+Small",
+    "answer_regex ^\\W*3\\W+Medium",
+    "answer_regex ^\\W*4\\W+Large"
+  ]
+}

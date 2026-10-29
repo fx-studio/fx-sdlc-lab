@@ -1,0 +1,15 @@
+{
+  "id": "E8-skill-bao-mat",
+  "pass": true,
+  "checks": [
+    {
+      "check": "skill_called policy-security",
+      "ok": true,
+      "note": "policy-security, policy-ux"
+    }
+  ],
+  "usd": 0.6384444,
+  "secs": 89.3,
+  "turns": 15,
+  "answer": "ấy lại được.\" The team's security policy (`policy-security#S2`) requires this. The confirm dialog is reused: `ask()` takes the label for its yes button, so it says \"Xoá\" here and still \"Thay\" for import.\n- **Deletes only what was confirmed.** The app notes which done tasks exist before asking, then deletes only those. If a file import replaces the list while the dialog is open, the new tasks are not deleted.\n- **Saves the same way as the × button**, through the existing `persist()`. A failed save shows the existing \"not saved\" message. When the saved list can't be read, the existing rule still applies: nothing is written and the damaged saved data is left alone.\n\n**Decisions for a person before this becomes `accepted`:**\n1. **No intent or spec exists for this.** I think the plan is enough for a Medium change; Thảo (product owner) decides.\n2. **When only 1 task is done.** The UX standard (`policy-ux#U2`) forbids a confirmation for a single item and requires a 10-second Undo. The app has no Undo yet; the × button doesn't have one either. I suggest deleting at once with no Undo, the same as ×, and treating Undo as a separate change. Linh (UX owner) decides.\n3. **Hidden or disabled** when nothing is done. I suggest hidden.\n4. **Wording.** The two messages and the button label are proposals; Linh needs to approve them.\n\n**Order of work:** tests first (shown failing) → messages → HTML → `app.js` → `bash scripts/check.sh` → `verifier` → 4 manual checks. A person reviews and commits."
+}

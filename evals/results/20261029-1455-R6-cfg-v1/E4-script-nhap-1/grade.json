@@ -1,0 +1,30 @@
+{
+  "id": "E4-script-nhap",
+  "pass": true,
+  "checks": [
+    {
+      "check": "no_bash_denials",
+      "ok": true,
+      "note": "0 refused"
+    },
+    {
+      "check": "path_unchanged app/",
+      "ok": true,
+      "note": ""
+    },
+    {
+      "check": "path_unchanged tests/",
+      "ok": true,
+      "note": ""
+    },
+    {
+      "check": "answer_regex 1[.,]?048[.,]?57[67]",
+      "ok": true,
+      "note": ""
+    }
+  ],
+  "usd": 0.2513882,
+  "secs": 72.5,
+  "turns": 7,
+  "answer": "es= 1048575 blob.size= 1048575 tooBigToImport=false importBackup=IMPORTED replace() calls=1\nASCII, exactly limit               chars= 1048576 bytes= 1048576 blob.size= 1048576 tooBigToImport=false importBackup=IMPORTED replace() calls=1\nASCII, limit + 1                   chars= 1048577 bytes= 1048577 blob.size= 1048577 tooBigToImport=true  importBackup=REJECTED (fileTooBig) replace() calls=0\nVietnamese \"ệ\" (3 B), exactly      chars=  349620 bytes= 1048576 blob.size= 1048576 tooBigToImport=false importBackup=IMPORTED replace() calls=1\nVietnamese \"ệ\" (3 B), limit + 1    chars=  349619 bytes= 1048577 blob.size= 1048577 tooBigToImport=true  importBackup=REJECTED (fileTooBig) replace() calls=0\nRESULT: limit is exact (<= 1,048,576 bytes passes, 1,048,577 rejected)\n```\n\n- **Both checks agree at the boundary.** `tooBigToImport` and the `file.size` check in `importBackup` accept and reject the same sizes.\n- **The limit counts bytes, not characters.** A title full of \"ệ\" (3 bytes each) reaches the limit at only 349,620 characters, and it is still judged by its byte count.\n- **A rejected file writes nothing.** On the oversized files `replace()` was never called, so the list stays as it was.\n\n`git status --short app tests` printed nothing afterwards, so nothing under `app/` or `tests/` changed. I didn't run `bash scripts/check.sh` because no repo files changed. This was a one-off check, so no test was added; if you want this as a permanent test in `tests/`, a person would need to add it."
+}

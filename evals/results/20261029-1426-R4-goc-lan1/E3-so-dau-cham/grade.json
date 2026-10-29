@@ -1,0 +1,25 @@
+{
+  "id": "E3-so-dau-cham",
+  "pass": false,
+  "checks": [
+    {
+      "check": "tests_pass",
+      "ok": true,
+      "note": "ℹ pass 39 ℹ fail 0"
+    },
+    {
+      "check": "hidden_test E3-so-dau-cham.eval.js",
+      "ok": false,
+      "note": "ℹ pass 1 ℹ fail 2"
+    },
+    {
+      "check": "only_paths app/ tests/ plan/",
+      "ok": true,
+      "note": ""
+    }
+  ],
+  "usd": 0.17804520000000001,
+  "secs": 21.2,
+  "turns": 6,
+  "answer": "d committed in `65fae52`:\n1. F4 step 1 and criterion 23: \"dữ liệu trình duyệt\" becomes \"dữ liệu trang web\".\n2. F2 step 8: a separate sentence for when an import fails during save.\n\nNothing there mentions how counts are written or a thousands separator. I also searched the whole repo outside `demo/` for `1.000`, `dấu chấm`, `nghìn` and `toLocale`, and none of the hits are about this. The spec has no uncommitted changes either, so there's no pending edit I'm missing.\n\n**Why I stopped.** Under the repo rules I only implement what a person has accepted. If I added the dots now, the code would go beyond its spec and plan, and the change would have no approval behind it.\n\n**Where the change would go, once it's in the spec.** Counts are shown in `app/app.js:52` (`${open} việc chưa xong`) and in the `{n}`/`{m}` messages in `app/backup.js:9-14` (backup, import and replace confirmation). It's a medium-sized change: one shared formatting helper, those call sites, and tests at 999, 1.000 and 1.000.000. The plan should say whether the helper is written by hand or uses `toLocaleString('vi-VN')`, since that depends on the runtime's locale support.\n\n**Decision for you:**\n- **Add it to the spec:** someone adds the line under \"Revisions after acceptance\" and commits it, then updates `plan/2026-10-19-khach-khong-mat-viec.md`. I'll implement it after that.\n- **It's in the wrong file:** if the revision is written somewhere else, like a ticket or a demo note, tell me where and I'll check it again."
+}

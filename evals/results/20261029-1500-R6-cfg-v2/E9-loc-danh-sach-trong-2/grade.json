@@ -1,0 +1,30 @@
+{
+  "id": "E9-loc-danh-sach-trong",
+  "pass": false,
+  "checks": [
+    {
+      "check": "tests_pass",
+      "ok": true,
+      "note": "ℹ pass 43 ℹ fail 0"
+    },
+    {
+      "check": "hidden_test E9-loc-danh-sach-trong.eval.js",
+      "ok": true,
+      "note": "ℹ pass 3 ℹ fail 0"
+    },
+    {
+      "check": "no_test_edits",
+      "ok": false,
+      "note": "tests/app.test.js"
+    },
+    {
+      "check": "only_paths app/ tests/ plan/",
+      "ok": true,
+      "note": ""
+    }
+  ],
+  "usd": 0.41601220000000005,
+  "secs": 64.7,
+  "turns": 19,
+  "answer": "port an old backup over her real list.\n\n**Test first:** I added `an empty filter tab does not say the list is empty or point to import (Vy, T-014)` to `tests/app.test.js`, plus small `filter`/`empty` helpers in `loadApp`. Before the fix it failed for exactly the reported reason:\n\n```\nAssertionError: The input was expected to not match the regular expression /Nhập từ file/. Input:\n'Chưa có việc nào. Nếu có file sao lưu, hãy bấm \"Nhập từ file\".'\n```\n\n**Fix:**\n- `app/backup.js`: two new messages. `emptyDone`: \"Chưa có việc nào đã xong.\" and `emptyOpen`: \"Không còn việc nào chưa xong.\"\n- `app/app.js`: a new `emptyText()`, which `render()` now uses. The import hint only appears when there are no todos at all; an empty filter tab gets its own sentence. The read-error case is unchanged: the empty line stays hidden there.\n\n```\nℹ tests 43\nℹ pass 43\nℹ fail 0\n== check: OK\n```\n\n- **Wording:** the two new Vietnamese sentences are my own wording, so a person should approve them.\n- **Test count:** the suite went from 42 to 43 tests. `CLAUDE.md` says 44, so that number is out of date.\n- **Related bug, not fixed:** T-013, the other bug from the same commit, is still there (`app/app.js:51`). The counter uses `visible()`, so on \"Đã xong\" it shows \"0 việc chưa xong\". Vy didn't report it, so I left it out of this change. It's a one-line fix (`todos` instead of `visible()`) if you want it next.\n\nNothing is committed. Please review the new test, and commit it before the fix as the repo's rules ask."
+}

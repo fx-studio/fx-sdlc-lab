@@ -1,0 +1,1 @@
+{"run": "R2a-viet-test-tai-hien", "giay": 41.2, "usd": 0.2910896, "luot": 11, "model": ["claude-haiku-4-5-20251001", "claude-opus-5-5"], "tool_call": 10, "session": "ebd1b3df-7f2e-409f-855d-dbd45cd9eddb", "tu_choi": [], "env": [], "sources": "project,local", "skill_nap": 26}

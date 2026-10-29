@@ -1,0 +1,30 @@
+{
+  "id": "E1-nhap-chong",
+  "pass": false,
+  "checks": [
+    {
+      "check": "tests_pass",
+      "ok": false,
+      "note": "ℹ pass 38 ℹ fail 1"
+    },
+    {
+      "check": "hidden_test E1-nhap-chong.eval.js",
+      "ok": false,
+      "note": "ℹ pass 0 ℹ fail 1"
+    },
+    {
+      "check": "no_test_edits",
+      "ok": true,
+      "note": ""
+    },
+    {
+      "check": "only_paths app/ tests/ plan/",
+      "ok": true,
+      "note": ""
+    }
+  ],
+  "usd": 0.31085240000000003,
+  "secs": 58.7,
+  "turns": 7,
+  "answer": " the handler records the list as it is when the file is picked (`const current = todos`), then waits for the file to be read. `importBackup` decides whether to ask using that old, empty list (`app/backup.js:118`), so it skips the confirm dialog. It then calls `store.replace` (`app/backup.js:120`), so the 1-item list is overwritten in storage as well as on screen.\n\n**Proposed fix (not applied):** the newest pick wins, and any earlier import still running stops before it writes anything.\n- In `app.js`, give each import a number, and pass `importBackup` a way to check whether its import is still the newest.\n- In `backup.js`, `importBackup` makes that check after the file is read and before it asks or calls `store.replace`. An import that is no longer the newest returns the list unchanged and shows nothing.\n\nOnly ignoring the old result in `app.js` would not be enough, because by then `store.replace` has already written the old file to storage. The extra parameter is optional, so the existing tests in `tests/backup.test.js` don't change.\n\nThere's another option: run imports one after another and check the list again just before replacing. That would also satisfy the test, but the customer would get a confirm dialog for a file they had already picked again over. I recommend newest-pick-wins.\n\nI haven't run `bash scripts/check.sh`, because the new test is meant to fail until the fix is in. Once you commit `tests/import-race.test.js`, I'll make the change and paste the check output."
+}

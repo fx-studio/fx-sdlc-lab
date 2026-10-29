@@ -1,0 +1,30 @@
+{
+  "id": "E1-nhap-chong",
+  "pass": false,
+  "checks": [
+    {
+      "check": "tests_pass",
+      "ok": false,
+      "note": "ℹ pass 38 ℹ fail 1"
+    },
+    {
+      "check": "hidden_test E1-nhap-chong.eval.js",
+      "ok": false,
+      "note": "ℹ pass 0 ℹ fail 1"
+    },
+    {
+      "check": "no_test_edits",
+      "ok": true,
+      "note": ""
+    },
+    {
+      "check": "only_paths app/ tests/ plan/",
+      "ok": true,
+      "note": ""
+    }
+  ],
+  "usd": 0.3643102,
+  "secs": 63.0,
+  "turns": 8,
+  "answer": "answers \"Huỷ\".\n\nIt fails for the right reason, because the large file replaced the list without the dialog opening:\n\n```\n✖ a slow import that finishes after a second import filled the list asks before replacing it\n  AssertionError [ERR_ASSERTION]: the list of 1 was replaced by the first file without the confirm dialog: [\"replace:b1\",\"replace:a1,a2,a3\"]\nℹ tests 1\nℹ pass 0\nℹ fail 1\n```\n\nThe test passes with either of two fixes: the old import asks before replacing, or the old import is dropped.\n\n**Fix I plan to make once the test is committed:**\n- **`app/backup.js`:** `importBackup` would get the list at the moment it decides (a function such as `current: () => todos`), not a copy taken before reading. The check would run after the file is read and again after the dialog closes, right before `store.replace`.\n- **`app/app.js`:** pass that function in, and only apply the result if the list hasn't changed since the check. This also covers a second import finishing while the first one's dialog is still open; today that would call `showModal()` on a dialog that is already open.\n- I'd update `tests/backup.test.js` to the new `current` form. That edits a committed test, so I'll check with you first. The other option is to accept both an array and a function, which leaves it untouched.\n\n**Next steps for you:** commit `tests/import-race.test.js`, ideally then start a session with `TASK_KIND=fix`, and tell me to go ahead. I'll make the fix and paste the output of `bash scripts/check.sh`."
+}

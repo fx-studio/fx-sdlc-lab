@@ -1,5 +1,7 @@
 # Demo SDLC-3 · Build: plan trước, code sau
 
+Bài blog của tập: https://fxstudio.dev/ai-native-sdlc-build-plan-truoc-code-sau/ (công khai 2026-10-28). Video dài và reel trên kênh Fx Studio.
+
 Demo cho tập **SDLC-3** của loạt "AI-Native SDLC". Chạy thật ngày **2026-10-27**, Claude Code 2.1.289 headless (`claude -p`). Phiên
 code, plan, review và verifier dùng `claude-opus-5-5`; phiên đóng vai dùng `sonnet`. 53 lượt `run.py` + 2 lượt bộ thử kích hoạt skill +
 một lượt máy chạy T0 trên Chromium. Tổng khoảng **27,2 USD**: 24,06 USD ghi trong `runs/*/so-do.jsonl`, 1,44 USD lượt R6 lần 2, khoảng

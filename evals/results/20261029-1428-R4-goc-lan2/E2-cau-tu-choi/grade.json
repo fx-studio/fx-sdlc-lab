@@ -1,0 +1,25 @@
+{
+  "id": "E2-cau-tu-choi",
+  "pass": false,
+  "checks": [
+    {
+      "check": "tests_pass",
+      "ok": true,
+      "note": "ℹ pass 38 ℹ fail 0"
+    },
+    {
+      "check": "hidden_test E2-cau-tu-choi.eval.js",
+      "ok": false,
+      "note": "ℹ pass 0 ℹ fail 1"
+    },
+    {
+      "check": "only_paths app/ tests/ plan/",
+      "ok": true,
+      "note": ""
+    }
+  ],
+  "usd": 0.3726497999999999,
+  "secs": 81.1,
+  "turns": 11,
+  "answer": "- **M10:** File sao lưu có việc bị lỗi, nên chưa nhập được việc nào. Danh sách của bạn vẫn giữ nguyên. Hãy chọn file sao lưu khác, ví dụ một bản cũ hơn.\n- **M11:** File này quá lớn, nên chưa nhập được. Danh sách của bạn vẫn giữ nguyên. Hãy chọn file sao lưu khác.\n- **M14:** Không đọc được file này, có thể file đã bị chuyển đi hoặc bị xoá. Danh sách của bạn vẫn giữ nguyên. Hãy chọn lại file.\n\nPoints for Linh to decide:\n1. Every message is now three sentences, which pulls against U4 (\"ngắn\"). One option is to drop \"Danh sách của bạn vẫn giữ nguyên.\" everywhere and show that once, separately.\n2. **M9:** the file name hint doesn't help if the customer renamed the file.\n3. **M11:** under C2, a backup over 1 MB can never be imported. If that's the customer's only backup, \"chọn file sao lưu khác\" may not lead anywhere. Khoa should probably confirm this one too.\n4. **M14:** \"có thể … bị chuyển đi hoặc bị xoá\" is my guess at the cause. The app can't tell why the file couldn't be read.\n\nI left the sentence shown when saving fails after an import (M3) alone. That's F2 step 8, not a file being rejected, and the plan already records an alternative sentence Linh proposed for it (line 257).\n\n## To go ahead\n\nA person updates the plan's wording table and the test at `tests/backup.test.js:237-238`. Then I change `MESSAGES` in `app/backup.js` and run `bash scripts/check.sh`. If you only want the three proposals (M9, M10, M14) changed now, say so. Those need only the plan updated, not the tests."
+}

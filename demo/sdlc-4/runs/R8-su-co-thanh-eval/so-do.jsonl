@@ -1,0 +1,1 @@
+{"run": "R8-su-co-thanh-eval", "giay": 136.7, "usd": 0.5583636, "luot": 28, "model": ["claude-haiku-4-5-20251001", "claude-opus-5-5"], "tool_call": 27, "session": "079c3600-bca1-4269-b45b-d489ed46e8c6", "tu_choi": ["Bash"], "env": [], "sources": "project,local", "skill_nap": 26}
