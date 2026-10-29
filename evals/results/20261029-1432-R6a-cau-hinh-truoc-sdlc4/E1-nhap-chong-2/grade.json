@@ -1,0 +1,30 @@
+{
+  "id": "E1-nhap-chong",
+  "pass": false,
+  "checks": [
+    {
+      "check": "tests_pass",
+      "ok": true,
+      "note": "ℹ pass 42 ℹ fail 0"
+    },
+    {
+      "check": "hidden_test E1-nhap-chong.eval.js",
+      "ok": false,
+      "note": "ℹ pass 0 ℹ fail 1"
+    },
+    {
+      "check": "no_test_edits",
+      "ok": true,
+      "note": ""
+    },
+    {
+      "check": "only_paths app/ tests/ plan/",
+      "ok": true,
+      "note": ""
+    }
+  ],
+  "usd": 0.5479642000000001,
+  "secs": 104.5,
+  "turns": 18,
+  "answer": "k using that snapshot. The slow first file still saw an empty list, so it replaced the second file's contents without asking. Picking two files over a non-empty list had a related problem: both opened the same confirm dialog at once, so one click answered both.\n\n**Fix:**\n- **`app/backup.js`:** `importBackup` can now take `current` as a function. It reads the list again after the file has been read, so the question is based on the list as it is right then. Passing an array still works as before.\n- **`app/app.js`:** imports now run one at a time, in the order the files were picked. A second file waits until the first has finished, including its dialog, so only one dialog is ever open. If one import fails with an error, the files after it still get imported.\n\n**Proof:** I added `tests/import-race.test.js`, which runs `app.js` unchanged in a `vm` and covers four cases:\n- **The reported bug:** a slow first file, then a fast second one. The first file now asks before replacing, and cancelling writes nothing.\n- **Agreeing** to that question replaces the list.\n- **A todo added while a file is being read** is not replaced without asking. This already passed before the fix, because adding a todo changes the same list the snapshot points to; it stays as a guard.\n- **Two files over a non-empty list** open one dialog at a time, and each question shows the correct counts.\n\nBefore the fix, the reported case and the two-dialog case failed. I didn't change any test that was already committed."
+}

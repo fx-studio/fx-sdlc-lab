@@ -1,0 +1,1 @@
+{"run": "R9-vong-hinh", "giay": 79.5, "usd": 0.41716420000000004, "luot": 18, "model": ["claude-haiku-4-5-20251001", "claude-opus-5-5"], "tool_call": 17, "session": "40ac007e-bf33-4aac-9516-5d14fb09e48e", "tu_choi": ["Bash"], "env": [], "sources": "project,local", "skill_nap": 26}

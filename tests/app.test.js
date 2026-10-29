@@ -50,7 +50,10 @@ function loadApp(initial = []) {
   });
   const pick = (file) => document.querySelector('#import').onchange({ target: { files: [file], value: '' } });
   const count = () => document.querySelector('#count').textContent;
-  return { submit, saved, replaced, asked, pick, count };
+  // Clicks a filter tab: 'all', 'open' or 'done'.
+  const filterBy = (f) => document.querySelector('#filters').onclick({ target: { dataset: { filter: f } } });
+  const emptyShown = () => !document.querySelector('#empty').hidden;
+  return { submit, saved, replaced, asked, pick, count, filterBy, emptyShown };
 }
 
 // A file whose text() resolves only when the test says so.
@@ -93,6 +96,30 @@ test('open-todo count line: a dot every three digits from 1,000 up, like every o
   assert.equal(loadApp(todos(12)).count(), '12 việc chưa xong');
   assert.equal(loadApp(todos(2001)).count(), '2.001 việc chưa xong');
   assert.equal(loadApp(todos(12500)).count(), '12.500 việc chưa xong');
+});
+
+test('open-todo count line counts the whole list, whatever the filter (T-013)', () => {
+  const todo = (i, done) => ({ id: `id-${i}`, title: `Việc ${i}`, done, createdAt: 1 });
+  const { count, filterBy } = loadApp([todo(1, false), todo(2, false), todo(3, false), todo(4, true), todo(5, true)]);
+  assert.equal(count(), '3 việc chưa xong');
+  filterBy('done');
+  assert.equal(count(), '3 việc chưa xong', 'tab "Đã xong"');
+  filterBy('open');
+  assert.equal(count(), '3 việc chưa xong', 'tab "Chưa xong"');
+  filterBy('all');
+  assert.equal(count(), '3 việc chưa xong', 'back to tab "Tất cả"');
+});
+
+test('empty-list message only when the whole list is empty, not when a filter hides everything (T-014)', () => {
+  const todo = (i, done) => ({ id: `id-${i}`, title: `Việc ${i}`, done, createdAt: 1 });
+  const { emptyShown, filterBy } = loadApp([todo(1, false), todo(2, false), todo(3, false), todo(4, false)]);
+  assert.equal(emptyShown(), false);
+  filterBy('done');
+  assert.equal(emptyShown(), false, 'tab "Đã xong" with no done todos');
+  const allDone = loadApp([todo(1, true)]);
+  allDone.filterBy('open');
+  assert.equal(allDone.emptyShown(), false, 'tab "Chưa xong" with no open todos');
+  assert.equal(loadApp([]).emptyShown(), true, 'a really empty list still shows it');
 });
 
 test('a backup of todos the app made imports again', () => {

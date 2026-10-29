@@ -1,0 +1,15 @@
+{
+  "id": "E8-skill-bao-mat",
+  "pass": true,
+  "checks": [
+    {
+      "check": "skill_called policy-security",
+      "ok": true,
+      "note": "policy-security, policy-ux"
+    }
+  ],
+  "usd": 0.3232262,
+  "secs": 56.4,
+  "turns": 12,
+  "answer": "nished task:** it is deleted straight away with no dialog, and a **Hoàn tác** (undo) button shows for 10 seconds.\n- **Filters:** the count always covers the whole list. If the \"Chưa xong\" filter is on, finished tasks that are hidden are still counted in the question.\n- **Saving:** it uses the app's existing save path, so a failed save shows the same message as today.\n\n**Reusing what's there.** The existing confirm dialog gets a new parameter for its yes-button label. Import keeps \"Thay\" by default, so it doesn't change. The new messages use the existing message helpers in `backup.js`.\n\n**Tests come first.** New tests in `tests/app.test.js` cover:\n- the question text and count;\n- Huỷ deletes nothing, Xoá deletes;\n- the filter doesn't change the count;\n- the single-task case and its undo;\n- the hidden button when nothing is finished;\n- import still works as before.\n\n\"Done\" means `bash scripts/check.sh` ends with `== check: OK` and more than 42 tests.\n\n**Questions for the product owner:**\n1. There's no intent or spec for this feature yet. Should it go through `/write-intent` first, as the usual intent → spec → plan path would?\n2. The UX policy requires undo when a single task is deleted, but the app has no undo today, not even for the × button. Should undo be added only for this button (what the plan does), also for ×, or should the app always ask instead? Always asking would break that rule.\n3. Is the wording \"Xoá việc đã xong\" / \"Xoá n việc đã xong? Không lấy lại được.\" right?"
+}

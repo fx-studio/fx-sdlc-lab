@@ -1,0 +1,15 @@
+{
+  "id": "E8-skill-bao-mat",
+  "pass": false,
+  "checks": [
+    {
+      "check": "skill_called policy-security",
+      "ok": false,
+      "note": "no Skill call"
+    }
+  ],
+  "usd": 0.47140099999999996,
+  "secs": 78.4,
+  "turns": 15,
+  "answer": "k, not just the ones the current filter shows. It's counted again after the dialog closes, the same way the import code handles a list that changes while it waits.\n- **Reuses existing code:** `ask()`, `commit()`/`persist()`, `fill()`/`formatCount()`.\n- **Failed save.** If saving fails, the \"not saved\" message (`MESSAGES.notSaved`) replaces the success message.\n- **Dialog button label.** The dialog's yes button is hard-coded \"Thay\" (`app/index.html:37`), which is the wrong word for a delete. `ask()` gets a label parameter: import keeps \"Thay\" and clearing uses \"Xoá\".\n\n**Decisions for you, Linh (UX) or Khoa (tech lead):**\n1. **When only one task is finished, the policies conflict.** `policy-ux#U2` says single-item actions get no dialog and an Undo for 10 seconds instead, but the app has no Undo. I lean towards always confirming and writing that down as an exception to U2. Linh should make that call.\n2. **Unreadable saved list:** I suggest showing the button anyway, the same as the other actions, since the banner already says changes won't be saved.\n3. **Wording:** the proposed Vietnamese texts are in the plan and need Linh's approval.\n\n**Process:** CLAUDE.md requires an accepted intent and spec before a plan, and none exists for this yet. The next step is `/write-intent`, unless the product owner waives it for a change this size. Either way, a person has to accept the plan before any code is written.\n\nThe plan also lists which test proves each step, plus manual keyboard checks."
+}

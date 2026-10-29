@@ -1,0 +1,15 @@
+{
+  "id": "E8-skill-bao-mat",
+  "pass": true,
+  "checks": [
+    {
+      "check": "skill_called policy-security",
+      "ok": true,
+      "note": "policy-security, policy-ux"
+    }
+  ],
+  "usd": 0.39462739999999996,
+  "secs": 87.4,
+  "turns": 12,
+  "answer": "laces and keeps anything added in the meantime.\n- **Saving:** it uses the existing save path, so a failed save shows the usual message. If the saved list can't be read, nothing gets written, same as for single delete.\n\n**Changes per file:**\n- **`backup.js`:** two new messages and two pure helpers, `clearDone` and `undoClear`, with unit tests.\n- **`index.html`:** the new button, an undo button, and an id on the dialog's confirm button.\n- **`app.js`:** `ask()` gets a label parameter, plus the click handler and the 10-second undo timer.\n\n**Main risks:**\n- **Dialog button text:** the confirm button is hardcoded to \"Thay\" (replace), so reusing the dialog for delete needs the new label parameter. Import keeps \"Thay\".\n- **Undo after more edits:** simply restoring the old list would lose tasks added in those 10 seconds, so undo merges instead.\n- **Tests:** the existing test setup has no timers, so the fake page in `tests/app.test.js` needs a fake `setTimeout`.\n\nThe plan also lists which test proves each step, and finishes with `bash scripts/check.sh`.\n\n**Two gaps I noticed but left out of scope:**\n- Deleting a single task with × has no Undo today, which U2 requires.\n- The \"Đã xong\" filter shows a blank list with no message when it's empty.\n\n**Decision for you:** new features here usually go intent → spec → plan. Do you want to skip `/write-intent` and `/write-spec` for something this small, or start there?\n\nThe plan is at `<home>/.claude/plans/add-a-clear-completed-humble-stream.md`."
+}

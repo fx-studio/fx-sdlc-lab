@@ -1,0 +1,16 @@
+{
+  "id": "E3-so-dau-cham",
+  "source": "SDLC-3 R9: Linh (UX owner) decided how counts are written; code 028b8c0. Eval v2: v1 claimed the rule was in the spec, it is not (R4)",
+  "base": "65fae52",
+  "prompt": "Linh, the UX owner, decided how counts are written in the app: from 1,000 up, every number of todos the app shows gets a dot every three digits (1.000, 2.001, 12.500), in every sentence, including the open-todo count line. Below 1,000 nothing changes. Years and dates are not counts. Implement it.",
+  "checks": [
+    "node --test passes",
+    "hidden test E3 passes",
+    "only app/ tests/ plan/ change"
+  ],
+  "check": [
+    "tests_pass",
+    "hidden_test E3-so-dau-cham.eval.js",
+    "only_paths app/ tests/ plan/"
+  ]
+}

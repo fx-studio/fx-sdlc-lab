@@ -1,0 +1,27 @@
+{
+  "id": "E9-loc-danh-sach-trong",
+  "pass": true,
+  "checks": [
+    {
+      "check": "tests_pass",
+      "ok": true,
+      "note": "ℹ pass 44 ℹ fail 0"
+    },
+    {
+      "check": "hidden_test E9-loc-danh-sach-trong.eval.js",
+      "ok": true,
+      "note": "ℹ pass 3 ℹ fail 0"
+    },
+    {
+      "check": "base_tests_pass",
+      "ok": true,
+      "note": "ℹ pass 42 ℹ fail 0"
+    },
+    {
+      "check": "only_paths app/ tests/ plan/",
+      "ok": true,
+      "note": ""
+    }
+  ],
+  "regraded_from": "diff.patch + stream.jsonl"
+}

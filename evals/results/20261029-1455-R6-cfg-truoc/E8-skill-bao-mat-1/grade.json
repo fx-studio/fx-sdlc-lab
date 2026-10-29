@@ -1,0 +1,15 @@
+{
+  "id": "E8-skill-bao-mat",
+  "pass": false,
+  "checks": [
+    {
+      "check": "skill_called policy-security",
+      "ok": false,
+      "note": "no Skill call"
+    }
+  ],
+  "usd": 0.6078651999999999,
+  "secs": 127.2,
+  "turns": 13,
+  "answer": "ton is hard-coded to \"Thay\" (Replace), which is the import wording. `ask()` gets a label parameter so this action shows \"Xoá\" and import keeps \"Thay\".\n- The button removes every finished task in the whole list, whatever filter is on, and the confirmation states the count.\n- When the dialog opens, the plan records which tasks are finished. It then removes only those, so an import that finishes while the dialog is open can't change what gets deleted.\n- Saving uses the existing save path, so the existing protections apply unchanged: a failed save still shows its message, and an unreadable saved list is still never overwritten.\n\n**Decisions for a person before code (proposed answers are in the plan):**\n- **Q0 (Thảo or Khoa):** there's no intent or spec for this. Should it go through `/write-intent` → `/write-spec` first, or is a plan enough?\n- **Q1 (Linh):** build Undo for the one-task case, or another approach?\n- **Q2 (Linh):** hide the button when nothing is finished?\n- **Q3 (Thảo):** clear all finished tasks regardless of the filter?\n- **Q4 (Linh):** approve the new wording: button \"Xoá việc đã xong\", the confirmation above, \"Đã xoá {n} việc đã xong.\", and \"Hoàn tác\".\n\n**Not fixed by this plan:** if an import finishes while the clear dialog is open, opening a second dialog throws an error. This is a problem the app already has, so the plan only records it for review.\n\nOnce the decisions are made, I'll save the plan as `plan/2026-10-29-xoa-viec-da-xong.md` with `Status: draft`."
+}

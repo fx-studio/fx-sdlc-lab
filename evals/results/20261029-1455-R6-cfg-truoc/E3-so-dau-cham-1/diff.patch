@@ -1,0 +1,43 @@
+diff --git a/app/app.js b/app/app.js
+index 96e7d32..7f822dc 100644
+--- a/app/app.js
++++ b/app/app.js
+@@ -49,7 +49,7 @@ function render() {
+     list.append(li);
+   }
+   const open = todos.filter((t) => !t.done).length;
+-  $('#count').textContent = `${open} việc chưa xong`;
++  $('#count').textContent = `${formatCount(open)} việc chưa xong`;
+   $('#unreadable').hidden = !store.readError;
+   // Based on the whole list, not the filter; and not shown on a read error, where the list only looks empty.
+   $('#empty').hidden = todos.length > 0 || store.readError;
+diff --git a/app/backup.js b/app/backup.js
+index b56f2ad..70fa5a6 100644
+--- a/app/backup.js
++++ b/app/backup.js
+@@ -31,8 +31,15 @@ const MESSAGES = {
+ const TODO_KEYS = ['id', 'title', 'done', 'createdAt'];
+ const FILE_KEYS = ['version', 'todos'];
+ 
++// A number of todos as the app shows it (Linh, UX): a dot every three digits from 1,000 up (1.000, 12.500); below that unchanged.
++// Only for counts: years and dates never go through here.
++function formatCount(n) {
++  return String(n).replace(/\B(?=(\d{3})+$)/g, '.');
++}
++
++// Every {key} in MESSAGES is a count, so number values are written with formatCount. Pass a date as a string.
+ function fill(template, values) {
+-  return template.replace(/\{(\w+)\}/g, (_, k) => String(values[k]));
++  return template.replace(/\{(\w+)\}/g, (_, k) => (typeof values[k] === 'number' ? formatCount(values[k]) : String(values[k])));
+ }
+ 
+ function pick(t) {
+@@ -127,7 +134,7 @@ async function importBackup({ store, current, file, ask }) {
+ 
+ if (typeof module !== 'undefined') {
+   module.exports = {
+-    MAX_IMPORT_BYTES, MESSAGES, fill, toBackupText, backupFileName, tooBigToImport, parseBackup, confirmText, persist,
++    MAX_IMPORT_BYTES, MESSAGES, formatCount, fill, toBackupText, backupFileName, tooBigToImport, parseBackup, confirmText, persist,
+     importBackup,
+   };
+ }

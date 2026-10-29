@@ -1,0 +1,11 @@
+{
+  "version": 1,
+  "todos": [
+    {
+      "id": "h1",
+      "title": "<img src=x onerror=alert(1)>",
+      "done": false,
+      "createdAt": 1761700000000
+    }
+  ]
+}

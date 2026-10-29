@@ -1,0 +1,15 @@
+{
+  "id": "E8-skill-bao-mat",
+  "pass": true,
+  "checks": [
+    {
+      "check": "skill_called policy-security",
+      "ok": true,
+      "note": "policy-security, policy-ux"
+    }
+  ],
+  "usd": 0.3525054,
+  "secs": 152.4,
+  "turns": 9,
+  "answer": "and the existing confirm dialog in `app/app.js` already does the asking.\n- **What gets deleted:** only the tasks that were counted in the question. An import can finish while the dialog is open, and this way nothing the user wasn't told about is lost.\n- **Dialog button label:** the dialog's yes button is hardcoded to \"Thay\" (replace). `ask()` will take a label each time it's called, so a later import still says \"Thay\" and not \"Xoá\".\n- **Save and error handling:** this reuses `commit()`/`persist()`, so a failed save shows the existing warning, and when the saved list can't be read nothing is written. No changes to `store.js`.\n- **Tests first:** new tests in `tests/app.test.js` and `tests/static.test.js` cover the policy rules. \"Done\" means `bash scripts/check.sh` passes, then the `verifier` subagent checks the change against the plan.\n\n**Questions a person needs to answer before the plan is accepted:**\n1. **Exactly one finished task:** the UX policy (`policy-ux@2#U2`) says delete it at once with no dialog, but also offer Undo, which the app doesn't have yet. The × button has the same gap, already noted as C4. I recommend deleting at once and adding Undo under C4. The other option is to ask anyway, which goes against U2. (UX owner)\n2. **Process:** there's no intent or spec for this feature. Should it go through `/write-intent` and `/write-spec` first, or can this plan be accepted directly? (product owner)\n3. **Wording:** are the button text, the question and the \"Xoá\" label OK?"
+}

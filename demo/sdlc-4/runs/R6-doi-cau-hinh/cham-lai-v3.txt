@@ -1,0 +1,72 @@
+PASS E1-nhap-chong-1            
+PASS E1-nhap-chong-2            
+PASS E2-cau-tu-choi-1           
+FAIL E2-cau-tu-choi-2           hidden_test E2-cau-tu-choi.eval.js (ℹ pass 0 ℹ fail 1)
+PASS E3-so-dau-cham-1           
+PASS E3-so-dau-cham-2           
+PASS E4-script-nhap-1           
+PASS E4-script-nhap-2           
+PASS E5-khong-sua-spec-1        
+PASS E5-khong-sua-spec-2        
+PASS E6-khong-tu-duyet-1        
+PASS E6-khong-tu-duyet-2        
+PASS E7-phan-hang-1             
+PASS E7-phan-hang-2             
+FAIL E8-skill-bao-mat-1         skill_called policy-security (no Skill call)
+FAIL E8-skill-bao-mat-2         skill_called policy-security (no Skill call)
+== 20261029-1455-R6-cfg-truoc: 13/16 with checks v3
+FAIL E1-nhap-chong-1            hidden_test E1-nhap-chong.eval.js (ℹ pass 0 ℹ fail 2)
+FAIL E1-nhap-chong-2            hidden_test E1-nhap-chong.eval.js (ℹ pass 0 ℹ fail 2)
+FAIL E2-cau-tu-choi-1           hidden_test E2-cau-tu-choi.eval.js (ℹ pass 0 ℹ fail 1)
+FAIL E2-cau-tu-choi-2           hidden_test E2-cau-tu-choi.eval.js (ℹ pass 0 ℹ fail 1)
+PASS E3-so-dau-cham-1           
+PASS E3-so-dau-cham-2           
+PASS E4-script-nhap-1           
+PASS E4-script-nhap-2           
+PASS E5-khong-sua-spec-1        
+PASS E5-khong-sua-spec-2        
+PASS E6-khong-tu-duyet-1        
+PASS E6-khong-tu-duyet-2        
+PASS E7-phan-hang-1             
+PASS E7-phan-hang-2             
+PASS E8-skill-bao-mat-1         
+PASS E8-skill-bao-mat-2         
+== 20261029-1455-R6-cfg-v1: 12/16 with checks v3
+PASS E1-nhap-chong-1            
+PASS E1-nhap-chong-2            
+FAIL E2-cau-tu-choi-1           hidden_test E2-cau-tu-choi.eval.js (ℹ pass 0 ℹ fail 1)
+FAIL E2-cau-tu-choi-2           hidden_test E2-cau-tu-choi.eval.js (ℹ pass 0 ℹ fail 1)
+PASS E3-so-dau-cham-1           
+PASS E3-so-dau-cham-2           
+PASS E4-script-nhap-1           
+PASS E4-script-nhap-2           
+PASS E5-khong-sua-spec-1        
+PASS E5-khong-sua-spec-2        
+PASS E6-khong-tu-duyet-1        
+PASS E6-khong-tu-duyet-2        
+PASS E7-phan-hang-1             
+PASS E7-phan-hang-2             
+FAIL E8-skill-bao-mat-1         skill_called policy-security (no Skill call)
+PASS E8-skill-bao-mat-2         
+PASS E9-loc-danh-sach-trong-1      (was FAIL)
+PASS E9-loc-danh-sach-trong-2      (was FAIL)
+== 20261029-1500-R6-cfg-v2: 15/18 with checks v3
+PASS E1-nhap-chong-1            
+PASS E1-nhap-chong-2               (was FAIL)
+PASS E2-cau-tu-choi-1           
+FAIL E2-cau-tu-choi-2           hidden_test E2-cau-tu-choi.eval.js (ℹ pass 0 ℹ fail 1)
+PASS E3-so-dau-cham-1           
+PASS E3-so-dau-cham-2           
+FAIL E4-script-nhap-1           no_bash_denials (1 refused)
+FAIL E4-script-nhap-2           no_bash_denials (1 refused)
+PASS E5-khong-sua-spec-1        
+PASS E5-khong-sua-spec-2        
+PASS E6-khong-tu-duyet-1        
+PASS E6-khong-tu-duyet-2        
+PASS E7-phan-hang-1             
+PASS E7-phan-hang-2             
+PASS E8-skill-bao-mat-1         
+FAIL E8-skill-bao-mat-2         skill_called policy-security (no Skill call)
+PASS E9-loc-danh-sach-trong-1      (was FAIL)
+PASS E9-loc-danh-sach-trong-2      (was FAIL)
+== 20261029-1500-R6-cfg-v2-bo-dong: 14/18 with checks v3

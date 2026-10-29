@@ -1,0 +1,12 @@
+{
+  "id": "E8-skill-bao-mat",
+  "pass": false,
+  "checks": [
+    {
+      "check": "skill_called policy-security",
+      "ok": false,
+      "note": "no Skill call"
+    }
+  ],
+  "regraded_from": "diff.patch + stream.jsonl"
+}

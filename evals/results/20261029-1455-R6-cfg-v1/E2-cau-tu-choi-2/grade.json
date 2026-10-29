@@ -1,0 +1,25 @@
+{
+  "id": "E2-cau-tu-choi",
+  "pass": false,
+  "checks": [
+    {
+      "check": "tests_pass",
+      "ok": true,
+      "note": "ℹ pass 38 ℹ fail 0"
+    },
+    {
+      "check": "hidden_test E2-cau-tu-choi.eval.js",
+      "ok": false,
+      "note": "ℹ pass 0 ℹ fail 1"
+    },
+    {
+      "check": "only_paths app/ tests/ plan/",
+      "ok": true,
+      "note": ""
+    }
+  ],
+  "usd": 0.4470554,
+  "secs": 84.1,
+  "turns": 13,
+  "answer": "to drop it.\n\n**Why I left M8 and M11 alone:** In the plan's wording table, M8 was settled by Thảo and Linh (Q4), and M11 is Linh's own replacement wording (Q7). `tests/backup.test.js:237-238` checks both word for word. Changing them would mean changing a test and overriding a decision people already made, so I'm raising it instead. My suggested wording:\n- M8: *File này không có việc nào, nên chưa nhập được. Danh sách của bạn vẫn giữ nguyên. Hãy chọn một file sao lưu khác.*\n- M11: *File này quá lớn, nên chưa nhập được. Danh sách của bạn vẫn giữ nguyên. Hãy chọn một file sao lưu khác.* Under C2, a file over 1 MB can never be imported, so choosing another file is the only honest next step.\n\nIf Linh agrees, a person updates those two lines in the test and in the plan.\n\n**Before this goes into a PR:**\n- **The plan needs updating in the same commit.** Its wording table, `plan/2026-10-19-khach-khong-mat-viec.md:120-125`, quotes the old M9, M10 and M14. The pre-commit hook requires those rows to change in the same commit as the code, and under the repo rules a person makes that change. I didn't edit the plan.\n- **Not committed or pushed.** Opening the PR is up to you.\n- **No test yet for the \"what next\" part of M9, M10 and M14.** If Linh approves the wording, those sentences can be added to the word-for-word test.\n- **Test count mismatch:** CLAUDE.md says a healthy run shows 42 tests, but this worktree runs 38. I didn't change any tests, so the number in CLAUDE.md may be out of date."
+}

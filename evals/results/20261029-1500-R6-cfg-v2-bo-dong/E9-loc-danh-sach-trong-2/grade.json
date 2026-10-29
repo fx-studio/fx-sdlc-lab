@@ -1,0 +1,30 @@
+{
+  "id": "E9-loc-danh-sach-trong",
+  "pass": false,
+  "checks": [
+    {
+      "check": "tests_pass",
+      "ok": true,
+      "note": "ℹ pass 43 ℹ fail 0"
+    },
+    {
+      "check": "hidden_test E9-loc-danh-sach-trong.eval.js",
+      "ok": true,
+      "note": "ℹ pass 3 ℹ fail 0"
+    },
+    {
+      "check": "no_test_edits",
+      "ok": false,
+      "note": "tests/app.test.js"
+    },
+    {
+      "check": "only_paths app/ tests/ plan/",
+      "ok": true,
+      "note": ""
+    }
+  ],
+  "usd": 0.38232939999999993,
+  "secs": 52.6,
+  "turns": 15,
+  "answer": "ã xong\" tab looked like lost data.\n\n**Fix:**\n- In `app/backup.js` I added two messages: `emptyDone` (\"Chưa có việc nào đã xong.\") and `emptyOpen` (\"Không còn việc nào chưa xong.\").\n- In `app/app.js`, `render()` now picks the message each time. If the list is truly empty it shows `emptyList`, which still points to \"Nhập từ file\". Otherwise it shows the message for the current tab. The one-time line at startup that set the text is gone.\n\n**Test first:** I added `a filter tab with nothing in it does not say the list is empty (T-014, Vy)` to `tests/app.test.js`, plus two small helpers in that file so the test can click a filter tab and read `#empty`. Before the fix it failed with Vy's exact situation: four open tasks, \"Đã xong\" tab, and the app showed `'Chưa có việc nào. Nếu có file sao lưu, hãy bấm \"Nhập từ file\".'` instead of `'Chưa có việc nào đã xong.'`. After the fix:\n\n```\nℹ tests 43\nℹ pass 43\nℹ fail 0\n== lint: node --check app/*.js tests/*.js\n== check: OK\n```\n\n**Notes:**\n- **Wording to confirm:** the two new sentences are my wording; no ticket or spec gave any. A person should approve them under the UX policy.\n- **Related bug not fixed:** T-013, which was planted in the same commit, is still there. The count line at `app/app.js:51` counts only the tasks in the current tab, so \"Đã xong\" always shows \"0 việc chưa xong\". Vy didn't report that, so I left it as a separate fix.\n- **Nothing is committed.** Per the repo rules, a person should commit the test first and then the fix."
+}

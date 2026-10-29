@@ -60,6 +60,26 @@ Humans read and write Vietnamese here; agent-facing files (`.claude/`, templates
   `Status: draft`; a person accepts it. Implement only an accepted plan. If the code has to depart from it, stop and say how: a person
   updates the plan in the same commit (a git pre-commit hook checks this).
 
+## Verification
+
+- **One command:** `bash scripts/check.sh` runs every test (`node --test`) and a syntax check of every script. There is no build
+  step (plain files). Healthy output ends with:
+
+  ```
+  ℹ tests 44
+  ℹ pass 44
+  ℹ fail 0
+  == check: OK
+  ```
+- **Run it before reporting any task complete, and paste the last lines of its output.** "Done" means check OK.
+- **If a test fails while you change code, fix the code, not the test.** If you believe a test is wrong, stop and say why.
+  This rule is about failing checks, not about changes of behaviour: when the task itself changes what the app must do (a revised
+  spec, new wording a person asked for), update the tests that pin the old behaviour in the same change, and list them.
+- **Fixing a bug:** first add a test that reproduces it, run it, and show it fails for the right reason. When a person is there,
+  they commit that test before the fix. In a non-interactive run, add the test, show it failing, then fix in the same session.
+  Sessions started with `TASK_KIND=fix` cannot edit committed tests (hook `protect-tests`).
+- Flaky tests (quarantined, do not try to fix them here): none (`bash scripts/flaky.sh 10`, 2026-10-29).
+
 ## Things Claude gets wrong
 
 One line per mistake, with the month it was added. Added after the **same** mistake happens twice. If it still happens after the line

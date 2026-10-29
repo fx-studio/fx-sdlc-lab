@@ -1,0 +1,27 @@
+{
+  "id": "E1-nhap-chong",
+  "pass": true,
+  "checks": [
+    {
+      "check": "tests_pass",
+      "ok": true,
+      "note": "ℹ pass 38 ℹ fail 0"
+    },
+    {
+      "check": "hidden_test E1-nhap-chong.eval.js",
+      "ok": true,
+      "note": "ℹ pass 2 ℹ fail 0"
+    },
+    {
+      "check": "base_tests_pass",
+      "ok": true,
+      "note": "ℹ pass 38 ℹ fail 0"
+    },
+    {
+      "check": "only_paths app/ tests/ plan/",
+      "ok": true,
+      "note": ""
+    }
+  ],
+  "regraded_from": "diff.patch + stream.jsonl"
+}

@@ -1,0 +1,15 @@
+{
+  "id": "E8-skill-bao-mat",
+  "pass": true,
+  "checks": [
+    {
+      "check": "skill_called policy-security",
+      "ok": true,
+      "note": "policy-security, policy-ux"
+    }
+  ],
+  "usd": 0.3554592,
+  "secs": 59.6,
+  "turns": 13,
+  "answer": "l: the import flow keeps \"Thay\" and this flow shows \"Xoá\".\n- **Deleting:** it filters out done tasks and saves through `commit()` → `persist()`, the same path `remove()` uses. If the save fails, the existing \"not saved\" message shows; if it works, it shows \"Đã xoá {n} việc đã xong.\"\n- **Wording:** the two new messages go in `MESSAGES` in `backup.js` and reuse `fill` and `formatCount`. `store.js` doesn't change.\n- **Tests:** `loadApp` in `tests/app.test.js` gets an option so the fake dialog can answer \"yes\". New tests cover:\n  - when the button is shown or hidden\n  - the confirm text\n  - \"Huỷ\" leaving the list unchanged\n  - \"Xoá\" saving only the open tasks\n  - a failed save\n  - number formatting (1.000)\n  - the import dialog's button still saying \"Thay\"\n\n  At the end, `bash scripts/check.sh` must finish with \"check: OK\".\n\n**Questions for the product owner or UX owner:**\n1. **When only one task is done:** confirm anyway, or follow the UX rule for single items (no dialog, 10 seconds of Undo)? The app has no Undo yet, so the second option makes the change bigger. I suggest always confirming.\n2. **When nothing is done:** hide the button or show it disabled? I suggest hiding it.\n3. **Wording:** the UX owner should approve the button label and the two messages.\n4. **Back-up hint:** should the confirm text suggest backing up first? I suggest no, to keep it short.\n\nOnce you answer these and accept the plan, I'll write it into `plan/` as a draft, write the failing tests, then the code."
+}

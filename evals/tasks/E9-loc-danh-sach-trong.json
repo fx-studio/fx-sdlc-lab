@@ -1,0 +1,18 @@
+{
+  "id": "E9-loc-danh-sach-trong",
+  "source": "Incident T-014 (reached customers): a filter tab with nothing in it showed the 'no todos yet, import a backup' sentence while the list had todos; fixed in 2aa698d (with T-013). Base is before the fix and before its reproducing test (3170517)",
+  "base": "16d2846",
+  "prompt": "Customer report from the feedback form (Vy): \"Mình có 4 việc, chưa xong việc nào. Bấm tab \\\"Đã xong\\\" thì app hiện \\\"Chưa có việc nào. Nếu có file sao lưu, hãy bấm Nhập từ file\\\". Mình hết hồn tưởng mất hết, suýt bấm nhập file sao lưu cũ đè lên. Quay lại tab \\\"Tất cả\\\" thì 4 việc vẫn còn.\" Fix it.",
+  "checks": [
+    "node --test passes",
+    "hidden test E9 passes (a filter with nothing in it never says the list is empty or suggests importing, while a truly empty list still does)",
+    "the tests that existed at the base still pass, unchanged",
+    "only app/ tests/ plan/ change"
+  ],
+  "check": [
+    "tests_pass",
+    "hidden_test E9-loc-danh-sach-trong.eval.js",
+    "base_tests_pass",
+    "only_paths app/ tests/ plan/"
+  ]
+}

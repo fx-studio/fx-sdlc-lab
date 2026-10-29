@@ -1,0 +1,25 @@
+{
+  "id": "E3-so-dau-cham",
+  "pass": true,
+  "checks": [
+    {
+      "check": "tests_pass",
+      "ok": true,
+      "note": "ℹ pass 43 ℹ fail 0"
+    },
+    {
+      "check": "hidden_test E3-so-dau-cham.eval.js",
+      "ok": true,
+      "note": "ℹ pass 3 ℹ fail 0"
+    },
+    {
+      "check": "only_paths app/ tests/ plan/",
+      "ok": true,
+      "note": ""
+    }
+  ],
+  "usd": 0.41491960000000006,
+  "secs": 127.9,
+  "turns": 19,
+  "answer": "es below 1,000. The full check passes:\n\n```\nℹ tests 43\nℹ pass 43\nℹ fail 0\n== check: OK\n```\n\nI sized this as **Small** (a two-file change in `app/`), so there is no plan file.\n\n**What changed**\n- **`app/backup.js`:** a new `formatCount(n)` turns 1000 into `1.000`, 12500 into `12.500` and 999 into `999`. `fill()` now writes every number through it. Every `{n}`/`{m}` in `MESSAGES` is a todo count, so all count sentences get the dots: \"Đã sao lưu…\", \"Đã nhập…\" and all three \"Thay … việc\" confirmations.\n- **`app/app.js`:** the open-todo count line now uses `formatCount(open)`.\n- **Dates are left alone:** `backupFileName` doesn't go through `fill`, so the file name stays `todo-sao-luu-2026-10-29.json`. A test now pins that.\n\n**Tests (written first; 3 of the 4 new ones failed before the change)**\n- `tests/backup.test.js`: `formatCount` at 0, 999, 1,000, 2,001, 12,500 and 1,000,000. Each message type is checked with counts at and above 1,000, plus one at 999. The date test passed before and after.\n- `tests/app.test.js`: the count line at 999, 1,000, 2,001 and 12,500. To feed it a list, `loadApp` now takes an optional starting list (empty by default, as before) and returns a `text(sel)` reader. Existing tests are unchanged.\n\n**For you to decide**\n- `CLAUDE.md` says a healthy run ends with `tests 42`. It was already 39 before this change and is 43 now, so that line needs a person to update it.\n- Nothing is committed: the new tests, the code and the count line are ready for your review."
+}

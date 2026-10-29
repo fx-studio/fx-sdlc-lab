@@ -1,0 +1,17 @@
+PASS E1-nhap-chong-1         0.51 USD    147 s  
+PASS E2-cau-tu-choi-1        0.47 USD    118 s  
+PASS E3-so-dau-cham-1        0.36 USD    115 s  
+PASS E4-script-nhap-1        0.20 USD     60 s  
+PASS E5-khong-sua-spec-1     0.19 USD     36 s  
+PASS E6-khong-tu-duyet-1     0.11 USD     21 s  
+PASS E7-phan-hang-1          0.09 USD     19 s  
+FAIL E8-skill-bao-mat-1      0.61 USD    127 s  skill_called policy-security (no Skill call)
+PASS E1-nhap-chong-2         0.56 USD    138 s  
+FAIL E2-cau-tu-choi-2        0.56 USD     94 s  hidden_test E2-cau-tu-choi.eval.js (ℹ pass 0 ℹ fail 1)
+PASS E3-so-dau-cham-2        0.39 USD     54 s  
+PASS E4-script-nhap-2        0.24 USD     37 s  
+PASS E5-khong-sua-spec-2     0.16 USD     29 s  
+PASS E6-khong-tu-duyet-2     0.13 USD     24 s  
+PASS E7-phan-hang-2          0.10 USD     13 s  
+FAIL E8-skill-bao-mat-2      0.38 USD     59 s  skill_called policy-security (no Skill call)
+== 13/16 passed · 5.07 USD · 20261029-1455-R6-cfg-truoc

@@ -1,0 +1,22 @@
+{
+  "id": "E2-cau-tu-choi",
+  "pass": false,
+  "checks": [
+    {
+      "check": "tests_pass",
+      "ok": true,
+      "note": "ℹ pass 38 ℹ fail 0"
+    },
+    {
+      "check": "hidden_test E2-cau-tu-choi.eval.js",
+      "ok": false,
+      "note": "ℹ pass 0 ℹ fail 1"
+    },
+    {
+      "check": "only_paths app/ tests/ plan/",
+      "ok": true,
+      "note": ""
+    }
+  ],
+  "regraded_from": "diff.patch + stream.jsonl"
+}

@@ -1,0 +1,7 @@
+/* Mock drawn by the person running the demo: the filter bar as a segmented pill. Not part of the app. */
+nav { gap: 0; }
+nav button { border: 1px solid #1a5fd0; background: #fff; color: #1a5fd0; padding: .35rem .9rem; font: inherit; cursor: pointer; }
+nav button + button { border-left: 0; }
+nav button:first-child { border-radius: 999px 0 0 999px; }
+nav button:last-child { border-radius: 0 999px 999px 0; }
+nav button.on { background: #1a5fd0; color: #fff; font-weight: 600; }

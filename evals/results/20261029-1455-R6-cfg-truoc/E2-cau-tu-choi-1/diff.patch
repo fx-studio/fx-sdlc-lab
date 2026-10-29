@@ -1,0 +1,47 @@
+diff --git a/app/backup.js b/app/backup.js
+index 1375326..6e38d6c 100644
+--- a/app/backup.js
++++ b/app/backup.js
+@@ -12,12 +12,20 @@ const MESSAGES = {
+   confirmReplaceUnreadable: 'Thay danh sách đã lưu không đọc được bằng {m} việc trong file?',
+   confirmReplaceUnreadableAndUnsaved:
+     'Thay danh sách đã lưu không đọc được và {n} việc bạn vừa thêm (chưa lưu) bằng {m} việc trong file?',
+-  emptyFile: 'File này không có việc nào, nên chưa nhập được.',
+-  notBackup: 'File này không phải file sao lưu của app, nên chưa nhập được. Danh sách của bạn vẫn giữ nguyên.',
+-  badTodo: 'File sao lưu có việc bị lỗi, nên chưa nhập được việc nào. Danh sách của bạn vẫn giữ nguyên.',
+-  fileTooBig: 'File này quá lớn, nên chưa nhập được. Danh sách của bạn vẫn giữ nguyên.',
++  emptyFile:
++    'File này không có việc nào, nên chưa nhập được. Danh sách của bạn vẫn giữ nguyên. Hãy chọn một file sao lưu khác.',
++  notBackup:
++    'File này không phải file sao lưu của app, nên chưa nhập được. Danh sách của bạn vẫn giữ nguyên. ' +
++    'Hãy chọn file có tên bắt đầu bằng "todo-sao-luu-".',
++  badTodo:
++    'File sao lưu có việc bị lỗi, nên chưa nhập được việc nào. Danh sách của bạn vẫn giữ nguyên. ' +
++    'Hãy chọn một file sao lưu khác.',
++  fileTooBig:
++    'File này quá lớn, nên chưa nhập được. Danh sách của bạn vẫn giữ nguyên. Hãy chọn một file sao lưu khác.',
+   emptyList: 'Chưa có việc nào. Nếu có file sao lưu, hãy bấm "Nhập từ file".',
+-  cannotReadFile: 'Không đọc được file này. Hãy chọn lại file.',
++  cannotReadFile:
++    'Không mở được file này, nên chưa nhập được. Danh sách của bạn vẫn giữ nguyên. ' +
++    'Hãy kiểm tra file còn trên máy rồi chọn lại.',
+   reading: 'Đang đọc file…',
+   unreadable:
+     'Không đọc được danh sách đã lưu trên trình duyệt này. Việc bạn thêm hoặc sửa lúc này sẽ không được lưu. ' +
+diff --git a/tests/backup.test.js b/tests/backup.test.js
+index 7b0eac5..e79491f 100644
+--- a/tests/backup.test.js
++++ b/tests/backup.test.js
+@@ -234,8 +234,10 @@ test('messages quoted in the spec and plan are word for word', () => {
+   assert.equal(MESSAGES.nothingToBackUp, 'Chưa có việc nào để sao lưu.');
+   assert.equal(MESSAGES.backupTooBig, 'File sao lưu đã lưu, nhưng quá lớn nên app không nhập lại được.');
+   assert.match(MESSAGES.notSaved, /Hãy sao lưu ra file, rồi xoá bớt việc đã xong/);
+-  assert.equal(MESSAGES.emptyFile, 'File này không có việc nào, nên chưa nhập được.');
+-  assert.equal(MESSAGES.fileTooBig, 'File này quá lớn, nên chưa nhập được. Danh sách của bạn vẫn giữ nguyên.');
++  assert.equal(MESSAGES.emptyFile,
++    'File này không có việc nào, nên chưa nhập được. Danh sách của bạn vẫn giữ nguyên. Hãy chọn một file sao lưu khác.');
++  assert.equal(MESSAGES.fileTooBig,
++    'File này quá lớn, nên chưa nhập được. Danh sách của bạn vẫn giữ nguyên. Hãy chọn một file sao lưu khác.');
+   assert.equal(MESSAGES.unreadable,
+     'Không đọc được danh sách đã lưu trên trình duyệt này. Việc bạn thêm hoặc sửa lúc này sẽ không được lưu. ' +
+     'Nếu có file sao lưu, hãy bấm "Nhập từ file".');

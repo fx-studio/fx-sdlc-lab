@@ -1,0 +1,34 @@
+diff --git a/app/app.js b/app/app.js
+index c3dd8d2..be20768 100644
+--- a/app/app.js
++++ b/app/app.js
+@@ -53,6 +53,9 @@ function render() {
+   $('#unreadable').hidden = !store.readError;
+   // Not shown on a read error, where the list only looks empty.
+   $('#empty').hidden = visible().length > 0 || store.readError;
++  // The import hint only when the whole list is empty, not when just this tab is (T-014).
++  if (todos.length === 0) $('#empty').textContent = MESSAGES.emptyList;
++  else $('#empty').textContent = filter === 'done' ? MESSAGES.emptyDone : MESSAGES.emptyOpen;
+ }
+ 
+ // Resolves true only when the customer picks "Thay"; Esc and "Huỷ" resolve false.
+@@ -113,5 +116,4 @@ $('#import').onchange = async (e) => {
+ };
+ 
+ $('#unreadable').textContent = MESSAGES.unreadable;
+-$('#empty').textContent = MESSAGES.emptyList;
+ render();
+diff --git a/app/backup.js b/app/backup.js
+index 76176df..0b82d95 100644
+--- a/app/backup.js
++++ b/app/backup.js
+@@ -25,6 +25,9 @@ const MESSAGES = {
+   fileTooBig:
+     'File này quá lớn, nên chưa nhập được. Danh sách của bạn vẫn giữ nguyên. Hãy chọn file sao lưu của danh sách ngắn hơn.',
+   emptyList: 'Chưa có việc nào. Nếu có file sao lưu, hãy bấm "Nhập từ file".',
++  // A filter tab with nothing in it while the list is not empty: no import hint, which could lead to an import over the list.
++  emptyDone: 'Chưa có việc nào đã xong.',
++  emptyOpen: 'Không còn việc nào chưa xong.',
+   cannotReadFile: 'Không đọc được file này. Danh sách của bạn vẫn giữ nguyên. Hãy chọn lại file hoặc chọn file khác.',
+   reading: 'Đang đọc file…',
+   unreadable:

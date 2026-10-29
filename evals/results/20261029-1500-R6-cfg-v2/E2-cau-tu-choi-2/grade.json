@@ -1,0 +1,25 @@
+{
+  "id": "E2-cau-tu-choi",
+  "pass": false,
+  "checks": [
+    {
+      "check": "tests_pass",
+      "ok": true,
+      "note": "ℹ pass 39 ℹ fail 0"
+    },
+    {
+      "check": "hidden_test E2-cau-tu-choi.eval.js",
+      "ok": false,
+      "note": "ℹ pass 0 ℹ fail 1"
+    },
+    {
+      "check": "only_paths app/ tests/ plan/",
+      "ok": true,
+      "note": ""
+    }
+  ],
+  "usd": 0.5123068,
+  "secs": 157.0,
+  "turns": 13,
+  "answer": "t file by the name the app gives backups.\n\n**Changes:**\n- `app/backup.js:15-23`: the four messages above.\n- `tests/backup.test.js`: a new test checks that every rejection message has both a reason and a \"Hãy …\" next step. Before the wording change it failed for the right reason (`fileTooBig: what next`). I also updated two exact-wording checks in the \"word for word\" test that pinned the old M8 and M11; this task changes them on purpose.\n\n`bash scripts/check.sh`:\n```\nℹ tests 39\nℹ pass 39\nℹ fail 0\n== lint: node --check app/*.js tests/*.js\n== check: OK\n```\n(CLAUDE.md says to expect 44 tests; this checkout has 39, including my new one.)\n\n**Needs a person before this goes in:**\n- **This departs from the accepted plan.** The wording table in `plan/2026-10-19-khach-khong-mat-viec.md` (lines 119–122) still lists the old M8–M11. M8 was approved by Thảo and Linh (Q4) and M11 is Linh's own wording (Q7), so both need her sign-off again. The pre-commit hook requires the plan to change in the same commit, so whoever commits should update those four rows to the new text and cite this change as the source. I didn't edit the plan myself.\n- **\"Choose another backup\" may not help someone whose only backup is too big.** Under C2, any backup over 1 MB can never be imported, and Khoa accepted that. Linh may want different advice there.\n- **Pull request:** this repo works on `main` with no PRs, and I don't commit or push. Linh can review the uncommitted diff, or the person who commits can open one."
+}

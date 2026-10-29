@@ -1,0 +1,25 @@
+{
+  "id": "E2-cau-tu-choi",
+  "pass": false,
+  "checks": [
+    {
+      "check": "tests_pass",
+      "ok": true,
+      "note": "ℹ pass 38 ℹ fail 0"
+    },
+    {
+      "check": "hidden_test E2-cau-tu-choi.eval.js",
+      "ok": false,
+      "note": "ℹ pass 0 ℹ fail 1"
+    },
+    {
+      "check": "only_paths app/ tests/ plan/",
+      "ok": true,
+      "note": ""
+    }
+  ],
+  "usd": 0.420133,
+  "secs": 92.7,
+  "turns": 13,
+  "answer": " có việc bị lỗi, nên chưa nhập được việc nào. Danh sách của bạn vẫn giữ nguyên. Hãy chọn một file sao lưu khác.`\n- M14: `Không đọc được file này, nên chưa nhập được. Danh sách của bạn vẫn giữ nguyên. Hãy chọn lại file.`\n\n**Not changed: M8 and M11.** Their wording was approved by people (M8 by Thảo and Linh in Q4, M11 rewritten by Linh in Q7), and `tests/backup.test.js:237-238` checks it word for word. Changing them would mean editing a test, and that's a person's decision. Proposed wording for Linh:\n- M8: `File này không có việc nào, nên chưa nhập được. Danh sách của bạn vẫn giữ nguyên. Hãy chọn một file sao lưu khác.`\n- M11: `File này quá lớn, nên chưa nhập được. Danh sách của bạn vẫn gi�ữ nguyên. Hãy chọn một file sao lưu khác.` One thing to note: under C2, a customer whose backup is over 1 MB may have no smaller backup to choose. Linh may prefer different advice here.\n\n**Needed before the PR:** the code now differs from the \"Câu chữ\" table in `plan/2026-10-19-khach-khong-mat-viec.md` (rows M9, M10, M14). Whoever commits needs to update those rows in the same commit; the pre-commit hook checks this. I haven't edited the plan, committed or opened the PR, because the repo rules leave those steps to a person.\n\n**Check:**\n```\nℹ tests 38\nℹ pass 38\nℹ fail 0\n== check: OK\n```\nCLAUDE.md says a healthy run shows 42 tests, but there are 38. I didn't add or remove any tests, so either the number in CLAUDE.md is out of date or 4 tests are missing from this checkout. It's worth checking."
+}

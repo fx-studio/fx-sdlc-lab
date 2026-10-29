@@ -1,0 +1,64 @@
+diff --git a/app/app.js b/app/app.js
+index e10d836..153529d 100644
+--- a/app/app.js
++++ b/app/app.js
+@@ -96,17 +96,23 @@ $('#export').onclick = () => {
+   show(tooBigToImport(text) ? MESSAGES.backupTooBig : fill(MESSAGES.backedUp, { n: todos.length }));
+ };
+ 
+-$('#import').onchange = async (e) => {
++// One import at a time: a file picked while another is still being read waits for it, so two confirmations never
++// overlap and each import sees the list the one before it left.
++let importing = Promise.resolve();
++
++$('#import').onchange = (e) => {
+   const input = e.target;
+   const file = input.files[0];
+   input.value = ''; // so the same file can be picked again
+   if (!file) return;
+-  show(MESSAGES.reading);
+-  const current = todos;
+-  const result = await importBackup({ store, current, file, ask });
+-  if (result.todos !== current) todos = result.todos;
+-  show(result.message);
+-  render();
++  importing = importing.catch(() => {}).then(async () => {
++    show(MESSAGES.reading);
++    // A function, not the list: importBackup reads it after the file, so todos added meanwhile count.
++    const result = await importBackup({ store, current: () => todos, file, ask });
++    todos = result.todos;
++    show(result.message);
++    render();
++  });
+ };
+ 
+ $('#unreadable').textContent = MESSAGES.unreadable;
+diff --git a/app/backup.js b/app/backup.js
+index 1375326..ae1d85b 100644
+--- a/app/backup.js
++++ b/app/backup.js
+@@ -102,10 +102,13 @@ function persist(store, todos) {
+   return { message: store.save(todos) === 'failed' ? MESSAGES.notSaved : null };
+ }
+ 
+-// Returns the list to show and the message. Every path except a successful replace returns `current` unchanged.
++// Returns the list to show and the message. Every path except a successful replace returns the current list unchanged.
+ // Writes only through store.replace, never store.save, so an unreadable saved list is replaced only here.
++// `current` is the list, or a function returning it. The page passes a function: reading the file takes time, and the
++// list can change meanwhile (a todo added, another import), so it is read after the file, right before deciding to ask.
+ async function importBackup({ store, current, file, ask }) {
+-  const keep = (message) => ({ todos: current, message });
++  const now = () => (typeof current === 'function' ? current() : current);
++  const keep = (message) => ({ todos: now(), message });
+   if (file.size > MAX_IMPORT_BYTES) return keep(MESSAGES.fileTooBig);
+   let text;
+   try {
+@@ -115,7 +118,7 @@ async function importBackup({ store, current, file, ask }) {
+   }
+   const parsed = parseBackup(text);
+   if (!parsed.ok) return keep(parsed.message);
+-  const question = confirmText({ readError: store.readError, current: current.length, incoming: parsed.todos.length });
++  const question = confirmText({ readError: store.readError, current: now().length, incoming: parsed.todos.length });
+   if (question !== null && !(await ask(question))) return keep(null);
+   if (store.replace(parsed.todos) !== 'saved') return keep(MESSAGES.notSaved);
+   return { todos: parsed.todos, message: fill(MESSAGES.imported, { n: parsed.todos.length }) };

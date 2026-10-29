@@ -1,0 +1,131 @@
+diff --git a/app/app.js b/app/app.js
+index 96e7d32..7f822dc 100644
+--- a/app/app.js
++++ b/app/app.js
+@@ -49,7 +49,7 @@ function render() {
+     list.append(li);
+   }
+   const open = todos.filter((t) => !t.done).length;
+-  $('#count').textContent = `${open} việc chưa xong`;
++  $('#count').textContent = `${formatCount(open)} việc chưa xong`;
+   $('#unreadable').hidden = !store.readError;
+   // Based on the whole list, not the filter; and not shown on a read error, where the list only looks empty.
+   $('#empty').hidden = todos.length > 0 || store.readError;
+diff --git a/app/backup.js b/app/backup.js
+index b56f2ad..8808797 100644
+--- a/app/backup.js
++++ b/app/backup.js
+@@ -31,8 +31,15 @@ const MESSAGES = {
+ const TODO_KEYS = ['id', 'title', 'done', 'createdAt'];
+ const FILE_KEYS = ['version', 'todos'];
+ 
++// A count of todos, as the app shows it: a dot every three digits from 1,000 up (1.000, 12.500), unchanged below
++// (Linh, UX owner). Not for years or dates. Written by hand, not toLocaleString, so it does not depend on the browser.
++function formatCount(n) {
++  return String(n).replace(/\B(?=(\d{3})+$)/g, '.');
++}
++
++// Every number in MESSAGES ({n}, {m}) is a count of todos, so numbers are written with formatCount.
+ function fill(template, values) {
+-  return template.replace(/\{(\w+)\}/g, (_, k) => String(values[k]));
++  return template.replace(/\{(\w+)\}/g, (_, k) => (typeof values[k] === 'number' ? formatCount(values[k]) : String(values[k])));
+ }
+ 
+ function pick(t) {
+@@ -127,7 +134,7 @@ async function importBackup({ store, current, file, ask }) {
+ 
+ if (typeof module !== 'undefined') {
+   module.exports = {
+-    MAX_IMPORT_BYTES, MESSAGES, fill, toBackupText, backupFileName, tooBigToImport, parseBackup, confirmText, persist,
++    MAX_IMPORT_BYTES, MESSAGES, formatCount, fill, toBackupText, backupFileName, tooBigToImport, parseBackup, confirmText, persist,
+     importBackup,
+   };
+ }
+diff --git a/tests/app.test.js b/tests/app.test.js
+index 5974557..f2d6d3e 100644
+--- a/tests/app.test.js
++++ b/tests/app.test.js
+@@ -21,14 +21,14 @@ function fakeElement() {
+   return el;
+ }
+ 
+-// Loads app.js on an empty, readable list and returns the add form plus every list the app tried to save.
+-function loadApp() {
++// Loads app.js on a readable list (empty unless given) and returns the add form plus every list the app tried to save.
++function loadApp(initial = []) {
+   const elements = {};
+   const saved = [];
+   const replaced = [];
+   const store = {
+     readError: false,
+-    load() { return { todos: [], readError: false }; },
++    load() { return { todos: initial, readError: false }; },
+     save(todos) { saved.push(todos.map((t) => ({ ...t }))); return 'saved'; },
+     replace(todos) { replaced.push(todos); return 'saved'; },
+   };
+@@ -49,7 +49,7 @@ function loadApp() {
+     addEventListener(type, fn) { queueMicrotask(fn); },
+   });
+   const pick = (file) => document.querySelector('#import').onchange({ target: { files: [file], value: '' } });
+-  return { submit, saved, replaced, asked, pick };
++  return { submit, saved, replaced, asked, pick, document };
+ }
+ 
+ // A file whose text() resolves only when the test says so.
+@@ -107,3 +107,12 @@ test('two overlapping imports: the later-finishing one asks before replacing the
+   assert.deepEqual(asked, [backup.fill(backup.MESSAGES.confirmReplace, { n: 1, m: 3 })]);
+   assert.equal(replaced.length, 1, 'cancelled, so the list from the small file stays');
+ });
++
++test('open-todo count line: a dot every three digits from 1,000 up, nothing below', () => {
++  const todos = (open, done = 0) => Array.from({ length: open + done }, (_, i) =>
++    ({ id: `id-${i}`, title: `Việc ${i}`, done: i >= open, createdAt: 1 }));
++  const countLine = (list) => loadApp(list).document.querySelector('#count').textContent;
++  assert.equal(countLine(todos(999, 5)), '999 việc chưa xong');
++  assert.equal(countLine(todos(1000)), '1.000 việc chưa xong');
++  assert.equal(countLine(todos(12500, 3)), '12.500 việc chưa xong');
++});
+diff --git a/tests/backup.test.js b/tests/backup.test.js
+index 69e68c2..7abf8de 100644
+--- a/tests/backup.test.js
++++ b/tests/backup.test.js
+@@ -3,7 +3,7 @@ const test = require('node:test');
+ const assert = require('node:assert/strict');
+ const { randomUUID } = require('node:crypto');
+ const {
+-  MAX_IMPORT_BYTES, MESSAGES, fill, toBackupText, backupFileName, tooBigToImport, parseBackup, confirmText, persist,
++  MAX_IMPORT_BYTES, MESSAGES, fill, formatCount, toBackupText, backupFileName, tooBigToImport, parseBackup, confirmText, persist,
+   importBackup,
+ } = require('../app/backup.js');
+ 
+@@ -122,6 +122,30 @@ test('every list the app can create survives backup then import unchanged', () =
+   assert.deepEqual(parseBackup(toBackupText(list(2000))).ok, true);
+ });
+ 
++// --- Counts: a dot every three digits from 1,000 up (Linh, UX owner) ---
++
++test('formatCount puts a dot every three digits from 1,000 up, and changes nothing below', () => {
++  const cases = [[0, '0'], [1, '1'], [999, '999'], [1000, '1.000'], [2001, '2.001'], [12500, '12.500'],
++    [999999, '999.999'], [1000000, '1.000.000']];
++  for (const [n, text] of cases) assert.equal(formatCount(n), text, String(n));
++});
++
++test('every count in a message gets the dots', () => {
++  assert.equal(fill(MESSAGES.backedUp, { n: 1000 }), 'Đã sao lưu 1.000 việc.');
++  assert.equal(fill(MESSAGES.imported, { n: 12500 }), 'Đã nhập 12.500 việc.');
++  assert.equal(fill(MESSAGES.imported, { n: 999 }), 'Đã nhập 999 việc.');
++  assert.equal(confirmText({ readError: false, current: 2001, incoming: 1000 }),
++    'Thay 2.001 việc hiện có bằng 1.000 việc trong file?');
++  assert.equal(confirmText({ readError: true, current: 0, incoming: 1500 }),
++    'Thay danh sách đã lưu không đọc được bằng 1.500 việc trong file?');
++  assert.equal(confirmText({ readError: true, current: 1234, incoming: 5678 }),
++    'Thay danh sách đã lưu không đọc được và 1.234 việc bạn vừa thêm (chưa lưu) bằng 5.678 việc trong file?');
++});
++
++test('years and dates are not counts: the backup file name keeps the plain year', () => {
++  assert.equal(backupFileName(new Date(2026, 9, 29)), 'todo-sao-luu-2026-10-29.json');
++});
++
+ // --- Confirmation (AC5, AC6, AC19, AC20, S2) ---
+ 
+ test('confirmText asks before replacing anything, and only then', () => {

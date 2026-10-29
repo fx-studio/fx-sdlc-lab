@@ -1,0 +1,1 @@
+{"run": "R1-A-verification-khong", "giay": 41.0, "usd": 0.31178379999999994, "luot": 15, "model": ["claude-haiku-4-5-20251001", "claude-opus-5-5"], "tool_call": 14, "session": "2e8f2ea4-36dc-4863-b1a4-636ae141daba", "tu_choi": ["Bash"], "env": [], "sources": "project,local", "skill_nap": 26}

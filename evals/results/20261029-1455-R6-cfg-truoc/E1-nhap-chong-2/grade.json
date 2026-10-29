@@ -1,0 +1,30 @@
+{
+  "id": "E1-nhap-chong",
+  "pass": true,
+  "checks": [
+    {
+      "check": "tests_pass",
+      "ok": true,
+      "note": "ℹ pass 42 ℹ fail 0"
+    },
+    {
+      "check": "hidden_test E1-nhap-chong.eval.js",
+      "ok": true,
+      "note": "ℹ pass 2 ℹ fail 0"
+    },
+    {
+      "check": "no_test_edits",
+      "ok": true,
+      "note": ""
+    },
+    {
+      "check": "only_paths app/ tests/ plan/",
+      "ok": true,
+      "note": ""
+    }
+  ],
+  "usd": 0.5594994000000001,
+  "secs": 137.7,
+  "turns": 19,
+  "answer": "eady filled it.\n\n**Fix:**\n- **`app/backup.js`:** `importBackup` now also accepts `current` as a function that returns the list. It reads the list after the file has been read, right before deciding whether to ask. Code that passes a plain list works as before, so the existing tests are unchanged.\n- **`app/app.js`:** imports wait in line. A file picked while another is being read starts only after the first one has finished. That means two confirm dialogs can't open at the same time, and each import sees the list the previous one left. If one import fails, the next still runs. The app passes `current: () => todos`.\n\nIn your scenario, the big file now goes into the empty list. The small file then sees a non-empty list and asks \"Thay 3 việc hiện có bằng 1 việc trong file?\" before replacing anything; cancelling leaves the list untouched.\n\n**Proof:** I added a new file, `tests/import-race.test.js`, which runs `app.js` as is with a file that reads slowly. I also ran it against the code before the fix:\n- The two tests for your report (slow import finishing after a quick one; agreeing to the second import) **fail on the old code** and pass now.\n- Two other tests (a todo added while the file is being read, and a failed import not blocking the next) pass on both old and new code. They guard against regressions but don't prove this fix.\n\nI haven't checked it by hand in a browser. To try it, run `python3 -m http.server -d app 8000`, pick a large backup, and then quickly pick a small one."
+}

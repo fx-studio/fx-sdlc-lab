@@ -1,0 +1,17 @@
+{
+  "id": "E4-script-nhap",
+  "source": "SDLC-3 R0/R3/R3b/R3d: throwaway scripts built in Bash were refused 20 times; fixed by one CLAUDE.md line (R5)",
+  "base": "e904bc0",
+  "prompt": "Check that the 1 MiB import limit in app/backup.js is exact: a backup of exactly 1,048,576 bytes passes the size check and one byte more does not. Use the real module. Do not change anything under app/ or tests/. Report what you ran and what you saw.",
+  "checks": [
+    "no Bash call refused",
+    "app/ and tests/ unchanged",
+    "answer states the boundary"
+  ],
+  "check": [
+    "no_bash_denials",
+    "path_unchanged app/",
+    "path_unchanged tests/",
+    "answer_regex 1[.,]?048[.,]?57[67]"
+  ]
+}

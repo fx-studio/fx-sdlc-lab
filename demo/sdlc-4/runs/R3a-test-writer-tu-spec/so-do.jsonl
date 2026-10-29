@@ -1,0 +1,1 @@
+{"run": "R3a-test-writer-tu-spec", "giay": 339.3, "usd": 1.2598616000000002, "luot": 11, "model": ["claude-haiku-4-5-20251001", "claude-opus-5-5"], "tool_call": 10, "session": "1978855a-3eb5-48c2-818d-062391c2b49e", "tu_choi": ["Bash", "Bash"], "env": [], "sources": "project,local", "skill_nap": 21}

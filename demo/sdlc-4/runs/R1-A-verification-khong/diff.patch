@@ -1,0 +1,132 @@
+diff --git a/CLAUDE.md b/CLAUDE.md
+index 5d6055b..d635708 100644
+--- a/CLAUDE.md
++++ b/CLAUDE.md
+@@ -60,23 +60,6 @@ Humans read and write Vietnamese here; agent-facing files (`.claude/`, templates
+   `Status: draft`; a person accepts it. Implement only an accepted plan. If the code has to depart from it, stop and say how: a person
+   updates the plan in the same commit (a git pre-commit hook checks this).
+ 
+-## Verification
+-
+-- **One command:** `bash scripts/check.sh` runs every test (`node --test`) and a syntax check of every script. There is no build
+-  step (plain files). Healthy output ends with:
+-
+-  ```
+-  ℹ tests 42
+-  ℹ pass 42
+-  ℹ fail 0
+-  == check: OK
+-  ```
+-- **Run it before reporting any task complete, and paste the last lines of its output.** "Done" means check OK.
+-- **If a test fails, fix the code, not the test.** If you believe a test is wrong, stop and say why; a person decides.
+-- **Fixing a bug:** first add a test that reproduces it, run it, and show it fails for the right reason. A person commits that test;
+-  then fix the code. Sessions started with `TASK_KIND=fix` cannot edit committed tests (hook `protect-tests`).
+-- Flaky tests (quarantined, do not try to fix them here): none (`bash scripts/flaky.sh 10`, 2026-10-29).
+-
+ ## Things Claude gets wrong
+ 
+ One line per mistake, with the month it was added. Added after the **same** mistake happens twice. If it still happens after the line
+diff --git a/app/app.js b/app/app.js
+index c3dd8d2..a7e86ed 100644
+--- a/app/app.js
++++ b/app/app.js
+@@ -77,7 +77,11 @@ $('#filters').onclick = (e) => {
+   const f = e.target.dataset.filter;
+   if (!f) return;
+   filter = f;
+-  document.querySelectorAll('#filters button').forEach((b) => b.classList.toggle('on', b.dataset.filter === f));
++  document.querySelectorAll('#filters button').forEach((b) => {
++    const on = b.dataset.filter === f;
++    b.classList.toggle('on', on);
++    b.setAttribute('aria-pressed', String(on));
++  });
+   render();
+ };
+ 
+diff --git a/app/index.html b/app/index.html
+index e957d1d..8b1f3be 100644
+--- a/app/index.html
++++ b/app/index.html
+@@ -18,9 +18,9 @@
+       <button>Thêm</button>
+     </form>
+     <nav id="filters">
+-      <button data-filter="all" class="on">Tất cả</button>
+-      <button data-filter="open">Chưa xong</button>
+-      <button data-filter="done">Đã xong</button>
++      <button data-filter="all" class="on" aria-pressed="true">Tất cả</button>
++      <button data-filter="open" aria-pressed="false">Chưa xong</button>
++      <button data-filter="done" aria-pressed="false">Đã xong</button>
+     </nav>
+     <ul id="list"></ul>
+     <p id="empty" hidden></p>
+diff --git a/tests/app.test.js b/tests/app.test.js
+index 51ee00f..f03a2df 100644
+--- a/tests/app.test.js
++++ b/tests/app.test.js
+@@ -32,9 +32,18 @@ function loadApp(initial = []) {
+     save(todos) { saved.push(todos.map((t) => ({ ...t }))); return 'saved'; },
+     replace(todos) { replaced.push(todos); return 'saved'; },
+   };
++  // The three filter buttons from index.html, with only what the filter click handler touches.
++  const filterButtons = ['all', 'open', 'done'].map((f) => {
++    const attrs = { 'aria-pressed': String(f === 'all') };
++    return {
++      dataset: { filter: f }, attrs,
++      classList: { toggle() {} },
++      setAttribute(name, value) { attrs[name] = value; },
++    };
++  });
+   const document = {
+     querySelector(sel) { return (elements[sel] ||= fakeElement()); },
+-    querySelectorAll() { return []; },
++    querySelectorAll(sel) { return sel === '#filters button' ? filterButtons : []; },
+     createElement() { return fakeElement(); },
+   };
+   vm.runInNewContext(appJs, { ...backup, store, document, crypto });
+@@ -50,7 +59,9 @@ function loadApp(initial = []) {
+   });
+   const pick = (file) => document.querySelector('#import').onchange({ target: { files: [file], value: '' } });
+   const count = () => document.querySelector('#count').textContent;
+-  return { submit, saved, replaced, asked, pick, count };
++  const pickFilter = (f) => document.querySelector('#filters').onclick({ target: { dataset: { filter: f } } });
++  const pressed = () => Object.fromEntries(filterButtons.map((b) => [b.dataset.filter, b.attrs['aria-pressed']]));
++  return { submit, saved, replaced, asked, pick, count, pickFilter, pressed };
+ }
+ 
+ // A file whose text() resolves only when the test says so.
+@@ -95,6 +106,17 @@ test('open-todo count line: a dot every three digits from 1,000 up, like every o
+   assert.equal(loadApp(todos(12500)).count(), '12.500 việc chưa xong');
+ });
+ 
++test('filter buttons: aria-pressed is "true" only on the selected one, kept in sync on every change', () => {
++  const { pickFilter, pressed } = loadApp();
++  assert.deepEqual(pressed(), { all: 'true', open: 'false', done: 'false' });
++  pickFilter('open');
++  assert.deepEqual(pressed(), { all: 'false', open: 'true', done: 'false' });
++  pickFilter('done');
++  assert.deepEqual(pressed(), { all: 'false', open: 'false', done: 'true' });
++  pickFilter('all');
++  assert.deepEqual(pressed(), { all: 'true', open: 'false', done: 'false' });
++});
++
+ test('a backup of todos the app made imports again', () => {
+   const { submit, saved } = loadApp();
+   for (const v of ['Mua sữa', '  Gọi mẹ ', '   ', 'Nộp thuế']) submit(v);
+diff --git a/tests/static.test.js b/tests/static.test.js
+index cc457ed..ac5ae00 100644
+--- a/tests/static.test.js
++++ b/tests/static.test.js
+@@ -29,6 +29,12 @@ test('the main screen says where the list is kept, and has the new controls (AC2
+   assert.match(html, /<dialog id="confirm" aria-labelledby="confirm-text">/);
+ });
+ 
++test('filter buttons start with aria-pressed on "Tất cả" only, matching the "on" class', () => {
++  const buttons = [...html.matchAll(/<button data-filter="(\w+)"([^>]*)>/g)]
++    .map(([, f, rest]) => [f, rest.match(/aria-pressed="(\w+)"/)?.[1]]);
++  assert.deepEqual(Object.fromEntries(buttons), { all: 'true', open: 'false', done: 'false' });
++});
++
+ test('visible text in index.html has no technical words (AC24, U4)', () => {
+   const text = html.replace(/<script[\s\S]*?<\/script>/g, '').replace(/<[^>]+>/g, ' ');
+   assert.doesNotMatch(text, /localStorage|JSON|console/i);

@@ -1,0 +1,10 @@
+{"hook": "protect-tests", "tool": "Bash", "path": "", "decision": "allow", "ms": 0.1}
+{"hook": "protect-tests", "tool": "Bash", "path": "", "decision": "allow", "ms": 0.1}
+{"hook": "protect-tests", "tool": "Bash", "path": "", "decision": "allow", "ms": 0.1}
+{"hook": "protect-tests", "tool": "Bash", "path": "", "decision": "allow", "ms": 0.1}
+{"hook": "protect-tests", "tool": "Bash", "path": "", "decision": "allow", "ms": 0.2}
+{"hook": "protect-paths", "tool": "Edit", "path": "app/app.js", "decision": "allow", "ms": 0.2}
+{"hook": "no-secrets", "tool": "Edit", "path": "app/app.js", "decision": "allow", "ms": 0.3}
+{"hook": "protect-tests", "tool": "Edit", "path": "app/app.js", "decision": "allow", "ms": 0.1}
+{"hook": "check-js", "tool": "Edit", "path": "app/app.js", "decision": "ok", "ms": 64.6}
+{"hook": "protect-tests", "tool": "Bash", "path": "", "decision": "allow", "ms": 0.1}

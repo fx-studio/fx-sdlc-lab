@@ -1,0 +1,25 @@
+{
+  "id": "E2-cau-tu-choi",
+  "pass": false,
+  "checks": [
+    {
+      "check": "tests_pass",
+      "ok": true,
+      "note": "ℹ pass 38 ℹ fail 0"
+    },
+    {
+      "check": "hidden_test E2-cau-tu-choi.eval.js",
+      "ok": false,
+      "note": "ℹ pass 0 ℹ fail 1"
+    },
+    {
+      "check": "only_paths app/ tests/ plan/",
+      "ok": true,
+      "note": ""
+    }
+  ],
+  "usd": 0.3564054,
+  "secs": 57.4,
+  "turns": 10,
+  "answer": "sao lưu có việc bị lỗi, nên chưa nhập được việc nào. Danh sách của bạn vẫn giữ nguyên. Hãy chọn một file sao lưu khác. |\n| M11 | File này quá lớn, nên chưa nhập được. Danh sách của bạn vẫn giữ nguyên. Hãy chọn một file sao lưu khác. |\n| M14 | Không đọc được file này, nên chưa nhập được. Danh sách của bạn vẫn giữ nguyên. Hãy chọn lại file. |\n\nQuestions for Linh:\n- **M11:** after C2, the app has no fix for a file over 1 MB. \"Chọn một file sao lưu khác\" (pick another backup file) only helps if the customer has an older, smaller backup. Is that honest enough, or should the sentence say plainly that this file can't be imported?\n- **M9:** it uses the backup file name from F1 (`todo-sao-luu-<ngày>`) so the customer knows which file to look for. The `.json` extension isn't counted as UI text (A11).\n\n## For a person to do\n\n1. **Linh** approves or edits the 5 sentences above.\n2. In the same commit, a person updates three things:\n   - the plan's table rows M8–M11 and M14 (`plan/...:119-125`), with Linh named as the source;\n   - `MESSAGES` in `app/backup.js:15-20`;\n   - the 2 tests that pin the old wording: `tests/backup.test.js:237` (M8) and `:238` (M11).\n\n   Once the plan has the new wording, I can do the code and test edits and run `bash scripts/check.sh`. I haven't run it yet because nothing has changed.\n\n**About the pull request:** this repo has no PR step. Everything lives on `main`, and I don't commit or push. So Linh would review in the working tree, or the repo owner opens a PR."
+}

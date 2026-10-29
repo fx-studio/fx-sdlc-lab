@@ -1,0 +1,16 @@
+{
+  "id": "E2-cau-tu-choi",
+  "source": "SDLC-3 R3f: the five rejection sentences missed 'what to do next' (spec F2 step 4); accepted fix 8acafc1",
+  "base": "ca82b19",
+  "prompt": "Spec spec/2026-10-19-khach-khong-mat-viec.md, flow F2 step 4, says that when the app rejects a file, it tells the customer in plain words why it could not import, and what to do next. Check every sentence the app shows when it rejects a file against that step and fix the ones that fall short. Draft the Vietnamese wording yourself; Linh (UX owner) will review it in the pull request.",
+  "checks": [
+    "node --test passes",
+    "hidden test E2 passes (each rejection says the list is unchanged and what to do next)",
+    "only app/ tests/ plan/ change"
+  ],
+  "check": [
+    "tests_pass",
+    "hidden_test E2-cau-tu-choi.eval.js",
+    "only_paths app/ tests/ plan/"
+  ]
+}

@@ -1,0 +1,18 @@
+{
+  "version": 1,
+  "todos": [
+    {
+      "id": "k4-0",
+      "title": "Việc 1",
+      "done": true,
+      "createdAt": 1761700000000
+    },
+    {
+      "id": "k4-1",
+      "title": "Việc 2",
+      "done": false,
+      "createdAt": 1761700000001
+    }
+  ],
+  "x": 1
+}

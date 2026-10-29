@@ -1,0 +1,1 @@
+{"run": "R2b-sua-bug-test-khoa", "giay": 29.5, "usd": 0.2135174, "luot": 9, "model": ["claude-haiku-4-5-20251001", "claude-opus-5-5"], "tool_call": 8, "session": "7b4ec659-b123-4a15-b46b-d8000e6fabe8", "tu_choi": [], "env": ["TASK_KIND=fix"], "sources": "project,local", "skill_nap": 26}

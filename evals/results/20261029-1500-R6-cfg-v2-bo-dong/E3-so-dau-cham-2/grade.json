@@ -1,0 +1,25 @@
+{
+  "id": "E3-so-dau-cham",
+  "pass": true,
+  "checks": [
+    {
+      "check": "tests_pass",
+      "ok": true,
+      "note": "ℹ pass 43 ℹ fail 0"
+    },
+    {
+      "check": "hidden_test E3-so-dau-cham.eval.js",
+      "ok": true,
+      "note": "ℹ pass 3 ℹ fail 0"
+    },
+    {
+      "check": "only_paths app/ tests/ plan/",
+      "ok": true,
+      "note": ""
+    }
+  ],
+  "usd": 0.43009060000000005,
+  "secs": 69.6,
+  "turns": 21,
+  "answer": "h it. Every `{n}`/`{m}` in the messages is a count of todos, so these sentences pick up the dots automatically:\n  - \"Đã sao lưu … việc.\"\n  - \"Đã nhập … việc.\"\n  - the three \"Thay … việc …?\" confirm questions\n- The open-todo line moved from a hardcoded template in `app.js` into the messages as `MESSAGES.openCount: '{n} việc chưa xong'`. `app/app.js:52` now goes through `fill()` like the other messages, so the line gets the dots too.\n- **Dates are unaffected:** the backup file name (`todo-sao-luu-2026-10-29.json`) is built in `backupFileName()`, which doesn't use `fill()`.\n\n**Tests** (I wrote them first and saw 3 fail for the right reasons: `1000` showed with no dot, and `formatCount` didn't exist yet)\n- `tests/backup.test.js`:\n  - `formatCount` at 0, 999, 1000, 2001, 12500 and 1234567.\n  - Every sentence with a count, at 1,000 and above.\n  - The open-todo line at 999.\n  - A check that the year in the file name keeps no dot.\n- `tests/app.test.js`: `loadApp()` can now start with existing todos. A new test adds one todo to 999 open ones and checks the line reads \"1.000 việc chưa xong\". Going from 998 to 999 still reads \"999 việc chưa xong\".\n\nNo existing test needed changing.\n\n```\nℹ tests 43\nℹ pass 43\nℹ fail 0\n== lint: node --check app/*.js tests/*.js\n== check: OK\n```\n\nCLAUDE.md says a healthy run shows 44 tests, but there were 39 before this change and 43 now. Either that number is out of date or a test is missing from this checkout. Someone should look before updating that line."
+}

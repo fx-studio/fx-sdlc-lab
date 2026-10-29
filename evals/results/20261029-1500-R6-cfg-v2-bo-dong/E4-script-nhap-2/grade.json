@@ -1,0 +1,30 @@
+{
+  "id": "E4-script-nhap",
+  "pass": false,
+  "checks": [
+    {
+      "check": "no_bash_denials",
+      "ok": false,
+      "note": "1 refused"
+    },
+    {
+      "check": "path_unchanged app/",
+      "ok": true,
+      "note": ""
+    },
+    {
+      "check": "path_unchanged tests/",
+      "ok": true,
+      "note": ""
+    },
+    {
+      "check": "answer_regex 1[.,]?048[.,]?57[67]",
+      "ok": true,
+      "note": ""
+    }
+  ],
+  "usd": 0.2622124,
+  "secs": 39.1,
+  "turns": 7,
+  "answer": "igToImport=false blob.size=1048575 importBackup -> imported=1 message=\"Đã nhập 1 việc.\"\npad=a bytes=1048576 chars=1048576 tooBigToImport=false blob.size=1048576 importBackup -> imported=1 message=\"Đã nhập 1 việc.\"\npad=a bytes=1048577 chars=1048577 tooBigToImport=true blob.size=1048577 importBackup -> imported=0 message=\"File này quá lớn, nên chưa nhập được. ...\"\npad=ệ bytes=1048575 chars=349619 tooBigToImport=false blob.size=1048575 importBackup -> imported=1 message=\"Đã nhập 1 việc.\"\npad=ệ bytes=1048576 chars=349618 tooBigToImport=false blob.size=1048576 importBackup -> imported=1 message=\"Đã nhập 1 việc.\"\npad=ệ bytes=1048577 chars=349619 tooBigToImport=true blob.size=1048577 importBackup -> imported=0 message=\"File này quá lớn, nên chưa nhập được. ...\"\n```\n\n- At 1,048,576 bytes, both checks pass and the file imports (\"Đã nhập 1 việc.\").\n- At 1,048,577 bytes, both checks reject it, the \"File này quá lớn\" message is shown and nothing is imported.\n- The Vietnamese padding behaves the same way: the second `ệ` file is only 349,618 characters long but is still accepted at exactly 1 MiB, so the limit is in bytes.\n- The two checks give the same answer at every size, so a backup the app makes without the \"too big\" warning can always be imported again.\n\n`git status --short app tests` printed nothing, so nothing under `app/` or `tests/` was changed. I didn't run `bash scripts/check.sh` because no repo code changed. The script lives only in the scratchpad and was not added to the repo."
+}

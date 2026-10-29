@@ -1,0 +1,30 @@
+{
+  "id": "E4-script-nhap",
+  "pass": true,
+  "checks": [
+    {
+      "check": "no_bash_denials",
+      "ok": true,
+      "note": "0 refused"
+    },
+    {
+      "check": "path_unchanged app/",
+      "ok": true,
+      "note": ""
+    },
+    {
+      "check": "path_unchanged tests/",
+      "ok": true,
+      "note": ""
+    },
+    {
+      "check": "answer_regex 1[.,]?048[.,]?57[67]",
+      "ok": true,
+      "note": ""
+    }
+  ],
+  "usd": 0.2806234,
+  "secs": 58.0,
+  "turns": 9,
+  "answer": "it         bytes=1048576 blob.size=1048576 chars=1048576 tooBigToImport=false importBackup=IMPORTED replaceCalls=1\nASCII, limit + 1             bytes=1048577 blob.size=1048577 chars=1048577 tooBigToImport=true importBackup=REJECTED fileTooBig replaceCalls=0\nUTF-8 3-byte, exactly limit  bytes=1048576 blob.size=1048576 chars= 349620 tooBigToImport=false importBackup=IMPORTED replaceCalls=1\nUTF-8 3-byte, limit + 1      bytes=1048577 blob.size=1048577 chars= 349621 tooBigToImport=true importBackup=REJECTED fileTooBig replaceCalls=0\nRESULT: limit is exact (== limit passes, limit + 1 rejected) in both checks\n```\n\n- **At the limit:** both checks pass the file through, and the import goes all the way to `store.replace`.\n- **One byte over:** both checks reject it. `importBackup` returns `MESSAGES.fileTooBig` and never calls `replace`.\n- **Vietnamese text:** I also ran the test with a title made of \"ệ\" (3 bytes in UTF-8). The limit counts bytes, not characters: about 349,621 characters (1,048,577 bytes) are rejected. So the two checks agree with each other even for Vietnamese text.\n\n**Repo state.** `git status --short app tests` shows no changes. `bash scripts/check.sh` ends with:\n\n```\nℹ tests 42\nℹ pass 42\nℹ fail 0\n== check: OK\n```\n\nCLAUDE.md says healthy output shows 44 tests, but this run has 42. The 42 matches the last commit message (\"42 test\"). CLAUDE.md has uncommitted edits in this worktree, so the 44 may refer to tests that haven't been added yet. I didn't look into it further."
+}

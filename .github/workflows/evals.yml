@@ -1,0 +1,38 @@
+# Eval suite for the agent configuration (playbook Stage 4, "continuous evals in CI").
+# MANUAL ONLY (workflow_dispatch). The playbook shape triggers on pull requests touching CLAUDE.md, .claude/ or evals/,
+# plus a weekly run; those triggers are off here for two reasons:
+#   1. Each task starts from an older commit (evals/tasks/*.json "base"). This GitHub repo receives one commit per
+#      episode, so those commits exist only in the local history: `git worktree add <base>` fails (exit 128).
+#   2. It needs ANTHROPIC_API_KEY in the repository secrets, and every run costs money (R7: 2.90 USD for 9 tasks).
+# Run it locally with the same command: `bash evals/run.sh --label ci --parallel 2 --min 0.75`.
+# To run it in CI for real, a task must carry its own starting snapshot instead of a commit hash.
+name: evals
+on:
+  workflow_dispatch:        # playbook shape, off here (see above):
+  # pull_request:
+  #   paths: ['CLAUDE.md', '.claude/**', 'evals/**']
+  # schedule:
+  #   - cron: '0 2 * * 1'
+jobs:
+  evals:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0          # tasks start from older commits
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm install -g @anthropic-ai/claude-code
+      - name: Run the eval suite
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        # Merge gate (playbook): a configuration change that lowers the pass rate gets reviewed before it merges.
+        # Here: fail the check below the last accepted rate; a person decides whether to merge anyway.
+        run: bash evals/run.sh --label ci --parallel 2 --min 0.75
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: eval-results
+          path: evals/results/

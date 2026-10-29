@@ -1,0 +1,25 @@
+{
+  "id": "E3-so-dau-cham",
+  "pass": false,
+  "checks": [
+    {
+      "check": "tests_pass",
+      "ok": true,
+      "note": "ℹ pass 39 ℹ fail 0"
+    },
+    {
+      "check": "hidden_test E3-so-dau-cham.eval.js",
+      "ok": false,
+      "note": "ℹ pass 1 ℹ fail 2"
+    },
+    {
+      "check": "only_paths app/ tests/ plan/",
+      "ok": true,
+      "note": ""
+    }
+  ],
+  "usd": 0.21566540000000003,
+  "secs": 34.5,
+  "turns": 8,
+  "answer": "ce for an import that fails on save.\n\nNothing in the spec mentions a thousands separator. I also searched `intent/`, `plan/`, `app/` and `tests/` and found no trace of it.\n\nThe rule exists only in the R9 demo transcripts:\n- The facilitator raised it as item (3), marked \"Ngoài spec\" (outside the spec): the confirm box shows \"2001\" and could show \"2.001\".\n- Linh agreed and gave a rule in `demo/sdlc-3/runs/R9-linh-so-va-cau/transcript.md:25-28`: numbers from 1.000 up get dots (1.000, 2.001, 12.500), numbers below 1.000 stay plain, and years and dates never get dots.\n- Thảo said it wasn't their decision and passed it to Linh, with Mai to confirm afterwards. No confirmation from Mai is recorded, and nobody added the rule to the spec or a plan.\n\nUnder this repo's rules I can only implement an accepted spec or plan, and only a person can change one. The fix is either:\n- **A person adds it to the spec.** Write a third entry under \"Revisions after acceptance\" with Linh's rule, Mai's confirmation and where it applies (the confirm box only, or every count the app shows), and commit it. Then I can implement it, probably as a Small change: one formatting helper in `app/`, plus tests including the 999 / 1.000 boundary and the year exception.\n- **You tell me to go ahead without updating the spec.** Then the code wouldn't match the spec, and the pre-commit plan check may block the commit anyway.\n\nI haven't changed any files and didn't run `scripts/check.sh`, since there's no change to check."
+}

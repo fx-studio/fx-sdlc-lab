@@ -1,0 +1,5 @@
+FAIL E1-nhap-chong-1         0.40 USD     76 s  hidden_test E1-nhap-chong.eval.js (ℹ pass 0 ℹ fail 0)
+FAIL E2-cau-tu-choi-1        0.44 USD     72 s  hidden_test E2-cau-tu-choi.eval.js (ℹ pass 0 ℹ fail 1)
+FAIL E1-nhap-chong-2         0.55 USD    104 s  hidden_test E1-nhap-chong.eval.js (ℹ pass 0 ℹ fail 1)
+PASS E2-cau-tu-choi-2        0.48 USD     76 s  
+== 1/4 passed · 1.87 USD · 20261029-1432-R6a-cau-hinh-truoc-sdlc4

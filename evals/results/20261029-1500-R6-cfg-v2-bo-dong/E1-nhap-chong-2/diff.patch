@@ -1,0 +1,123 @@
+diff --git a/app/app.js b/app/app.js
+index e10d836..be9e4b7 100644
+--- a/app/app.js
++++ b/app/app.js
+@@ -1,6 +1,8 @@
+ // A todo has: id, title, done, createdAt. No due date, no tags, no owner.
+ // Saving and importing decisions live in backup.js (persist, importBackup); this file only wires them to the page.
+-let todos = store.load().todos;
++// One array for the page's whole life, changed only in place: importBackup reads it again after the file is read, so it
++// sees todos added or imported meanwhile and asks before replacing them. Never reassign it.
++const todos = store.load().todos;
+ let filter = 'all';
+ 
+ const $ = (sel) => document.querySelector(sel);
+@@ -17,7 +19,8 @@ function toggle(id) {
+ }
+ 
+ function remove(id) {
+-  todos = todos.filter((x) => x.id !== id);
++  const i = todos.findIndex((x) => x.id === id);
++  if (i !== -1) todos.splice(i, 1);
+   commit();
+ }
+ 
+@@ -102,9 +105,8 @@ $('#import').onchange = async (e) => {
+   input.value = ''; // so the same file can be picked again
+   if (!file) return;
+   show(MESSAGES.reading);
+-  const current = todos;
+-  const result = await importBackup({ store, current, file, ask });
+-  if (result.todos !== current) todos = result.todos;
++  const result = await importBackup({ store, current: todos, file, ask });
++  if (result.todos !== todos) todos.splice(0, todos.length, ...result.todos);
+   show(result.message);
+   render();
+ };
+diff --git a/tests/app.test.js b/tests/app.test.js
+index 71181b8..04ad567 100644
+--- a/tests/app.test.js
++++ b/tests/app.test.js
+@@ -17,19 +17,28 @@ function fakeElement() {
+     append() {},
+     querySelector(sel) { return (el.children[sel] ||= fakeElement()); },
+     children: {},
++    // The confirm <dialog>: records each question, then the customer cancels.
++    asked: [],
++    showModal() {
++      el.asked.push(elements['#confirm-text'].textContent);
++      setImmediate(() => el.onclose());
++    },
++    addEventListener(type, fn) { el['on' + type] = fn; },
+   };
+   return el;
+ }
++let elements;
+ 
+ // Loads app.js on an empty, readable list and returns the add form plus every list the app tried to save.
+ function loadApp() {
+-  const elements = {};
++  elements = {};
+   const saved = [];
++  const replaced = [];
+   const store = {
+     readError: false,
+     load() { return { todos: [], readError: false }; },
+     save(todos) { saved.push(todos.map((t) => ({ ...t }))); return 'saved'; },
+-    replace() { return 'saved'; },
++    replace(todos) { replaced.push(todos); return 'saved'; },
+   };
+   const document = {
+     querySelector(sel) { return (elements[sel] ||= fakeElement()); },
+@@ -41,7 +50,20 @@ function loadApp() {
+     document.querySelector('#title').value = value;
+     document.querySelector('#add').onsubmit({ preventDefault() {} });
+   };
+-  return { submit, saved };
++  const pick = (file) => document.querySelector('#import').onchange({ target: { files: [file], value: '' } });
++  const asked = document.querySelector('#confirm').asked;
++  return { submit, saved, replaced, pick, asked };
++}
++
++// A picked file whose text() resolves only when the test calls finish().
++function slowFile(text) {
++  let finish;
++  const read = new Promise((resolve) => { finish = () => resolve(text); });
++  return { size: text.length, text: () => read, finish };
++}
++
++function backupOf(n) {
++  return backup.toBackupText(Array.from({ length: n }, (_, i) => ({ id: `id${i}`, title: `Việc ${i}`, done: false, createdAt: i })));
+ }
+ 
+ test('add form: trims the title and makes a string id', () => {
+@@ -72,3 +94,29 @@ test('a backup of todos the app made imports again', () => {
+   assert.equal(parsed.ok, true, parsed.message);
+   assert.deepEqual(parsed.todos, todos);
+ });
++
++test('import: a file that finishes after a second, smaller import asks before replacing (bug: overlapping imports)', async () => {
++  const { pick, asked, replaced } = loadApp();
++  const big = slowFile(backupOf(3));
++  const small = slowFile(backupOf(1));
++  const first = pick(big);
++  const second = pick(small);
++  small.finish();
++  await second;
++  assert.equal(replaced.length, 1, 'the small file fills the empty list');
++  big.finish();
++  await first;
++  assert.deepEqual(asked, [backup.fill(backup.MESSAGES.confirmReplace, { n: 1, m: 3 })]);
++  assert.equal(replaced.length, 1, 'cancel keeps the list the small file made');
++});
++
++test('import: a todo added while the file is read is not replaced without asking', async () => {
++  const { pick, asked, replaced, submit } = loadApp();
++  const file = slowFile(backupOf(3));
++  const done = pick(file);
++  submit('Mua sữa');
++  file.finish();
++  await done;
++  assert.deepEqual(asked, [backup.fill(backup.MESSAGES.confirmReplace, { n: 1, m: 3 })]);
++  assert.equal(replaced.length, 0);
++});

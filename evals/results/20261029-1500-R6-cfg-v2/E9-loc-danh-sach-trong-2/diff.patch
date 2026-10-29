@@ -1,0 +1,85 @@
+diff --git a/app/app.js b/app/app.js
+index c3dd8d2..ca54bbb 100644
+--- a/app/app.js
++++ b/app/app.js
+@@ -53,6 +53,13 @@ function render() {
+   $('#unreadable').hidden = !store.readError;
+   // Not shown on a read error, where the list only looks empty.
+   $('#empty').hidden = visible().length > 0 || store.readError;
++  $('#empty').textContent = emptyText();
++}
++
++// The import hint only when there is no todo at all, not when a filter tab is empty (T-014).
++function emptyText() {
++  if (todos.length === 0) return MESSAGES.emptyList;
++  return filter === 'done' ? MESSAGES.emptyDone : MESSAGES.emptyOpen;
+ }
+ 
+ // Resolves true only when the customer picks "Thay"; Esc and "Huỷ" resolve false.
+@@ -113,5 +120,4 @@ $('#import').onchange = async (e) => {
+ };
+ 
+ $('#unreadable').textContent = MESSAGES.unreadable;
+-$('#empty').textContent = MESSAGES.emptyList;
+ render();
+diff --git a/app/backup.js b/app/backup.js
+index 76176df..d9d5c30 100644
+--- a/app/backup.js
++++ b/app/backup.js
+@@ -25,6 +25,9 @@ const MESSAGES = {
+   fileTooBig:
+     'File này quá lớn, nên chưa nhập được. Danh sách của bạn vẫn giữ nguyên. Hãy chọn file sao lưu của danh sách ngắn hơn.',
+   emptyList: 'Chưa có việc nào. Nếu có file sao lưu, hãy bấm "Nhập từ file".',
++  // A filter tab with nothing in it: the list itself is not empty, so no import hint.
++  emptyDone: 'Chưa có việc nào đã xong.',
++  emptyOpen: 'Không còn việc nào chưa xong.',
+   cannotReadFile: 'Không đọc được file này. Danh sách của bạn vẫn giữ nguyên. Hãy chọn lại file hoặc chọn file khác.',
+   reading: 'Đang đọc file…',
+   unreadable:
+diff --git a/tests/app.test.js b/tests/app.test.js
+index 51ee00f..eb536d1 100644
+--- a/tests/app.test.js
++++ b/tests/app.test.js
+@@ -50,7 +50,12 @@ function loadApp(initial = []) {
+   });
+   const pick = (file) => document.querySelector('#import').onchange({ target: { files: [file], value: '' } });
+   const count = () => document.querySelector('#count').textContent;
+-  return { submit, saved, replaced, asked, pick, count };
++  const filter = (f) => document.querySelector('#filters').onclick({ target: { dataset: { filter: f } } });
++  const empty = () => {
++    const el = document.querySelector('#empty');
++    return el.hidden ? null : el.textContent;
++  };
++  return { submit, saved, replaced, asked, pick, count, filter, empty };
+ }
+ 
+ // A file whose text() resolves only when the test says so.
+@@ -95,6 +100,28 @@ test('open-todo count line: a dot every three digits from 1,000 up, like every o
+   assert.equal(loadApp(todos(12500)).count(), '12.500 việc chưa xong');
+ });
+ 
++test('an empty filter tab does not say the list is empty or point to import (Vy, T-014)', () => {
++  const open = [1, 2, 3, 4].map((i) => ({ id: `id-${i}`, title: `Việc ${i}`, done: false, createdAt: 1 }));
++  const { filter, empty } = loadApp(open);
++  assert.equal(empty(), null);
++  filter('done');
++  assert.doesNotMatch(empty(), /Nhập từ file/);
++  assert.equal(empty(), backup.MESSAGES.emptyDone);
++  filter('all');
++  assert.equal(empty(), null);
++
++  const done = open.map((t) => ({ ...t, done: true }));
++  const app = loadApp(done);
++  app.filter('open');
++  assert.doesNotMatch(app.empty(), /Nhập từ file/);
++  assert.equal(app.empty(), backup.MESSAGES.emptyOpen);
++
++  const none = loadApp();
++  assert.equal(none.empty(), backup.MESSAGES.emptyList, 'a truly empty list still offers import');
++  none.filter('done');
++  assert.equal(none.empty(), backup.MESSAGES.emptyList);
++});
++
+ test('a backup of todos the app made imports again', () => {
+   const { submit, saved } = loadApp();
+   for (const v of ['Mua sữa', '  Gọi mẹ ', '   ', 'Nộp thuế']) submit(v);

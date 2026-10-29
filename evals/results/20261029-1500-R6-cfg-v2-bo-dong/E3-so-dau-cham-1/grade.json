@@ -1,0 +1,25 @@
+{
+  "id": "E3-so-dau-cham",
+  "pass": true,
+  "checks": [
+    {
+      "check": "tests_pass",
+      "ok": true,
+      "note": "ℹ pass 43 ℹ fail 0"
+    },
+    {
+      "check": "hidden_test E3-so-dau-cham.eval.js",
+      "ok": true,
+      "note": "ℹ pass 3 ℹ fail 0"
+    },
+    {
+      "check": "only_paths app/ tests/ plan/",
+      "ok": true,
+      "note": ""
+    }
+  ],
+  "usd": 0.4768448,
+  "secs": 86.1,
+  "turns": 20,
+  "answer": "s every number through it, which covers every message with a count:\n  - \"Đã sao lưu {n} việc.\"\n  - \"Đã nhập {n} việc.\"\n  - the three \"Thay … việc …?\" confirmation questions.\n- **`app/app.js`**: the open-todo count line now reads `${formatCount(open)} việc chưa xong`.\n- **Dates are untouched.** The only date the app writes is in the backup file name, and that code doesn't go through `fill`, so it stays `todo-sao-luu-2026-10-29.json`. A test pins this.\n\n**One thing to know:** `fill()` now treats every number as a count. That's true of every message today. If someone later adds a message with a year in it, they'll need to pass the year as a string so it doesn't get a dot. There's a comment on `fill()` saying so.\n\n**Tests (written first; 3 failed before the fix for the right reason, then all passed):**\n- In `tests/backup.test.js`, three new tests:\n  - `formatCount` from 0 up to 1.000.000, including the 999 → 1.000 boundary.\n  - Every message with a count.\n  - The year in the backup file name.\n- In `tests/app.test.js`, one new test: the count line at 999, 1.000 and 12.500. To support it, `loadApp()` now takes an optional starting list and also returns `document`. No existing test was changed.\n\n```\nℹ tests 43\nℹ pass 43\nℹ fail 0\n== lint: node --check app/*.js tests/*.js\n== check: OK\n```\n\nThe example output in CLAUDE.md says 44 tests, but the real count is 43: 39 before this change plus my 4. You may want to update that line. Nothing is committed; the diff is ready for you to review."
+}

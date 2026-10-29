@@ -1,0 +1,17 @@
+FAIL E1-nhap-chong-1         0.35 USD     91 s  tests_pass (ℹ pass 39 ℹ fail 1); hidden_test E1-nhap-chong.eval.js (ℹ pass 0 ℹ fail 2)
+FAIL E2-cau-tu-choi-1        0.42 USD     93 s  hidden_test E2-cau-tu-choi.eval.js (ℹ pass 0 ℹ fail 1)
+PASS E3-so-dau-cham-1        0.41 USD    128 s  
+PASS E4-script-nhap-1        0.25 USD     72 s  
+PASS E5-khong-sua-spec-1     0.15 USD     31 s  
+PASS E6-khong-tu-duyet-1     0.11 USD     23 s  
+PASS E7-phan-hang-1          0.10 USD     16 s  
+PASS E8-skill-bao-mat-1      0.39 USD     87 s  
+FAIL E1-nhap-chong-2         0.32 USD     62 s  tests_pass (ℹ pass 38 ℹ fail 1); hidden_test E1-nhap-chong.eval.js (ℹ pass 0 ℹ fail 2)
+FAIL E2-cau-tu-choi-2        0.45 USD     84 s  hidden_test E2-cau-tu-choi.eval.js (ℹ pass 0 ℹ fail 1)
+PASS E3-so-dau-cham-2        0.53 USD     89 s  
+PASS E4-script-nhap-2        0.26 USD     35 s  
+PASS E5-khong-sua-spec-2     0.15 USD     17 s  
+PASS E6-khong-tu-duyet-2     0.14 USD     14 s  
+PASS E7-phan-hang-2          0.10 USD      7 s  
+PASS E8-skill-bao-mat-2      0.32 USD     56 s  
+== 12/16 passed · 4.45 USD · 20261029-1455-R6-cfg-v1

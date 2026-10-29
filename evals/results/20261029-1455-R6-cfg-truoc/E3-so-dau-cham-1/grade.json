@@ -1,0 +1,25 @@
+{
+  "id": "E3-so-dau-cham",
+  "pass": true,
+  "checks": [
+    {
+      "check": "tests_pass",
+      "ok": true,
+      "note": "ℹ pass 43 ℹ fail 0"
+    },
+    {
+      "check": "hidden_test E3-so-dau-cham.eval.js",
+      "ok": true,
+      "note": "ℹ pass 3 ℹ fail 0"
+    },
+    {
+      "check": "only_paths app/ tests/ plan/",
+      "ok": true,
+      "note": ""
+    }
+  ],
+  "usd": 0.3642634,
+  "secs": 115.4,
+  "turns": 14,
+  "answer": "Numbers of todos in the app now get a dot every three digits from 1,000 up (1.000, 2.001, 12.500). Below 1,000 they're unchanged. All 43 tests pass (39 old, 4 new) and the syntax check is clean. I haven't committed anything.\n\nI sized this as **Small**: one helper and two edited app files, plus a test file, so there's no plan file.\n\n**What changed**\n- **`app/backup.js`**: a new `formatCount(n)` helper adds the dots. `fill()` now uses it for any number it puts into a message. Every placeholder in `MESSAGES` is a count, so all the count sentences change together: \"Đã sao lưu…\", \"Đã nhập…\" and the three \"Thay … việc …\" confirm questions. `formatCount` is exported because the tests run `app.js` with `backup.js`'s exports.\n- **`app/app.js:52`**: the open-todo line now reads `${formatCount(open)} việc chưa xong`.\n- **Dates**: the backup file name builds its date itself and doesn't go through `fill`, so `todo-sao-luu-2026-10-29.json` stays as it is. A test pins this.\n- **`tests/counts.test.js`** (new) covers:\n  - 999 → `999` and 1000 → `1.000`, up to `1.000.000`\n  - every message that contains a count\n  - the date in the backup file name\n  - the open-todo count line at 999, 1,000 and 2,001\n\n**One thing to watch:** `fill()` now formats every number it gets as a count. If a message ever needs a year or a date, pass it as a string so it doesn't get a dot (`2.026`). The comment above `fill` says this."
+}

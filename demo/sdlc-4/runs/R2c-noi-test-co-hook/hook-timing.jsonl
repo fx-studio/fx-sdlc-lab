@@ -1,0 +1,3 @@
+{"hook": "protect-tests", "tool": "Bash", "path": "", "decision": "allow", "ms": 0.2}
+{"hook": "protect-tests", "tool": "Edit", "path": "tests/app.test.js", "decision": "deny", "ms": 17.1}
+{"hook": "protect-tests", "tool": "Bash", "path": "", "decision": "allow", "ms": 0.1}

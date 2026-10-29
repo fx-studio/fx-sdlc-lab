@@ -1,0 +1,30 @@
+{
+  "id": "E4-script-nhap",
+  "pass": true,
+  "checks": [
+    {
+      "check": "no_bash_denials",
+      "ok": true,
+      "note": "0 refused"
+    },
+    {
+      "check": "path_unchanged app/",
+      "ok": true,
+      "note": ""
+    },
+    {
+      "check": "path_unchanged tests/",
+      "ok": true,
+      "note": ""
+    },
+    {
+      "check": "answer_regex 1[.,]?048[.,]?57[67]",
+      "ok": true,
+      "note": ""
+    }
+  ],
+  "usd": 0.2588014,
+  "secs": 34.9,
+  "turns": 8,
+  "answer": "ackup.js` with `require`, then ran it with one `node` call. It builds a valid backup with one todo and a Vietnamese title, so the bytes and characters differ, and pads it with trailing spaces to an exact byte count. Each file goes through both places the limit is enforced:\n- `tooBigToImport(text)` (`app/backup.js:83`): counts the UTF-8 bytes of the text.\n- `importBackup(...)` (`app/backup.js:123`): reads `file.size` from a real `Blob`. It ran with a stub store and an \"ask\" that always says yes.\n\n**What I saw:**\n```\nMAX_IMPORT_BYTES=1048576 (1 MiB = 1048576)\nlimit-1    UTF-8 bytes=1048575 chars=1048570 blob.size=1048575 tooBigToImport=false importBackup=IMPORTED 1 todo(s)\nlimit      UTF-8 bytes=1048576 chars=1048571 blob.size=1048576 tooBigToImport=false importBackup=IMPORTED 1 todo(s)\nlimit+1    UTF-8 bytes=1048577 chars=1048572 blob.size=1048577 tooBigToImport=true importBackup=REJECTED fileTooBig\n```\n\n- Both checks use `>` (strictly greater than), so 1,048,576 bytes is allowed and 1,048,577 is not.\n- The limit counts bytes, not characters. The test file is 5 characters shorter than its byte count, and the cutoff still falls exactly on the byte count.\n\nNothing under `app/` or `tests/` was changed. `bash scripts/check.sh` still passes:\n```\nℹ tests 42\nℹ pass 42\nℹ fail 0\n== check: OK\n```\n\nThe script is only in the scratchpad and was not added to the repo. If you want this boundary covered permanently, it would fit in `tests/backup.test.js`, but that file is for a person to add."
+}
