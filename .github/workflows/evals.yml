@@ -1,14 +1,18 @@
 # Eval suite for the agent configuration (playbook Stage 4, "continuous evals in CI").
-# Runs when a pull request touches CLAUDE.md, .claude/ or evals/, and once a week (not nightly: cost, see README).
-# NOT ENABLED on GitHub yet: it needs ANTHROPIC_API_KEY in the repository secrets, and every run costs money.
-# Tried locally first with the same command: `bash evals/run.sh --label local`.
+# MANUAL ONLY (workflow_dispatch). The playbook shape triggers on pull requests touching CLAUDE.md, .claude/ or evals/,
+# plus a weekly run; those triggers are off here for two reasons:
+#   1. Each task starts from an older commit (evals/tasks/*.json "base"). This GitHub repo receives one commit per
+#      episode, so those commits exist only in the local history: `git worktree add <base>` fails (exit 128).
+#   2. It needs ANTHROPIC_API_KEY in the repository secrets, and every run costs money (R7: 2.90 USD for 9 tasks).
+# Run it locally with the same command: `bash evals/run.sh --label ci --parallel 2 --min 0.75`.
+# To run it in CI for real, a task must carry its own starting snapshot instead of a commit hash.
 name: evals
 on:
-  pull_request:
-    paths: ['CLAUDE.md', '.claude/**', 'evals/**']
-  schedule:
-    - cron: '0 2 * * 1'
-  workflow_dispatch:
+  workflow_dispatch:        # playbook shape, off here (see above):
+  # pull_request:
+  #   paths: ['CLAUDE.md', '.claude/**', 'evals/**']
+  # schedule:
+  #   - cron: '0 2 * * 1'
 jobs:
   evals:
     runs-on: ubuntu-latest
