@@ -23,7 +23,7 @@ dọn test chập chờn trước, bắt đầu eval nhỏ và chấm bằng má
 | `scripts/flaky.sh` | Chạy cả bộ test N lần, in test nào đổi kết quả | vá 4.2 |
 | `.claude/agents/test-writer.md` | Viết test **chỉ từ spec** và danh sách tên công khai, không đọc `app/` | vá 4.1 |
 | `evals/` | 9 task lấy từ chính lịch sử repo (khuôn 4.6: `id`, `source`, `base`, `prompt`, `checks`), test ẩn `*.eval.js`, `check.py` chấm bằng máy, `run.py` chạy mỗi task trong một worktree tạm ở commit gốc của nó **với cấu hình hiện tại phủ lên**, ghi tỉ lệ đạt + tiền vào `evals/results/history.jsonl` | Eval liên tục · vá 4.4, 4.5 |
-| `.github/workflows/evals.yml` | Đúng khuôn workflow mẫu: PR đụng `CLAUDE.md`/`.claude/`/`evals/` + cron **mỗi tuần**. **Chưa bật trên GitHub**, chạy thử ở máy bằng đúng lệnh trong đó | Eval trong CI |
+| `.github/workflows/evals.yml` | Đúng khuôn workflow mẫu: PR đụng `CLAUDE.md`/`.claude/`/`evals/` + cron **mỗi tuần**. **Trên GitHub chỉ chạy tay** (trigger PR + cron để dạng chú thích: commit gốc của task chỉ có ở lịch sử local; bật ở PR #4 thì fail `git worktree add`), chạy thử ở máy bằng đúng lệnh trong đó | Eval trong CI |
 | `scripts/shot.py` + `demo/sdlc-4/mock/` | Chụp app ở khổ điện thoại bằng Chromium; ảnh mock thanh lọc | Playbook bước 5 |
 
 **Hai bug gài có chủ ý** (commit `16d2846`, ticket mẫu `T-013`, `T-014`): dòng đếm và câu "chưa có việc nào" tính theo bộ lọc thay vì cả
