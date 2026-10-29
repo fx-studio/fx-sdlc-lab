@@ -102,8 +102,9 @@ Cần Claude Code, `python3`, Node (app mẫu). Eval tốn tiền mỗi lần ch
 5. Đo một thay đổi cấu hình: `python3 evals/run.py --label <tên> --repeat 2 --config-from <thư-mục có CLAUDE.md và .claude mới>`. Đọc
    **từng task** trong `evals/results/history.jsonl`, không chỉ tổng: ở demo tổng đứng yên 12–13/16 trong khi từng task lên xuống 2/2 ↔ 0/2.
 6. Sự cố thành eval: đưa ticket + commit sửa cho Claude, bảo viết theo khuôn `evals/tasks/*.json`; người kiểm fail/pass trên hai commit.
-7. CI: `.github/workflows/evals.yml` chạy khi PR đụng `CLAUDE.md` / `.claude/` / `evals/` và mỗi tuần. Cần `ANTHROPIC_API_KEY` trong
-   GitHub Secrets. Chạy thử ở máy trước bằng đúng lệnh trong đó.
+7. CI: `.github/workflows/evals.yml` theo khuôn của playbook (PR đụng `CLAUDE.md` / `.claude/` / `evals/` + mỗi tuần). **Ở repo này
+   chỉ chạy tay**: task bắt đầu từ commit cũ trong lịch sử, mà GitHub chỉ nhận một commit mỗi tập nên không có các commit đó.
+   Repo của bạn có đủ lịch sử thì bật lại hai trigger, thêm `ANTHROPIC_API_KEY` vào GitHub Secrets, chạy thử ở máy trước.
 
 ## Bố cục
 
