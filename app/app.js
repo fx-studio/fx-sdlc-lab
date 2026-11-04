@@ -49,7 +49,8 @@ function render() {
     list.append(li);
   }
   const open = todos.filter((t) => !t.done).length;
-  $('#count').textContent = `${formatCount(open)} việc chưa xong`;
+  // Every todo done (and the list not empty): say so instead of "0 việc chưa xong" (Thảo, PR 3).
+  $('#count').textContent = open === 0 && todos.length > 0 ? 'Đã xong hết' : `${formatCount(open)} việc chưa xong`;
   $('#unreadable').hidden = !store.readError;
   // Based on the whole list, not the filter; and not shown on a read error, where the list only looks empty.
   $('#empty').hidden = todos.length > 0 || store.readError;

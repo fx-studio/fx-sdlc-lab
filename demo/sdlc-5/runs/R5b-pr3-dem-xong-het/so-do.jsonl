@@ -1,0 +1,1 @@
+{"run": "R5b-pr3-dem-xong-het", "giay": 43.8, "usd": 0.358103, "luot": 16, "model": ["claude-opus-5-5", "claude-haiku-5-5"], "tool_call": 15, "session": "c4626b48-d590-4e94-9e99-e1fa304896d9", "tu_choi": [], "env": [], "sources": "project,local", "mcp": false, "swap_settings": null, "skill_nap": 26}

@@ -1,0 +1,1 @@
+{"run": "B6-thao-product-owner", "giay": 16.7, "usd": 0.08230960000000001, "luot": 1, "model": ["claude-haiku-5-5", "claude-sonnet-5-5"], "tool_call": 0, "session": "14ef2799-1cfd-498b-a3e6-15ba93358c31", "tu_choi": [], "env": [], "sources": "project,local", "mcp": false, "swap_settings": null, "skill_nap": 21}

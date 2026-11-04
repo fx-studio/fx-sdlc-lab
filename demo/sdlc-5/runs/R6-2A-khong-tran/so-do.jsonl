@@ -1,0 +1,1 @@
+{"run": "R6-2A-khong-tran", "giay": 623.1, "usd": 4.406253900000002, "luot": 9, "model": ["claude-haiku-5-5", "claude-opus-5-5"], "tool_call": 81, "session": "6a19659c-b844-4d29-8515-aa22b8c463b3", "tu_choi": [], "env": [], "sources": "project,local", "mcp": false, "swap_settings": null, "skill_nap": 26}

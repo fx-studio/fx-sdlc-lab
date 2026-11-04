@@ -1,0 +1,1 @@
+{"run": "R7-dev-staging-production", "giay": 25.8, "usd": 0.22175360000000002, "luot": 15, "model": ["claude-opus-5-5", "claude-haiku-5-5"], "tool_call": 14, "session": "08190033-ee87-44cd-9072-1ddfc814e884", "tu_choi": [], "env": [], "sources": "project,local", "mcp": true, "swap_settings": null, "skill_nap": 26}

@@ -1,0 +1,55 @@
+{
+ "findings": [
+  {
+   "pass": "Bugs",
+   "severity": "Important",
+   "file": "app/app.js",
+   "line": 138,
+   "title": "After a date edit, the first mouse click on a row control is lost",
+   "why": "When a person changes a row's date and then clicks the checkbox or the × of any row, the date field loses focus on mousedown. That blur sees dirty = true and calls render(e.relatedTarget), and render() empties #list and builds new nodes. The button or checkbox under the pointer is now detached, so mouseup lands on a new node and the browser fires no click on either. The todo is not marked done or removed, and nothing tells the person why. With 'Xếp theo: Hạn chót' the row can also move under the pointer, so even a second click can hit a different todo. The fake page in tests/app.test.js calls onblur and onclick directly, so it cannot catch this. To confirm: in Chrome, Firefox and Safari, change a date, then click × on the same row once, and check whether the row is gone.",
+   "fix": "Do not rebuild the list from the blur handler while a pointer press is in progress. For example, defer the redraw with setTimeout(() => render(document.activeElement), 0) so the click is dispatched first. Or skip the redraw when relatedTarget is inside #list and let the next commit()/render() re-sort. Add a test that fires blur, then the click, on the original node and expects toggle/remove to happen."
+  },
+  {
+   "pass": "Compliance",
+   "severity": "Nit",
+   "file": "plan/2026-10-19-han-chot-cho-viec.md",
+   "line": 114,
+   "title": "Code departs from the accepted plan and the plan was not updated",
+   "why": "render(focusTo) takes a parameter, data-id/data-part sit on each control and not on the li (plan line 114), and 'today' is computed per row in drawDue, not once per render (line 115). CLAUDE.md says to stop and have a person update the plan in the same commit. The pre-commit hook that checks this is not installed in this worktree, so nothing stopped it.",
+   "fix": "Have a person update the Thiết kế lines 114–117 of the plan, either in this PR's commit or in a follow-up, and install the pre-commit hook (scripts/install-hooks.sh) in the worktrees."
+  },
+  {
+   "pass": "Compliance",
+   "severity": "Nit",
+   "file": "tests/app.test.js",
+   "line": null,
+   "title": "Proof lines 247 and 249 are only partly covered",
+   "why": "Proof line 247 needs add/toggle/remove/import to hide the button of a real due-date Undo. The tests only use offerUndo called directly (PR 6). Proof line 249 needs four-field legacy data, and it is covered only by one todo inside the broken-data test. A regression in show()/clearUndo after a cleared due date would not be caught.",
+   "fix": "Add one test that clears a due date (blur with ''), then does add, toggle, remove and import in turn, and expects #undo hidden each time. Add one test that loads a list of four-field todos only and expects no 'Hạn …' and no crash under both sort orders."
+  },
+  {
+   "pass": "Compliance",
+   "severity": "Nit",
+   "file": "CLAUDE.md",
+   "line": null,
+   "title": "CLAUDE.md script load order is out of date",
+   "why": "CLAUDE.md says the scripts load store.js → backup.js → app.js, but app/index.html and tests/static.test.js now pin store.js → due.js → backup.js → app.js. due.js is DOM-free logic that app.js depends on and is not mentioned. The change was introduced by the base (PR 6) and is still wrong at this head.",
+   "fix": "Have a person update the App architecture line: loaded store.js → due.js → backup.js → app.js, and due.js is DOM-free due-date logic (no localStorage)."
+  },
+  {
+   "pass": "Compliance",
+   "severity": "Nit",
+   "file": "CLAUDE.md",
+   "line": null,
+   "title": "The 'Things Claude gets wrong' line on throwaway scripts is not working",
+   "why": "PR.md says the verifier's self-written script for the neighbouring flows was refused, so those flows were only read, not run. This is the 2026-10 mistake already listed in CLAUDE.md. It happened again, so the line is not preventing it.",
+   "fix": "Per the CLAUDE.md rule, turn the line into a hook (for example, reject heredocs, sed -i and && chains in Bash before they run), or give the verifier agent the Write tool so it can write a script file and run it with one plain node command."
+  }
+ ],
+ "dropped_nits": 2,
+ "claude_md_outdated": true,
+ "pr": 7,
+ "base": "2a40506",
+ "head": "efb7a18",
+ "mode": "REVIEW.md"
+}

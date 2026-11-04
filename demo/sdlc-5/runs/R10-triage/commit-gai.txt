@@ -1,0 +1,10 @@
+commit 685a86f R10: đổi câu báo sao lưu (gài build fail có chủ ý)
+
+ app/backup.js | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+     'Hãy sao lưu ra file, xoá bớt việc đã xong rồi thử lại.',
+-  backedUp: 'Đã sao lưu {n} việc.',
++  backedUp: 'Đã sao lưu {n} việc ra file.',
+   imported: 'Đã nhập {n} việc.',
+   confirmReplace: 'Thay {n} việc hiện có bằng {m} việc trong file?',
+   confirmReplaceUnreadable: 'Thay danh sách đã lưu không đọc được bằng {m} việc trong file?',

@@ -1,0 +1,1128 @@
+diff --git a/app/app.js b/app/app.js
+index 2f26e65..523f1ea 100644
+--- a/app/app.js
++++ b/app/app.js
+@@ -1,12 +1,22 @@
+-// A todo has: id, title, done, createdAt. No due date, no tags, no owner.
+-// Saving and importing decisions live in backup.js (persist, importBackup); this file only wires them to the page.
++// A todo has: id, title, done, createdAt, and maybe dueDate ('YYYY-MM-DD'; no key when it has none). No tags, no owner.
++// Saving and importing decisions live in backup.js (persist, importBackup), date logic in due.js; this file only wires
++// them to the page.
+ let todos = store.load().todos;
+ let filter = 'all';
++let sort = 'added'; // 'added' | 'due'. Not remembered: a reload shows added order again (A11).
++let undo = null; // { restore, timer } while "Hoàn tác" is offered. Page memory only, never saved.
++let changedInPlace = false; // a row's date was saved and drawn in place; the list redraws when that field is left (Q3)
++let rendering = false;
+ 
+ const $ = (sel) => document.querySelector(sel);
+ 
+-function add(title) {
+-  todos.push({ id: crypto.randomUUID(), title: title.trim(), done: false, createdAt: Date.now() });
++// Fills {title} as plain text: a function replacer, so "$&" or "$1" in a title stay as typed.
++const withTitle = (template, title) => template.replace('{title}', () => title);
++
++function add(title, dueDate) {
++  const t = { id: crypto.randomUUID(), title: title.trim(), done: false, createdAt: Date.now() };
++  if (isValidDueDate(dueDate)) t.dueDate = dueDate; // an empty field adds no key (AC2); a past date is fine (A4)
++  todos.push(t);
+   commit();
+ }
+ 
+@@ -21,39 +31,138 @@ function remove(id) {
+   commit();
+ }
+ 
++// On a row's date `change`. Only a valid, different date is saved. An empty value (a part being retyped with the
++// keyboard) does nothing here, so it never drops a saved date; leaving the field decides (Q3). Returns the todo if saved.
++function setDue(id, value) {
++  const t = todos.find((x) => x.id === id);
++  if (!t || !isValidDueDate(value) || t.dueDate === value) return null;
++  t.dueDate = value;
++  save();
++  changedInPlace = true;
++  return t;
++}
++
++// On leaving a row's date field while it is empty. `before`: the field's value when it got focus. Returns true if saved.
++function clearDue(id, before) {
++  const t = todos.find((x) => x.id === id);
++  if (!t || !isValidDueDate(t.dueDate)) return false; // nothing shown to clear; a broken value stays as it is (A14)
++  const old = t.dueDate; // the date saved now, which may be one set during this same focus
++  delete t.dueDate;
++  const notSaved = persist(store, todos).message;
++  // Set and cleared within this focus: the customer loses no date they had before, so no D5 and no Undo (Q3).
++  if (before === '') {
++    show(notSaved);
++    return true;
++  }
++  offerUndo(notSaved || withTitle(DUE_TEXT.cleared, t.title), () => {
++    const again = todos.find((x) => x.id === id);
++    if (again) again.dueDate = old;
++  });
++  return true;
++}
++
+ function commit() {
+-  show(persist(store, todos).message);
++  save();
+   render();
+ }
+ 
++function save() {
++  show(persist(store, todos).message);
++}
++
++// Every new message removes the Undo button, so add, toggle, delete, a date change and import all end it (A16);
++// filter, sort and leaving a date field show nothing, so it stays.
+ function show(message) {
++  clearUndo();
+   $('#message').textContent = message || '';
+ }
+ 
++// One Undo for the whole app (plan Q7): restore() puts the data back; saving and redrawing are done here.
++function offerUndo(message, restore) {
++  show(message);
++  $('#undo').hidden = false;
++  undo = { restore, timer: setTimeout(clearUndo, 10000) };
++}
++
++function clearUndo() {
++  if (undo) clearTimeout(undo.timer);
++  undo = null;
++  $('#undo').hidden = true;
++}
++
+ function visible() {
+-  if (filter === 'open') return todos.filter((t) => !t.done);
+-  if (filter === 'done') return todos.filter((t) => t.done);
+-  return todos;
++  let shown = todos;
++  if (filter === 'open') shown = todos.filter((t) => !t.done);
++  if (filter === 'done') shown = todos.filter((t) => t.done);
++  return sort === 'due' ? sortByDue(shown) : shown; // a new array: the saved order never changes (Q6)
++}
++
++// The parts of a row that change with its date and done state. Called on each draw and after a date change in place.
++function showDue(li, t, today) {
++  const overdue = isOverdue(t, today);
++  li.className = [t.done ? 'done' : '', overdue ? 'overdue' : ''].filter(Boolean).join(' ');
++  li.querySelector('.due').textContent = isValidDueDate(t.dueDate) ? formatDueDate(t.dueDate) : '';
++  li.querySelector('.overdue-tag').textContent = overdue ? DUE_TEXT.overdue : '';
++}
++
++function row(t, today) {
++  const li = document.createElement('li');
++  li.dataset.id = t.id;
++  // A fixed template with no user text; the title, label and dates go in below as text or attributes (S3).
++  li.innerHTML =
++    `<label><input type="checkbox" class="toggle" ${t.done ? 'checked' : ''}> <span class="title"></span></label>` +
++    '<span class="due-box"><input type="date" class="due-input"><span class="due"></span><span class="overdue-tag"></span></span>' +
++    '<button class="remove" aria-label="Xoá">×</button>';
++  li.querySelector('.title').textContent = t.title;
++  const box = li.querySelector('.toggle');
++  const date = li.querySelector('.due-input');
++  const del = li.querySelector('.remove');
++  // So render() can put focus back on the same control of the same todo.
++  for (const [el, part] of [[box, 'toggle'], [date, 'due-input'], [del, 'remove']]) {
++    el.dataset.id = t.id;
++    el.dataset.part = part;
++  }
++  box.onchange = () => toggle(t.id);
++  del.onclick = () => remove(t.id);
++  date.value = isValidDueDate(t.dueDate) ? t.dueDate : '';
++  date.setAttribute('aria-label', withTitle(DUE_TEXT.rowLabel, t.title));
++  date.onfocus = () => { date.dataset.before = date.value; };
++  date.onchange = () => {
++    const changed = setDue(t.id, date.value);
++    if (changed) showDue(li, changed, localDateString(new Date()));
++  };
++  date.onblur = (e) => {
++    if (rendering) return; // a browser may blur a field while render() removes it
++    if (date.value === '' && clearDue(t.id, date.dataset.before)) changedInPlace = true;
++    if (changedInPlace) render(e.relatedTarget);
++  };
++  showDue(li, t, today);
++  return li;
+ }
+ 
+-function render() {
++// focusTarget: where focus is going, when called from a blur (the browser has not moved focus yet at that point).
++function render(focusTarget) {
+   const list = $('#list');
++  const from = focusTarget || document.activeElement;
++  const keep = from && from.dataset && from.dataset.part ? { id: from.dataset.id, part: from.dataset.part } : null;
++  const today = localDateString(new Date()); // again on every draw (F3 step 5)
++  let refocus = null;
++  rendering = true;
+   list.innerHTML = '';
+   for (const t of visible()) {
+-    const li = document.createElement('li');
+-    li.className = t.done ? 'done' : '';
+-    li.innerHTML = `<label><input type="checkbox" ${t.done ? 'checked' : ''}> <span></span></label><button aria-label="Xoá">×</button>`;
+-    li.querySelector('span').textContent = t.title;
+-    li.querySelector('input').onchange = () => toggle(t.id);
+-    li.querySelector('button').onclick = () => remove(t.id);
++    const li = row(t, today);
++    if (keep && keep.id === t.id) refocus = li.querySelector(`.${keep.part}`);
+     list.append(li);
+   }
++  rendering = false;
++  changedInPlace = false;
+   const open = todos.filter((t) => !t.done).length;
+   // Every todo done (and the list not empty): say so instead of "0 việc chưa xong" (Thảo, PR 3).
+   $('#count').textContent = open === 0 && todos.length > 0 ? 'Đã xong hết' : `${formatCount(open)} việc chưa xong`;
+   $('#unreadable').hidden = !store.readError;
+   // Based on the whole list, not the filter; and not shown on a read error, where the list only looks empty.
+   $('#empty').hidden = todos.length > 0 || store.readError;
++  if (refocus) refocus.focus();
+ }
+ 
+ // Resolves true only when the customer picks "Thay"; Esc and "Huỷ" resolve false.
+@@ -70,8 +179,10 @@ function ask(question) {
+ $('#add').onsubmit = (e) => {
+   e.preventDefault();
+   const input = $('#title');
+-  if (input.value.trim()) add(input.value);
++  const date = $('#due');
++  if (input.value.trim()) add(input.value, date.value);
+   input.value = '';
++  date.value = '';
+ };
+ 
+ $('#filters').onclick = (e) => {
+@@ -82,6 +193,20 @@ $('#filters').onclick = (e) => {
+   render();
+ };
+ 
++$('#sort').value = sort; // a browser may restore the last choice on reload; the list starts in added order (A11)
++$('#sort').onchange = () => {
++  sort = $('#sort').value === 'due' ? 'due' : 'added';
++  render();
++};
++
++$('#undo').onclick = () => {
++  if (!undo) return;
++  undo.restore();
++  const notSaved = persist(store, todos).message;
++  render();
++  show(notSaved || DUE_TEXT.undone); // show() also removes the button
++};
++
+ $('#export').onclick = () => {
+   if (todos.length === 0) return show(MESSAGES.nothingToBackUp);
+   const text = toBackupText(todos);
+diff --git a/app/due.js b/app/due.js
+new file mode 100644
+index 0000000..debdde4
+--- /dev/null
++++ b/app/due.js
+@@ -0,0 +1,63 @@
++// Due dates: checking, today's date, overdue, display and sorting. No DOM and no browser storage here, so it can be tested
++// in Node. A due date is a calendar day 'YYYY-MM-DD' (not a moment in time); a todo without one has no dueDate key.
++// Never build a Date from a dueDate string (it is read as UTC) and never take the day from a UTC ISO string: both shift
++// the day at UTC+7.
++
++// New screen text (plan D1-D6, D8, D9). {title} is the todo's own title; fill it with a function replacer, as text only.
++const DUE_TEXT = {
++  label: 'Hạn chót',
++  rowLabel: 'Hạn chót của việc {title}',
++  due: 'Hạn {date}',
++  overdue: 'Quá hạn',
++  cleared: 'Đã bỏ hạn chót của việc {title}.',
++  undo: 'Hoàn tác',
++  sortBy: 'Xếp theo',
++  sortAdded: 'Thứ tự thêm',
++  sortDue: 'Hạn chót',
++  undone: 'Đã hoàn tác.',
++};
++
++// A string in the fixed form YYYY-MM-DD that is a real day (no 2026-02-30). Date.UTC and getUTC* do not depend on the time zone.
++function isValidDueDate(v) {
++  if (typeof v !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(v)) return false;
++  const [y, m, d] = v.split('-').map(Number);
++  const date = new Date(Date.UTC(y, m - 1, d));
++  return date.getUTCFullYear() === y && date.getUTCMonth() === m - 1 && date.getUTCDate() === d;
++}
++
++// The customer's own day on this machine (local time), as YYYY-MM-DD.
++function localDateString(date) {
++  const pad = (n) => String(n).padStart(2, '0');
++  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
++}
++
++// Open and due before today. Due today is not overdue; a done todo never is. The fixed 4-2-2 form compares as strings.
++function isOverdue(todo, today) {
++  return !todo.done && isValidDueDate(todo.dueDate) && todo.dueDate < today;
++}
++
++// 'Hạn DD/MM/YYYY'. Only for valid values.
++function formatDueDate(s) {
++  const [y, m, d] = s.split('-');
++  return DUE_TEXT.due.replace('{date}', `${d}/${m}/${y}`);
++}
++
++// A new array (the stored order is never changed): valid dates ascending, then todos with no or a broken dueDate.
++// Ties keep the given order, by comparing the original index rather than relying on a stable sort.
++function sortByDue(todos) {
++  return todos
++    .map((todo, index) => ({ todo, index, key: isValidDueDate(todo.dueDate) ? todo.dueDate : null }))
++    .sort((a, b) => {
++      if (a.key !== b.key) {
++        if (a.key === null) return 1;
++        if (b.key === null) return -1;
++        return a.key < b.key ? -1 : 1;
++      }
++      return a.index - b.index;
++    })
++    .map((x) => x.todo);
++}
++
++if (typeof module !== 'undefined') {
++  module.exports = { DUE_TEXT, isValidDueDate, localDateString, isOverdue, formatDueDate, sortByDue };
++}
+diff --git a/app/index.html b/app/index.html
+index e957d1d..d145120 100644
+--- a/app/index.html
++++ b/app/index.html
+@@ -12,16 +12,24 @@
+     <div id="notices" role="status" aria-live="polite">
+       <p id="unreadable" class="banner" hidden></p>
+       <p id="message"></p>
++      <button type="button" id="undo" hidden>Hoàn tác</button>
+     </div>
+     <form id="add">
+       <input id="title" placeholder="Việc cần làm…" autocomplete="off" required>
++      <label id="due-label">Hạn chót <input type="date" id="due" autocomplete="off"></label>
+       <button>Thêm</button>
+     </form>
+-    <nav id="filters">
+-      <button data-filter="all" class="on">Tất cả</button>
+-      <button data-filter="open">Chưa xong</button>
+-      <button data-filter="done">Đã xong</button>
+-    </nav>
++    <div id="view">
++      <nav id="filters">
++        <button data-filter="all" class="on">Tất cả</button>
++        <button data-filter="open">Chưa xong</button>
++        <button data-filter="done">Đã xong</button>
++      </nav>
++      <label id="sort-label">Xếp theo <select id="sort" autocomplete="off">
++        <option value="added" selected>Thứ tự thêm</option>
++        <option value="due">Hạn chót</option>
++      </select></label>
++    </div>
+     <ul id="list"></ul>
+     <p id="empty" hidden></p>
+     <p id="count"></p>
+@@ -39,6 +47,7 @@
+     </form>
+   </dialog>
+   <script src="store.js"></script>
++  <script src="due.js"></script>
+   <script src="backup.js"></script>
+   <script src="app.js"></script>
+ </body>
+diff --git a/app/style.css b/app/style.css
+index fc3eb87..6587dc7 100644
+--- a/app/style.css
++++ b/app/style.css
+@@ -1,12 +1,23 @@
+ body { font: 16px/1.5 system-ui, sans-serif; background: #f6f6f4; color: #222; margin: 0; }
+ main { max-width: 32rem; margin: 3rem auto; padding: 0 1rem; }
+-form { display: flex; gap: .5rem; }
+-input#title { flex: 1; padding: .5rem; }
+-nav { margin: 1rem 0; display: flex; gap: .25rem; }
++form { display: flex; flex-wrap: wrap; gap: .5rem; align-items: center; }
++input#title { flex: 1 1 12rem; padding: .5rem; }
++#due-label, #sort-label { display: flex; align-items: center; gap: .35rem; }
++#view { margin: 1rem 0; display: flex; flex-wrap: wrap; gap: .5rem 1rem; align-items: center; justify-content: space-between; }
++nav { display: flex; gap: .25rem; }
+ nav button.on { font-weight: 700; }
+ ul { list-style: none; padding: 0; }
+-li { display: flex; justify-content: space-between; padding: .4rem 0; border-bottom: 1px solid #ddd; }
+-li.done span { text-decoration: line-through; color: #888; }
++li { display: flex; flex-wrap: wrap; align-items: center; gap: .25rem .5rem; padding: .4rem 0; border-bottom: 1px solid #ddd; }
++li > label { flex: 1 1 10rem; }
++li.done .title { text-decoration: line-through; color: #888; }
++.due-box { display: flex; flex-wrap: wrap; align-items: center; gap: .4rem; font-size: .875rem; }
++.due { color: #444; }
++.due:empty, .overdue-tag:empty { display: none; }
++/* Overdue is said in words ("Quá hạn"), the colour only adds to it (U5). #a4161a on #f6f6f4: contrast about 7:1. */
++li.overdue { border-left: 3px solid #a4161a; padding-left: .5rem; }
++li.overdue .due, .overdue-tag { color: #a4161a; }
++.overdue-tag { font-weight: 700; }
++#undo { margin: .25rem 0 .5rem; }
+ .banner { background: #fff4e5; border: 1px solid #d08a2a; border-radius: 4px; padding: .6rem .8rem; }
+ #message { background: #eaf1fb; border-radius: 4px; padding: .5rem .8rem; }
+ #message:empty { display: none; }
+diff --git a/tests/app.test.js b/tests/app.test.js
+index c1530e8..385cc1f 100644
+--- a/tests/app.test.js
++++ b/tests/app.test.js
+@@ -1,6 +1,9 @@
+ // Pins what add() in app/app.js makes, so a backup the app itself made always imports again (Khoa's review of commit B:
+ // isValidTodo rejects whitespace-only titles and non-string ids). app.js is a plain page script with no exports, so it
+ // runs unchanged in a vm context with a minimal fake page. Run: node --test
++// Due dates (plan/2026-10-19-han-chot-cho-viec.md, PR A): the clock is fixed at 06:00 on 10/11/2026 in UTC+7 (23:00 on
++// 09/11 in UTC), and timers are fake, so the 10-second Undo runs on demand.
++process.env.TZ = 'Asia/Ho_Chi_Minh';
+ const test = require('node:test');
+ const assert = require('node:assert/strict');
+ const fs = require('node:fs');
+@@ -8,39 +11,69 @@ const path = require('node:path');
+ const vm = require('node:vm');
+ const crypto = require('node:crypto');
+ const backup = require('../app/backup.js');
++const due = require('../app/due.js');
+ 
+ const appJs = fs.readFileSync(path.join(__dirname, '..', 'app', 'app.js'), 'utf8');
++const NOW = Date.UTC(2026, 10, 9, 23, 0); // 06:00 on 10/11/2026 in UTC+7
+ 
+-function fakeElement() {
++// A fake element. A list remembers the rows appended to it (cleared by innerHTML = ''); focus() moves the fake
++// document's focus and fires onfocus, like a browser.
++function fakeElement(doc) {
++  let html = '';
+   const el = {
+-    textContent: '', innerHTML: '', hidden: false, value: '', className: '', dataset: {},
+-    append() {},
+-    querySelector(sel) { return (el.children[sel] ||= fakeElement()); },
++    textContent: '', hidden: false, value: '', className: '', dataset: {}, attributes: {}, rows: [],
++    get innerHTML() { return html; },
++    set innerHTML(v) { html = v; if (v === '') el.rows = []; },
++    append(child) { el.rows.push(child); },
++    querySelector(sel) { return (el.children[sel] ||= fakeElement(doc)); },
+     children: {},
++    setAttribute(name, v) { el.attributes[name] = String(v); },
++    getAttribute(name) { return name in el.attributes ? el.attributes[name] : null; },
++    focus() { if (doc) { doc.activeElement = el; if (el.onfocus) el.onfocus({}); } },
+   };
+   return el;
+ }
+ 
+ // Loads app.js on a readable list (empty unless given) and returns the add form plus every list the app tried to save.
+-function loadApp(initial = []) {
++// saveResult: what store.save returns ('saved', 'failed' or 'skipped').
++function loadApp(initial = [], { saveResult = 'saved' } = {}) {
+   const elements = {};
+   const saved = [];
+   const replaced = [];
+   const store = {
+     readError: false,
+     load() { return { todos: initial, readError: false }; },
+-    save(todos) { saved.push(todos.map((t) => ({ ...t }))); return 'saved'; },
++    save(todos) { saved.push(todos.map((t) => ({ ...t }))); return saveResult; },
+     replace(todos) { replaced.push(todos); return 'saved'; },
+   };
+   const document = {
+-    querySelector(sel) { return (elements[sel] ||= fakeElement()); },
++    activeElement: null,
++    querySelector(sel) { return (elements[sel] ||= fakeElement(document)); },
+     querySelectorAll() { return []; },
+-    createElement() { return fakeElement(); },
++    createElement() { return fakeElement(document); },
+   };
+-  vm.runInNewContext(appJs, { ...backup, store, document, crypto });
+-  const submit = (value) => {
+-    document.querySelector('#title').value = value;
+-    document.querySelector('#add').onsubmit({ preventDefault() {} });
++  document.body = fakeElement(document);
++  document.activeElement = document.body;
++  // index.html ships the Undo button hidden.
++  document.querySelector('#undo').hidden = true;
++  const timers = new Map();
++  let nextTimer = 1;
++  const setTimeout = (fn, ms) => { timers.set(nextTimer, { fn, ms }); return nextTimer++; };
++  const clearTimeout = (id) => { timers.delete(id); };
++  // Runs every pending timer due within `ms`.
++  const runTimers = (ms) => {
++    for (const [id, t] of [...timers]) if (t.ms <= ms && timers.delete(id)) t.fn();
++  };
++  class FixedDate extends Date {
++    constructor(...args) { if (args.length) super(...args); else super(NOW); }
++    static now() { return NOW; }
++  }
++  vm.runInNewContext(appJs, { ...backup, ...due, store, document, crypto, Date: FixedDate, setTimeout, clearTimeout });
++  const $ = (sel) => document.querySelector(sel);
++  const submit = (value, dueDate = '') => {
++    $('#title').value = value;
++    $('#due').value = dueDate;
++    $('#add').onsubmit({ preventDefault() {} });
+   };
+   // The confirm dialog records each question and answers "Huỷ".
+   const asked = [];
+@@ -53,7 +86,41 @@ function loadApp(initial = []) {
+   // Clicks a filter tab: 'all', 'open' or 'done'.
+   const filterBy = (f) => document.querySelector('#filters').onclick({ target: { dataset: { filter: f } } });
+   const emptyShown = () => !document.querySelector('#empty').hidden;
+-  return { submit, saved, replaced, asked, pick, count, filterBy, emptyShown };
++
++  // Rows on screen, in screen order.
++  const rows = () => $('#list').rows;
++  const titleOf = (li) => li.querySelector('.title').textContent;
++  const titles = () => rows().map(titleOf);
++  const row = (title) => {
++    const li = rows().find((r) => titleOf(r) === title);
++    assert.ok(li, `row "${title}" on screen`);
++    return li;
++  };
++  const dueText = (title) => row(title).querySelector('.due').textContent;
++  const overdueText = (title) => row(title).querySelector('.overdue-tag').textContent;
++  const isOverdueRow = (title) => row(title).className.split(' ').includes('overdue');
++  const sortBy = (v) => { $('#sort').value = v; $('#sort').onchange({ target: $('#sort') }); };
++  const message = () => $('#message').textContent;
++  const undoShown = () => !$('#undo').hidden;
++  const clickUndo = () => $('#undo').onclick({});
++  // A row's date field: focus it, fire change with a value (as the picker or each typed part does), leave it.
++  const focusDate = (title) => { const el = row(title).querySelector('.due-input'); el.focus(); return el; };
++  const changeDate = (el, v) => { el.value = v; el.onchange({ target: el }); };
++  // While blur runs the browser has no focused element yet; relatedTarget is where focus goes next.
++  const blurDate = (el, relatedTarget = null) => {
++    document.activeElement = document.body;
++    el.onblur({ target: el, relatedTarget });
++    if (relatedTarget && document.activeElement === document.body) relatedTarget.focus();
++  };
++  const toggleRow = (title) => row(title).querySelector('.toggle').onchange({});
++  const removeRow = (title) => row(title).querySelector('.remove').onclick({});
++  const lastSaved = () => saved.at(-1);
++  const savedTodo = (title) => lastSaved().find((t) => t.title === title);
++  return {
++    submit, saved, replaced, asked, pick, count, filterBy, emptyShown, document, $, rows, titles, row, dueText, overdueText,
++    isOverdueRow, sortBy, message, undoShown, clickUndo, focusDate, changeDate, blurDate, toggleRow, removeRow, lastSaved,
++    savedTodo, runTimers,
++  };
+ }
+ 
+ // A file whose text() resolves only when the test says so.
+@@ -157,3 +224,326 @@ test('two overlapping imports: the later-finishing one asks before replacing the
+   assert.deepEqual(asked, [backup.fill(backup.MESSAGES.confirmReplace, { n: 1, m: 3 })]);
+   assert.equal(replaced.length, 1, 'cancelled, so the list from the small file stays');
+ });
++
++// ---- Due dates (plan/2026-10-19-han-chot-cho-viec.md, PR A) ----
++
++const D5 = (title) => `Đã bỏ hạn chót của việc ${title}.`;
++const D7 = 'Thay đổi vừa rồi chưa được lưu. Hãy sao lưu ra file, rồi xoá bớt việc đã xong.';
++const D9 = 'Đã hoàn tác.';
++const todo = (title, extra = {}) => ({ id: `id-${title}`, title, done: false, createdAt: 1, ...extra });
++
++test('F1: add with a due date saves it, shows "Hạn 12/11/2026" and empties the date field (AC1)', () => {
++  const app = loadApp();
++  app.submit('Nộp báo cáo', '2026-11-12');
++  assert.equal(app.savedTodo('Nộp báo cáo').dueDate, '2026-11-12');
++  assert.equal(app.dueText('Nộp báo cáo'), 'Hạn 12/11/2026');
++  assert.equal(app.$('#due').value, '');
++  assert.equal(app.$('#title').value, '');
++});
++
++test('F1: add without a date saves no dueDate key and shows no date (AC2)', () => {
++  const app = loadApp();
++  app.submit('Mua sữa');
++  assert.equal('dueDate' in app.savedTodo('Mua sữa'), false);
++  assert.equal(app.dueText('Mua sữa'), '');
++});
++
++test('F3: "Quá hạn" only for open todos due before today, in local time at 06:00 UTC+7 (AC3)', () => {
++  const app = loadApp([
++    todo('Hôm qua', { dueDate: '2026-11-09' }),
++    todo('Hôm nay', { dueDate: '2026-11-10' }),
++    todo('Ngày mai', { dueDate: '2026-11-11' }),
++    todo('Xong rồi', { dueDate: '2026-11-09', done: true }),
++  ]);
++  assert.equal(app.overdueText('Hôm qua'), 'Quá hạn');
++  assert.equal(app.isOverdueRow('Hôm qua'), true);
++  for (const t of ['Hôm nay', 'Ngày mai', 'Xong rồi']) {
++    assert.equal(app.overdueText(t), '', t);
++    assert.equal(app.isOverdueRow(t), false, t);
++  }
++  app.toggleRow('Hôm qua');
++  assert.equal(app.overdueText('Hôm qua'), '', 'marked done');
++  assert.equal(app.isOverdueRow('Hôm qua'), false);
++  app.submit('Trễ từ trước', '2026-11-01');
++  assert.equal(app.overdueText('Trễ từ trước'), 'Quá hạn', 'a past date is accepted and overdue at once (A4)');
++});
++
++test('F4: sort by due date, back to added order, and the saved order never changes (AC4, Q6)', () => {
++  const app = loadApp();
++  app.submit('A');
++  app.submit('B', '2026-11-15');
++  app.submit('C', '2026-11-12');
++  app.submit('D', '2026-11-12');
++  app.sortBy('due');
++  assert.deepEqual(app.titles(), ['C', 'D', 'B', 'A']);
++  app.toggleRow('B');
++  assert.deepEqual(app.lastSaved().map((t) => t.title), ['A', 'B', 'C', 'D'], 'saved in added order while sorted');
++  assert.deepEqual(app.titles(), ['C', 'D', 'B', 'A']);
++  app.sortBy('added');
++  assert.deepEqual(app.titles(), ['A', 'B', 'C', 'D']);
++});
++
++test('F4: sorting works together with the "Chưa xong" filter (AC5)', () => {
++  const app = loadApp([
++    todo('A'), todo('B', { dueDate: '2026-11-15' }), todo('C', { dueDate: '2026-11-12', done: true }),
++    todo('D', { dueDate: '2026-11-12' }),
++  ]);
++  app.sortBy('due');
++  app.filterBy('open');
++  assert.deepEqual(app.titles(), ['D', 'B', 'A']);
++});
++
++test('F2: change saves at once with no Undo; clearing on leave has D5 and Undo; Undo restores; 10 s hides it (AC6, Q5)', () => {
++  const app = loadApp([todo('B', { dueDate: '2026-11-15' })]);
++  let input = app.focusDate('B');
++  app.changeDate(input, '2026-11-11');
++  assert.equal(app.savedTodo('B').dueDate, '2026-11-11', 'saved on change');
++  assert.equal(app.dueText('B'), 'Hạn 11/11/2026', 'row updated in place');
++  assert.equal(app.undoShown(), false, 'no Undo for setting or changing a date (A3)');
++  app.blurDate(input);
++
++  input = app.focusDate('B');
++  app.changeDate(input, '');
++  app.blurDate(input);
++  assert.equal('dueDate' in app.savedTodo('B'), false, 'cleared and saved, key removed');
++  assert.equal(app.dueText('B'), '');
++  assert.equal(app.message(), D5('B'));
++  assert.equal(app.undoShown(), true);
++
++  app.clickUndo();
++  assert.equal(app.savedTodo('B').dueDate, '2026-11-11');
++  assert.equal(app.dueText('B'), 'Hạn 11/11/2026');
++  assert.equal(app.message(), D9);
++  assert.equal(app.undoShown(), false);
++
++  input = app.focusDate('B');
++  app.changeDate(input, '');
++  app.blurDate(input);
++  assert.equal(app.undoShown(), true);
++  app.runTimers(9999);
++  assert.equal(app.undoShown(), true, 'still there before 10 s');
++  app.runTimers(10000);
++  assert.equal(app.undoShown(), false, 'gone after 10 s');
++  assert.equal('dueDate' in app.savedTodo('B'), false);
++});
++
++test('Q3: clearing part of the date while typing (change with "") keeps the saved date and shows nothing', () => {
++  const app = loadApp([todo('B', { dueDate: '2026-11-12' })]);
++  const input = app.focusDate('B');
++  const saves = app.saved.length;
++  app.changeDate(input, '');
++  assert.equal(app.saved.length, saves, 'no new save');
++  assert.equal(app.message(), '');
++  assert.equal(app.undoShown(), false);
++  app.changeDate(input, '2026-11-15');
++  assert.equal(app.savedTodo('B').dueDate, '2026-11-15');
++  app.blurDate(input);
++  assert.equal(app.message(), '', 'no D5 on leave with a date');
++  assert.equal(app.undoShown(), false);
++  assert.equal(app.dueText('B'), 'Hạn 15/11/2026');
++});
++
++test('Q3: the list re-sorts when the field is left, not while it has focus', () => {
++  const app = loadApp([todo('A', { dueDate: '2026-11-12' }), todo('B', { dueDate: '2026-11-15' })]);
++  app.sortBy('due');
++  assert.deepEqual(app.titles(), ['A', 'B']);
++  const input = app.focusDate('B');
++  app.changeDate(input, '2026-11-11');
++  assert.deepEqual(app.titles(), ['A', 'B'], 'not re-sorted while typing');
++  app.blurDate(input);
++  assert.deepEqual(app.titles(), ['B', 'A']);
++});
++
++test('Q3: change then clear in one focus, then leave: D5 and Undo give back the date saved when it was cleared', () => {
++  const app = loadApp([todo('B', { dueDate: '2026-11-12' })]);
++  const input = app.focusDate('B');
++  app.changeDate(input, '2026-11-15');
++  app.changeDate(input, '');
++  app.blurDate(input);
++  assert.equal('dueDate' in app.savedTodo('B'), false);
++  assert.equal(app.message(), D5('B'));
++  assert.equal(app.undoShown(), true);
++  app.clickUndo();
++  assert.equal(app.savedTodo('B').dueDate, '2026-11-15');
++  assert.equal(app.message(), D9);
++});
++
++test('Q3: a date set and cleared in the same focus is removed without D5 or Undo', () => {
++  const app = loadApp([todo('B')]);
++  const input = app.focusDate('B');
++  app.changeDate(input, '2026-11-13');
++  assert.equal(app.savedTodo('B').dueDate, '2026-11-13');
++  app.changeDate(input, '');
++  app.blurDate(input);
++  assert.equal('dueDate' in app.savedTodo('B'), false);
++  assert.equal(app.message(), '');
++  assert.equal(app.undoShown(), false);
++});
++
++test('A14: leaving an empty date field of a todo with a broken dueDate saves nothing and keeps the value', () => {
++  const app = loadApp([todo('B', { dueDate: 'abc' })]);
++  const input = app.focusDate('B');
++  assert.equal(input.value, '');
++  app.blurDate(input);
++  assert.equal(app.saved.length, 0);
++  assert.equal(app.message(), '');
++  assert.equal(app.undoShown(), false);
++  app.toggleRow('B');
++  assert.equal(app.savedTodo('B').dueDate, 'abc', 'the broken value is still there on the next save');
++});
++
++test('Q3, U1: a date set and cleared in one focus while saving fails shows D7, still no Undo', () => {
++  const app = loadApp([todo('B')], { saveResult: 'failed' });
++  const input = app.focusDate('B');
++  app.changeDate(input, '2026-11-13');
++  app.changeDate(input, '');
++  app.blurDate(input);
++  assert.equal(app.message(), D7);
++  assert.equal(app.undoShown(), false);
++});
++
++test('A16: Undo goes on add, toggle, delete, another date change and import; stays on filter, sort and leaving a date field', async () => {
++  const clearB = (app) => {
++    const input = app.focusDate('B');
++    app.changeDate(input, '');
++    app.blurDate(input);
++    assert.equal(app.undoShown(), true);
++  };
++  const start = () => loadApp([todo('A', { dueDate: '2026-11-20' }), todo('B', { dueDate: '2026-11-12' }), todo('C')]);
++
++  let app = start();
++  clearB(app);
++  app.filterBy('open');
++  assert.equal(app.undoShown(), true, 'filter');
++  app.sortBy('due');
++  assert.equal(app.undoShown(), true, 'sort');
++  const a = app.focusDate('A');
++  app.blurDate(a);
++  assert.equal(app.undoShown(), true, 'leaving a date field without clearing it');
++  app.submit('Mới');
++  assert.equal(app.undoShown(), false, 'add');
++
++  app = start(); clearB(app); app.toggleRow('C');
++  assert.equal(app.undoShown(), false, 'toggle');
++  app = start(); clearB(app); app.removeRow('C');
++  assert.equal(app.undoShown(), false, 'delete');
++  app = start(); clearB(app);
++  const c = app.focusDate('C');
++  app.changeDate(c, '2026-11-30');
++  assert.equal(app.undoShown(), false, 'another date change');
++  app = start(); clearB(app);
++  await app.pick({ size: 10, text: async () => backupOf('X') });
++  assert.equal(app.undoShown(), false, 'import');
++});
++
++test('editing a date while filtered and sorted changes the right todo (Risks)', () => {
++  const app = loadApp([
++    todo('A', { dueDate: '2026-11-20' }), todo('B', { done: true, dueDate: '2026-11-11' }),
++    todo('C', { dueDate: '2026-11-15' }), todo('D'),
++  ]);
++  app.filterBy('open');
++  app.sortBy('due');
++  assert.deepEqual(app.titles(), ['C', 'A', 'D']);
++  const second = app.rows()[1].querySelector('.due-input');
++  app.changeDate(second, '2026-11-25');
++  assert.equal(app.savedTodo('A').dueDate, '2026-11-25');
++  assert.equal(app.savedTodo('B').dueDate, '2026-11-11');
++  assert.equal(app.savedTodo('C').dueDate, '2026-11-15');
++  assert.equal('dueDate' in app.savedTodo('D'), false);
++});
++
++test('AC7: a stored list in the old shape (four fields) shows every todo, no due dates, no error', () => {
++  const app = loadApp([todo('A'), todo('B', { done: true })]);
++  assert.deepEqual(app.titles(), ['A', 'B']);
++  assert.equal(app.dueText('A'), '');
++  assert.equal(app.overdueText('A'), '');
++  assert.equal(app.row('B').className.split(' ').includes('done'), true);
++});
++
++test('AC8, A14: broken dueDate values show no date, sort last, and are saved back unchanged', () => {
++  const app = loadApp([
++    todo('Hỏng 1', { dueDate: 'abc' }), todo('Hỏng 2', { dueDate: '2026-02-30' }), todo('Tốt', { dueDate: '2026-11-12' }),
++    todo('Khác'),
++  ]);
++  assert.equal(app.dueText('Hỏng 1'), '');
++  assert.equal(app.dueText('Hỏng 2'), '');
++  assert.equal(app.overdueText('Hỏng 2'), '');
++  app.sortBy('due');
++  assert.deepEqual(app.titles(), ['Tốt', 'Hỏng 1', 'Hỏng 2', 'Khác']);
++  app.toggleRow('Khác');
++  assert.equal(app.savedTodo('Hỏng 1').dueDate, 'abc');
++  assert.equal(app.savedTodo('Hỏng 2').dueDate, '2026-02-30');
++});
++
++test('AC12, S3: a title with markup goes in as text, in the row, the date label and D5', () => {
++  const title = '<img src=x onerror=alert(1)>';
++  const app = loadApp();
++  app.submit(title, '2026-11-09');
++  const li = app.row(title);
++  assert.equal(li.querySelector('.title').textContent, title);
++  assert.equal(app.overdueText(title), 'Quá hạn');
++  assert.doesNotMatch(li.innerHTML, /<img/, 'the row template holds no user text');
++  assert.equal(li.querySelector('.due-input').getAttribute('aria-label'), `Hạn chót của việc ${title}`);
++  const input = app.focusDate(title);
++  app.changeDate(input, '');
++  app.blurDate(input);
++  assert.equal(app.message(), D5(title));
++});
++
++test('D2, D5 keep "$" patterns in a title as typed', () => {
++  const title = 'Giá $& và $1 $$';
++  const app = loadApp([todo(title, { dueDate: '2026-11-12' })]);
++  assert.equal(app.row(title).querySelector('.due-input').getAttribute('aria-label'), `Hạn chót của việc ${title}`);
++  const input = app.focusDate(title);
++  app.changeDate(input, '');
++  app.blurDate(input);
++  assert.equal(app.message(), D5(title));
++});
++
++test('AC13, U1, Q4, Q5: when saving fails, add, change, clear and Undo each show D7, Undo still offered, never D9', () => {
++  const app = loadApp([todo('B', { dueDate: '2026-11-15' })], { saveResult: 'failed' });
++  app.submit('Nộp báo cáo', '2026-11-12');
++  assert.equal(app.message(), D7, 'add');
++  let input = app.focusDate('B');
++  app.changeDate(input, '2026-11-11');
++  assert.equal(app.message(), D7, 'change');
++  app.blurDate(input);
++  input = app.focusDate('B');
++  app.changeDate(input, '');
++  app.blurDate(input);
++  assert.equal(app.message(), D7, 'clear');
++  assert.equal(app.undoShown(), true, 'Undo still offered (Q4)');
++  app.clickUndo();
++  assert.equal(app.message(), D7, 'Undo');
++  assert.equal(app.undoShown(), false);
++});
++
++test('Q4: with the saved list unreadable (save skipped), clearing still shows D5 and Undo', () => {
++  const app = loadApp([todo('B', { dueDate: '2026-11-15' })], { saveResult: 'skipped' });
++  const input = app.focusDate('B');
++  app.changeDate(input, '');
++  app.blurDate(input);
++  assert.equal(app.message(), D5('B'));
++  assert.equal(app.undoShown(), true);
++});
++
++test('AC9: redrawing keeps keyboard focus on the same control of the same todo', () => {
++  const app = loadApp([todo('A', { dueDate: '2026-11-12' }), todo('B', { dueDate: '2026-11-15' })]);
++  const old = app.focusDate('B');
++  app.filterBy('all');
++  const now = app.row('B').querySelector('.due-input');
++  assert.notEqual(now, old, 'the row was rebuilt');
++  assert.equal(app.document.activeElement, now, 'focus on the new date field of B');
++
++  // Tab from a changed date field to the delete button: the blur redraws, focus lands on the new delete button.
++  const input = app.focusDate('B');
++  app.changeDate(input, '2026-11-11');
++  app.blurDate(input, app.row('B').querySelector('.remove'));
++  assert.equal(app.document.activeElement, app.row('B').querySelector('.remove'));
++
++  // Ticking the checkbox redraws too.
++  const box = app.row('A').querySelector('.toggle');
++  box.focus();
++  app.toggleRow('A');
++  assert.equal(app.document.activeElement, app.row('A').querySelector('.toggle'));
++});
+diff --git a/tests/due.test.js b/tests/due.test.js
+new file mode 100644
+index 0000000..58d8911
+--- /dev/null
++++ b/tests/due.test.js
+@@ -0,0 +1,252 @@
++// Acceptance tests for app/due.js (spec/2026-10-19-han-chot-cho-viec.md, plan of the same name, PR A step 2-3).
++// Written from the spec, the plan and the public names only. Run: node --test
++// The machine time zone is UTC+7 (spec AC preamble); set before anything creates a Date.
++process.env.TZ = 'Asia/Ho_Chi_Minh';
++
++const test = require('node:test');
++const assert = require('node:assert/strict');
++const {
++  isValidDueDate, localDateString, isOverdue, formatDueDate, sortByDue, DUE_TEXT,
++} = require('../app/due.js');
++
++// Spec AC preamble: machine date 10/11/2026.
++const TODAY = '2026-11-10';
++
++let seq = 0;
++const todo = (title, extra = {}) => ({ id: `id-${++seq}`, title, done: false, createdAt: 1000 + seq, ...extra });
++const titles = (list) => list.map((t) => t.title);
++
++// Guard: the tests below only mean something if the TZ setting took effect.
++test('setup: process runs at UTC+7', () => {
++  assert.equal(new Date(2026, 10, 10, 6, 0).getTimezoneOffset(), -420);
++});
++
++// ---- isValidDueDate (AC8, AC16, A14, A15, F5 step 2) ----
++
++test('AC8/A15: isValidDueDate accepts real YYYY-MM-DD calendar dates', () => {
++  for (const v of ['2026-11-12', '2028-02-29', '2000-02-29', '2026-01-01', '2026-12-31', '2026-11-30']) {
++    assert.equal(isValidDueDate(v), true, v);
++  }
++});
++
++test('AC8/AC16: isValidDueDate rejects malformed strings and impossible dates', () => {
++  const bad = [
++    'abc', '2026-02-30', '2027-02-29', '1900-02-29', '2026-13-01', '2026-00-10', '2026-11-00', '2026-11-31',
++    '2026-1-5', '26-11-12', '2026/11/12', '12/11/2026', '', ' 2026-11-12', '2026-11-12 ', '2026-11-12T00:00',
++    '2026-11-12T00:00:00Z',
++  ];
++  for (const v of bad) assert.equal(isValidDueDate(v), false, JSON.stringify(v));
++});
++
++test('AC16/A14: isValidDueDate rejects non-strings (null, number, Date, missing)', () => {
++  for (const v of [null, undefined, 20261112, 0, true, {}, [], new Date(2026, 10, 12)]) {
++    assert.equal(isValidDueDate(v), false, String(v));
++  }
++});
++
++// ---- localDateString (AC3, F3 step 4, A9) ----
++
++test('AC3/A9: localDateString uses the machine date, not the UTC date (06:00 local = 23:00 UTC the day before)', () => {
++  assert.equal(localDateString(new Date('2026-11-09T23:00:00Z')), '2026-11-10');
++});
++
++test('A9: localDateString just after local midnight is the new local day', () => {
++  // 00:30 local on 10/11 is 17:30 UTC on 09/11.
++  assert.equal(localDateString(new Date(2026, 10, 10, 0, 30)), '2026-11-10');
++  assert.equal(localDateString(new Date(2026, 10, 9, 23, 59)), '2026-11-09');
++});
++
++test('F3 step 4: localDateString pads month and day to YYYY-MM-DD', () => {
++  assert.equal(localDateString(new Date(2026, 0, 5, 12, 0)), '2026-01-05');
++  // Local 1 Jan 2027 06:00 is still 31 Dec 2026 in UTC.
++  assert.equal(localDateString(new Date(2027, 0, 1, 6, 0)), '2027-01-01');
++});
++
++test('F3 step 4: localDateString output is itself a valid due date (so it compares with dueDate)', () => {
++  assert.equal(isValidDueDate(localDateString(new Date(2026, 10, 10, 6, 0))), true);
++});
++
++// ---- isOverdue (AC3, AC8, A4, A6, A7, A14) ----
++
++test('AC3/A6: not-done todo due before today is overdue', () => {
++  assert.equal(isOverdue(todo('a', { dueDate: '2026-11-09' }), TODAY), true);
++});
++
++test('AC3/A6: due today or later is not overdue', () => {
++  assert.equal(isOverdue(todo('a', { dueDate: '2026-11-10' }), TODAY), false);
++  assert.equal(isOverdue(todo('b', { dueDate: '2026-11-11' }), TODAY), false);
++});
++
++test('AC3/A7: a done todo is never overdue, even past its due date', () => {
++  assert.equal(isOverdue(todo('a', { dueDate: '2026-11-09', done: true }), TODAY), false);
++  assert.equal(isOverdue(todo('b', { dueDate: '2020-01-01', done: true }), TODAY), false);
++});
++
++test('AC3/A4: a todo added with a past due date is overdue right away', () => {
++  assert.equal(isOverdue(todo('a', { dueDate: '2026-11-01' }), TODAY), true);
++});
++
++test('AC3/A9: at 06:00 local on 10/11 (23:00 UTC on 09/11), due 10/11 is not overdue and due 09/11 is', () => {
++  const today = localDateString(new Date('2026-11-09T23:00:00Z'));
++  assert.equal(isOverdue(todo('a', { dueDate: '2026-11-10' }), today), false);
++  assert.equal(isOverdue(todo('b', { dueDate: '2026-11-09' }), today), true);
++});
++
++test('AC7/A15: a todo without dueDate (old data shape) is not overdue', () => {
++  const old = { id: 'x', title: 'cũ', done: false, createdAt: 1 };
++  assert.equal(isOverdue(old, TODAY), false);
++});
++
++test('AC8/A14: broken dueDate in storage is not overdue and does not throw', () => {
++  for (const v of ['abc', '2026-02-30', null, 20261101, '', '2026-1-5']) {
++    assert.equal(isOverdue(todo('a', { dueDate: v }), TODAY), false, String(v));
++  }
++});
++
++test('F3 step 2: overdue works across month and year boundaries', () => {
++  assert.equal(isOverdue(todo('a', { dueDate: '2026-12-31' }), '2027-01-01'), true);
++  assert.equal(isOverdue(todo('b', { dueDate: '2026-10-31' }), '2026-11-01'), true);
++  assert.equal(isOverdue(todo('c', { dueDate: '2027-01-01' }), '2026-12-31'), false);
++});
++
++test('A14: isOverdue does not change the todo', () => {
++  const t = todo('a', { dueDate: 'abc' });
++  const before = { ...t };
++  isOverdue(t, TODAY);
++  assert.deepEqual(t, before);
++});
++
++// ---- formatDueDate (AC1, A5) ----
++
++test('AC1/A5: formatDueDate shows "Hạn DD/MM/YYYY"', () => {
++  assert.equal(formatDueDate('2026-11-12'), 'Hạn 12/11/2026');
++  assert.equal(formatDueDate('2026-10-25'), 'Hạn 25/10/2026');
++});
++
++test('A5: formatDueDate keeps two-digit day and month', () => {
++  // AMBIGUOUS: spec gives the pattern DD/MM/YYYY but its examples have no single-digit day or month; reading DD/MM as zero-padded.
++  assert.equal(formatDueDate('2026-01-05'), 'Hạn 05/01/2026');
++});
++
++test('A9/A15: formatDueDate does not shift the day by time zone', () => {
++  // At +7, local midnight is 17:00 UTC the day before, so a path through toISOString() shows the previous day.
++  assert.equal(formatDueDate('2026-11-01'), 'Hạn 01/11/2026');
++  assert.equal(formatDueDate('2027-01-01'), 'Hạn 01/01/2027');
++  assert.equal(formatDueDate('2026-12-31'), 'Hạn 31/12/2026');
++});
++
++test('D3: formatDueDate matches the DUE_TEXT.due template', () => {
++  assert.equal(formatDueDate('2026-11-12'), DUE_TEXT.due.replace('{date}', '12/11/2026'));
++});
++
++// ---- sortByDue (AC4, AC5, AC8, A12, A13, Q6) ----
++
++test('AC4/A12: sort by due puts earlier dates first, ties keep added order, no due date last', () => {
++  const list = [todo('A'), todo('B', { dueDate: '2026-11-15' }), todo('C', { dueDate: '2026-11-12' }), todo('D', { dueDate: '2026-11-12' })];
++  assert.deepEqual(titles(sortByDue(list)), ['C', 'D', 'B', 'A']);
++});
++
++test('AC4/Q6: sortByDue returns a new array and does not reorder or change the input', () => {
++  const list = [todo('A'), todo('B', { dueDate: '2026-11-15' }), todo('C', { dueDate: '2026-11-12' }), todo('D', { dueDate: '2026-11-12' })];
++  const snapshot = structuredClone(list);
++  const out = sortByDue(list);
++  assert.notEqual(out, list);
++  assert.deepEqual(list, snapshot);
++  assert.deepEqual(titles(list), ['A', 'B', 'C', 'D']);
++});
++
++test('AC8/A14: broken dueDate values sort last, like no due date, in added order', () => {
++  // AMBIGUOUS: spec says broken values "sort like no due date"; reading missing and broken as one group kept in added order.
++  const list = [
++    todo('P', { dueDate: 'abc' }),
++    todo('Q'),
++    todo('R', { dueDate: '2026-11-20' }),
++    todo('S', { dueDate: '2026-02-30' }),
++    todo('T', { dueDate: null }),
++    todo('U', { dueDate: '2026-11-11' }),
++  ];
++  assert.deepEqual(titles(sortByDue(list)), ['U', 'R', 'P', 'Q', 'S', 'T']);
++});
++
++test('AC8/A14: sortByDue keeps broken values unchanged on the todos', () => {
++  const list = [todo('P', { dueDate: 'abc' }), todo('S', { dueDate: '2026-02-30' })];
++  const out = sortByDue(list);
++  assert.equal(out.find((t) => t.title === 'P').dueDate, 'abc');
++  assert.equal(out.find((t) => t.title === 'S').dueDate, '2026-02-30');
++});
++
++test('A13: sort by due with no due dates at all shows added order', () => {
++  const list = [todo('A'), todo('B'), todo('C')];
++  assert.deepEqual(titles(sortByDue(list)), ['A', 'B', 'C']);
++  assert.deepEqual(sortByDue([]), []);
++});
++
++test('A12: ties keep added order on a long list', () => {
++  const list = Array.from({ length: 30 }, (_, i) => todo(`T${i}`, { dueDate: '2026-11-12' }));
++  assert.deepEqual(titles(sortByDue(list)), titles(list));
++});
++
++test('F4 step 3: sort compares across months and years', () => {
++  const list = [todo('Y27', { dueDate: '2027-01-01' }), todo('D26', { dueDate: '2026-12-01' }), todo('N26', { dueDate: '2026-11-30' })];
++  assert.deepEqual(titles(sortByDue(list)), ['N26', 'D26', 'Y27']);
++});
++
++test('AC5/F4 step 4: sortByDue works on a filtered list (not done only) and ignores done state', () => {
++  const all = [
++    todo('A'),
++    todo('B', { dueDate: '2026-11-15' }),
++    todo('X', { dueDate: '2026-11-01', done: true }),
++    todo('C', { dueDate: '2026-11-12' }),
++  ];
++  const notDone = all.filter((t) => !t.done);
++  assert.deepEqual(titles(sortByDue(notDone)), ['C', 'B', 'A']);
++  // Done todos are sorted by date like the others (the filter decides what shows).
++  assert.deepEqual(titles(sortByDue(all)), ['X', 'C', 'B', 'A']);
++});
++
++test('Q6: sortByDue returns the same todo objects (only order changes)', () => {
++  // AMBIGUOUS: spec only says sorting changes the shown order, not stored data; reading that as no copying or rewriting of todos.
++  const list = [todo('A'), todo('B', { dueDate: '2026-11-15' })];
++  const out = sortByDue(list);
++  assert.equal(out.length, 2);
++  assert.ok(out.every((t) => list.includes(t)));
++});
++
++// ---- DUE_TEXT (AC9, AC10, U4, D1-D6, D8, D9) ----
++
++const EXPECTED_TEXT = {
++  label: 'Hạn chót',
++  rowLabel: 'Hạn chót của việc {title}',
++  due: 'Hạn {date}',
++  overdue: 'Quá hạn',
++  cleared: 'Đã bỏ hạn chót của việc {title}.',
++  undo: 'Hoàn tác',
++  sortBy: 'Xếp theo',
++  sortAdded: 'Thứ tự thêm',
++  sortDue: 'Hạn chót',
++  undone: 'Đã hoàn tác.',
++};
++
++test('D1-D6, D8, D9: DUE_TEXT has the chosen wording verbatim', () => {
++  for (const [key, value] of Object.entries(EXPECTED_TEXT)) {
++    assert.equal(DUE_TEXT[key], value, key);
++  }
++});
++
++test('AC10/U4: no DUE_TEXT value contains localStorage, JSON, console or dueDate', () => {
++  const values = Object.values(DUE_TEXT);
++  assert.ok(values.length >= Object.keys(EXPECTED_TEXT).length);
++  for (const v of values) {
++    assert.equal(typeof v, 'string');
++    // Case-insensitive: stricter than the spec, which lists the words as written.
++    for (const word of ['localstorage', 'json', 'console', 'duedate']) {
++      assert.ok(!v.toLowerCase().includes(word), `${JSON.stringify(v)} contains ${word}`);
++    }
++  }
++});
++
++test('AC12/A16: D2 and D5 keep a title verbatim when filled', () => {
++  const title = '<img src=x onerror=alert(1)>';
++  assert.equal(DUE_TEXT.rowLabel.replace('{title}', title), `Hạn chót của việc ${title}`);
++  assert.equal(DUE_TEXT.cleared.replace('{title}', title), `Đã bỏ hạn chót của việc ${title}.`);
++});
+diff --git a/tests/static.test.js b/tests/static.test.js
+index 4190dda..d730dbb 100644
+--- a/tests/static.test.js
++++ b/tests/static.test.js
+@@ -7,9 +7,10 @@ const path = require('node:path');
+ const read = (f) => fs.readFileSync(path.join(__dirname, '..', 'app', f), 'utf8');
+ const html = read('index.html');
+ 
+-test('scripts load in the order store, backup, app (Q2)', () => {
++// Was store, backup, app; due.js comes before backup.js and app.js, which use it (plan han-chot-cho-viec Q2).
++test('scripts load in the order store, due, backup, app (Q2)', () => {
+   const scripts = [...html.matchAll(/<script\b[^>]*\bsrc="([^"]+)"/g)].map((m) => m[1]);
+-  assert.deepEqual(scripts, ['store.js', 'backup.js', 'app.js']);
++  assert.deepEqual(scripts, ['store.js', 'due.js', 'backup.js', 'app.js']);
+ });
+ 
+ test('index.html loads nothing from outside (AC26, S4)', () => {
+@@ -17,7 +18,20 @@ test('index.html loads nothing from outside (AC26, S4)', () => {
+ });
+ 
+ test('only store.js touches browser storage', () => {
+-  for (const f of ['app.js', 'backup.js']) assert.doesNotMatch(read(f), /localStorage/, f);
++  for (const f of ['app.js', 'backup.js', 'due.js']) assert.doesNotMatch(read(f), /localStorage/, f);
++});
++
++test('no UTC day: app.js and due.js never use toISOString (A9)', () => {
++  for (const f of ['app.js', 'due.js']) assert.doesNotMatch(read(f), /toISOString/, f);
++});
++
++test('due date controls have labels: "Hạn chót", "Xếp theo" with two choices, and an Undo button (AC9, U5)', () => {
++  assert.match(html, /<label[^>]*>\s*Hạn chót\s*<input type="date" id="due"/);
++  assert.match(html, /<label[^>]*>\s*Xếp theo\s*<select id="sort"[^>]*>/);
++  const sort = html.match(/<select id="sort"[^>]*>([\s\S]*?)<\/select>/)[1];
++  const options = [...sort.matchAll(/<option value="(\w+)"[^>]*>([^<]+)<\/option>/g)].map((m) => [m[1], m[2]]);
++  assert.deepEqual(options, [['added', 'Thứ tự thêm'], ['due', 'Hạn chót']]);
++  assert.match(html, /<button type="button" id="undo" hidden>Hoàn tác<\/button>/);
+ });
+ 
+ test('the main screen says where the list is kept, and has the new controls (AC23, U5)', () => {
+@@ -38,5 +52,5 @@ test('confirm dialog buttons show a focus ring on any focus, not only :focus-vis
+ 
+ test('visible text in index.html has no technical words (AC24, U4)', () => {
+   const text = html.replace(/<script[\s\S]*?<\/script>/g, '').replace(/<[^>]+>/g, ' ');
+-  assert.doesNotMatch(text, /localStorage|JSON|console/i);
++  assert.doesNotMatch(text, /localStorage|JSON|console|dueDate/i);
+ });

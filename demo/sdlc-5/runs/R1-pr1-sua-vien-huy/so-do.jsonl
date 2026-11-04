@@ -1,0 +1,1 @@
+{"run": "R1-pr1-sua-vien-huy", "giay": 48.5, "usd": 0.3813559000000001, "luot": 17, "model": ["claude-haiku-5-5", "claude-opus-5-5"], "tool_call": 16, "session": "72406255-8f2a-4349-9395-7871ca3e17af", "tu_choi": ["Bash"], "env": [], "sources": "project,local", "mcp": false, "swap_settings": null, "skill_nap": 26}

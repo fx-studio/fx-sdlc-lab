@@ -1,0 +1,1 @@
+{"run": "R6-2B-co-tran", "giay": 160.5, "usd": 1.3725528000000002, "luot": 30, "model": ["claude-haiku-5-5", "claude-opus-5-5"], "tool_call": 33, "session": "4122a441-4279-4169-835e-a2918dd5fd43", "tu_choi": ["Bash"], "env": [], "sources": "project,local", "mcp": false, "swap_settings": null, "skill_nap": 26}

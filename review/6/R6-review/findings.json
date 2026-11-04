@@ -1,0 +1,37 @@
+{
+ "findings": [
+  {
+   "pass": "Compliance",
+   "severity": "Nit",
+   "file": "CLAUDE.md",
+   "line": null,
+   "title": "CLAUDE.md still gives the old script order store → backup → app",
+   "why": "This PR loads `due.js` between `store.js` and `backup.js`, and `tests/static.test.js` now expects store, due, backup, app. The App architecture line in CLAUDE.md still says scripts load `store.js` → `backup.js` → `app.js` and that the test pins this order. It also does not mention `due.js` (DOM-free, no storage). An agent that trusts CLAUDE.md would write code against the old order.",
+   "fix": "Propose this CLAUDE.md line for a person to update: loaded `store.js` → `due.js` → `backup.js` → `app.js` (pinned by `tests/static.test.js`); `due.js` is DOM-free date logic and the `DUE_TEXT` wording."
+  },
+  {
+   "pass": "Bugs",
+   "severity": "Nit",
+   "file": "app/app.js",
+   "line": 53,
+   "title": "Focus drops to body when the Undo button hides itself",
+   "why": "`clearUndo()` sets `#undo.hidden = true` whether the button is clicked (`undoLast`) or the 10-second timer runs out. If a keyboard user has focus on the button, focus falls back to `body` and they have to Tab from the top of the page again. That breaks U5 (every control works with the keyboard) and will show up in manual check T8. It is a Nit only because nothing in the app calls `offerUndo` yet; it becomes real in 4–5b. The PR description already raises this (point 4) without a decision.",
+   "fix": "Before 4–5b, have a person decide where focus goes and record it in the plan. For example: after Undo, move focus to the restored row's control (re-use the focus-keeping step that `render()` gets in 5b); on timeout, move focus to `#message` or the previously focused control, but only when `document.activeElement` is `#undo`. Add a test with `document.activeElement`."
+  },
+  {
+   "pass": "Compliance",
+   "severity": "Nit",
+   "file": "app/app.js",
+   "line": 128,
+   "title": "Backing up to a file hides the Undo button; A16 does not say it should",
+   "why": "The `#export` handler calls `show()`, so saving a backup file removes a pending Undo. Spec A16 lists the actions that hide the button (add, toggle, delete, change due date, import) and the ones that do not (filter, sort, leaving the date field). Export is in neither list. A user who backs up right after removing a due date loses the chance to undo it, and nothing in the spec covers that case.",
+   "fix": "Ask Linh/Thảo whether export should keep the button. If yes, add a message-setting path that does not call `clearUndo()` for export (for example `show(message, { keepUndo: true })`). Either way, record the answer under A16 and add export to the test that hides/keeps the button."
+  }
+ ],
+ "dropped_nits": 0,
+ "claude_md_outdated": true,
+ "pr": 6,
+ "base": "f07ff41",
+ "head": "2a40506",
+ "mode": "REVIEW.md"
+}

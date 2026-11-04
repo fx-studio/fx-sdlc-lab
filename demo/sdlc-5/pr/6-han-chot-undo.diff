@@ -1,0 +1,294 @@
+diff --git a/app/app.js b/app/app.js
+index 2f26e65..b593244 100644
+--- a/app/app.js
++++ b/app/app.js
+@@ -2,6 +2,10 @@
+ // Saving and importing decisions live in backup.js (persist, importBackup); this file only wires them to the page.
+ let todos = store.load().todos;
+ let filter = 'all';
++// The one Undo of the app (plan han-chot-cho-viec, Q7): { restore, timer } while the "Hoàn tác" button shows, else null.
++// Kept in page memory only, never saved.
++let undo = null;
++const UNDO_MS = 10000;
+ 
+ const $ = (sel) => document.querySelector(sel);
+ 
+@@ -22,14 +26,45 @@ function remove(id) {
+ }
+ 
+ function commit() {
+-  show(persist(store, todos).message);
++  save();
+   render();
+ }
+ 
++// Saves and says so only when saving failed (U1). Split from render() so a change can be saved before the list is redrawn.
++function save() {
++  show(persist(store, todos).message);
++}
++
++// Every new message hides the Undo button: add, toggle, remove, import (and export) all call show(). Filtering does not.
+ function show(message) {
++  clearUndo();
+   $('#message').textContent = message || '';
+ }
+ 
++// Shared by every Undo (due dates now, renaming in PR 2). restore() puts the old value back in todos; this saves it.
++// message is set with textContent like every other message, so a title inside it is never read as HTML (S3).
++function offerUndo(message, restore) {
++  show(message);
++  $('#undo').hidden = false;
++  undo = { restore, timer: setTimeout(clearUndo, UNDO_MS) };
++}
++
++function clearUndo() {
++  if (undo) clearTimeout(undo.timer);
++  undo = null;
++  $('#undo').hidden = true;
++}
++
++function undoLast() {
++  if (!undo) return;
++  const { restore } = undo;
++  clearUndo();
++  restore();
++  const { message } = persist(store, todos);
++  render();
++  show(message || DUE_TEXT.undone); // D7 when saving failed, else D9 (plan Q5)
++}
++
+ function visible() {
+   if (filter === 'open') return todos.filter((t) => !t.done);
+   if (filter === 'done') return todos.filter((t) => t.done);
+@@ -82,6 +117,8 @@ $('#filters').onclick = (e) => {
+   render();
+ };
+ 
++$('#undo').onclick = undoLast;
++
+ $('#export').onclick = () => {
+   if (todos.length === 0) return show(MESSAGES.nothingToBackUp);
+   const text = toBackupText(todos);
+diff --git a/app/index.html b/app/index.html
+index e957d1d..a80410a 100644
+--- a/app/index.html
++++ b/app/index.html
+@@ -12,6 +12,7 @@
+     <div id="notices" role="status" aria-live="polite">
+       <p id="unreadable" class="banner" hidden></p>
+       <p id="message"></p>
++      <button type="button" id="undo" hidden>Hoàn tác</button>
+     </div>
+     <form id="add">
+       <input id="title" placeholder="Việc cần làm…" autocomplete="off" required>
+@@ -39,6 +40,7 @@
+     </form>
+   </dialog>
+   <script src="store.js"></script>
++  <script src="due.js"></script>
+   <script src="backup.js"></script>
+   <script src="app.js"></script>
+ </body>
+diff --git a/app/style.css b/app/style.css
+index fc3eb87..ba35027 100644
+--- a/app/style.css
++++ b/app/style.css
+@@ -10,6 +10,8 @@ li.done span { text-decoration: line-through; color: #888; }
+ .banner { background: #fff4e5; border: 1px solid #d08a2a; border-radius: 4px; padding: .6rem .8rem; }
+ #message { background: #eaf1fb; border-radius: 4px; padding: .5rem .8rem; }
+ #message:empty { display: none; }
++#undo { margin-top: .25rem; }
++#undo:focus { outline: 2px solid #1a5fd0; outline-offset: 2px; }
+ #empty, .note { color: #555; }
+ .note { font-size: .875rem; }
+ #backup { display: flex; gap: .5rem; align-items: center; margin: 1rem 0 .25rem; }
+diff --git a/tests/app.test.js b/tests/app.test.js
+index c1530e8..692bd1c 100644
+--- a/tests/app.test.js
++++ b/tests/app.test.js
+@@ -8,6 +8,7 @@ const path = require('node:path');
+ const vm = require('node:vm');
+ const crypto = require('node:crypto');
+ const backup = require('../app/backup.js');
++const due = require('../app/due.js');
+ 
+ const appJs = fs.readFileSync(path.join(__dirname, '..', 'app', 'app.js'), 'utf8');
+ 
+@@ -26,18 +27,27 @@ function loadApp(initial = []) {
+   const elements = {};
+   const saved = [];
+   const replaced = [];
++  let saveResult = 'saved';
+   const store = {
+     readError: false,
+     load() { return { todos: initial, readError: false }; },
+-    save(todos) { saved.push(todos.map((t) => ({ ...t }))); return 'saved'; },
++    save(todos) { saved.push(todos.map((t) => ({ ...t }))); return saveResult; },
+     replace(todos) { replaced.push(todos); return 'saved'; },
+   };
++  const created = [];
+   const document = {
+     querySelector(sel) { return (elements[sel] ||= fakeElement()); },
+     querySelectorAll() { return []; },
+-    createElement() { return fakeElement(); },
++    createElement() { const el = fakeElement(); created.push(el); return el; },
+   };
+-  vm.runInNewContext(appJs, { ...backup, store, document, crypto });
++  // Fake timers: nothing runs until the test calls runTimers().
++  const timers = [];
++  const setTimeout = (fn, ms) => timers.push({ fn, ms, cleared: false, ran: false });
++  const clearTimeout = (id) => { if (timers[id - 1]) timers[id - 1].cleared = true; };
++  const runTimers = () => timers.filter((t) => !t.cleared && !t.ran).forEach((t) => { t.ran = true; t.fn(); });
++  // Top-level functions of app.js (offerUndo, ...) end up on ctx.
++  const ctx = { ...backup, ...due, store, document, crypto, setTimeout, clearTimeout };
++  vm.runInNewContext(appJs, ctx);
+   const submit = (value) => {
+     document.querySelector('#title').value = value;
+     document.querySelector('#add').onsubmit({ preventDefault() {} });
+@@ -53,7 +63,15 @@ function loadApp(initial = []) {
+   // Clicks a filter tab: 'all', 'open' or 'done'.
+   const filterBy = (f) => document.querySelector('#filters').onclick({ target: { dataset: { filter: f } } });
+   const emptyShown = () => !document.querySelector('#empty').hidden;
+-  return { submit, saved, replaced, asked, pick, count, filterBy, emptyShown };
++  // The last drawn row of a todo, by title.
++  const row = (title) => created.findLast((el) => el.children.span?.textContent === title);
++  const undo = {
++    shown: () => !document.querySelector('#undo').hidden,
++    click: () => document.querySelector('#undo').onclick(),
++  };
++  const message = () => document.querySelector('#message').textContent;
++  const failSaves = (result = 'failed') => { saveResult = result; };
++  return { submit, saved, replaced, asked, pick, count, filterBy, emptyShown, ctx, timers, runTimers, row, undo, message, failSaves };
+ }
+ 
+ // A file whose text() resolves only when the test says so.
+@@ -157,3 +175,92 @@ test('two overlapping imports: the later-finishing one asks before replacing the
+   assert.deepEqual(asked, [backup.fill(backup.MESSAGES.confirmReplace, { n: 1, m: 3 })]);
+   assert.equal(replaced.length, 1, 'cancelled, so the list from the small file stays');
+ });
++
++// Shared Undo (plan han-chot-cho-viec, Q5, Q7; PR A step 4–5a). Nothing in the app offers an Undo yet, so these tests call
++// offerUndo directly. restore() mutates the list given to loadApp, which is the app's own `todos` array until a remove.
++const todo = (title, done = false) => ({ id: `id-${title}`, title, done, createdAt: 1 });
++const D5 = due.DUE_TEXT.cleared.replace('{title}', 'A');
++
++test('Undo: offerUndo shows the message and the button; "Hoàn tác" restores, saves, redraws, says D9, hides the button', () => {
++  const list = [todo('A')];
++  const app = loadApp(list);
++  let restored = 0;
++  app.ctx.offerUndo(D5, () => { restored++; list.push(todo('B')); });
++  assert.equal(app.message(), D5);
++  assert.equal(app.undo.shown(), true);
++  assert.equal(app.saved.length, 0, 'offering an Undo saves nothing by itself');
++  app.undo.click();
++  assert.equal(restored, 1);
++  assert.deepEqual(app.saved.at(-1).map((t) => t.title), ['A', 'B'], 'the restored list is saved');
++  assert.equal(app.count(), '2 việc chưa xong', 'and redrawn');
++  assert.equal(app.message(), due.DUE_TEXT.undone);
++  assert.equal(app.undo.shown(), false);
++  app.undo.click();
++  assert.equal(restored, 1, 'a second click does nothing');
++  assert.equal(app.saved.length, 1);
++});
++
++test('Undo: the button goes after 10 seconds, and the message stays (A16)', () => {
++  const app = loadApp([todo('A')]);
++  let restored = 0;
++  app.ctx.offerUndo(D5, () => restored++);
++  assert.equal(app.timers.at(-1).ms, 10000);
++  app.runTimers();
++  assert.equal(app.undo.shown(), false);
++  assert.equal(app.message(), D5);
++  app.undo.click();
++  assert.equal(restored, 0);
++  assert.equal(app.saved.length, 0);
++});
++
++test('Undo: adding, toggling, removing or importing hides the button; filtering does not (A16)', async () => {
++  const cases = {
++    add: (app) => app.submit('C'),
++    toggle: (app) => app.row('A').children.input.onchange(),
++    remove: (app) => app.row('A').children.button.onclick(),
++    import: (app) => app.pick({ size: 0, text: async () => '' }),
++  };
++  for (const [name, act] of Object.entries(cases)) {
++    const app = loadApp([todo('A'), todo('B')]);
++    let restored = 0;
++    app.ctx.offerUndo(D5, () => restored++);
++    await act(app);
++    assert.equal(app.undo.shown(), false, name);
++    app.undo.click();
++    assert.equal(restored, 0, `${name}: a hidden Undo does nothing`);
++  }
++  const app = loadApp([todo('A'), todo('B', true)]);
++  let restored = 0;
++  app.ctx.offerUndo(D5, () => restored++);
++  app.filterBy('open');
++  app.filterBy('all');
++  assert.equal(app.undo.shown(), true, 'filtering keeps it');
++  assert.equal(app.message(), D5);
++  app.undo.click();
++  assert.equal(restored, 1);
++});
++
++test('Undo: a new offer replaces the old one and stops its timer', () => {
++  const app = loadApp([todo('A')]);
++  const calls = [];
++  app.ctx.offerUndo(D5, () => calls.push('first'));
++  app.ctx.offerUndo('Hai', () => calls.push('second'));
++  assert.equal(app.timers[0].cleared, true);
++  assert.equal(app.message(), 'Hai');
++  app.undo.click();
++  assert.deepEqual(calls, ['second']);
++});
++
++test('Undo: when saving fails the message is D7, never D9; an unreadable saved list still says D9 (U1, Q4, Q5)', () => {
++  const failed = loadApp([todo('A')]);
++  failed.failSaves('failed');
++  failed.ctx.offerUndo(D5, () => {});
++  failed.undo.click();
++  assert.equal(failed.message(), backup.MESSAGES.notSaved);
++  assert.equal(failed.undo.shown(), false);
++  const skipped = loadApp([todo('A')]);
++  skipped.failSaves('skipped');
++  skipped.ctx.offerUndo(D5, () => {});
++  skipped.undo.click();
++  assert.equal(skipped.message(), due.DUE_TEXT.undone, 'the read-error banner already explains a skipped save');
++});
+diff --git a/tests/static.test.js b/tests/static.test.js
+index 4190dda..51508ce 100644
+--- a/tests/static.test.js
++++ b/tests/static.test.js
+@@ -7,9 +7,21 @@ const path = require('node:path');
+ const read = (f) => fs.readFileSync(path.join(__dirname, '..', 'app', f), 'utf8');
+ const html = read('index.html');
+ 
+-test('scripts load in the order store, backup, app (Q2)', () => {
++// Was store, backup, app; due.js comes before backup.js and app.js, which use it (plan han-chot-cho-viec, Q2).
++test('scripts load in the order store, due, backup, app (Q2)', () => {
+   const scripts = [...html.matchAll(/<script\b[^>]*\bsrc="([^"]+)"/g)].map((m) => m[1]);
+-  assert.deepEqual(scripts, ['store.js', 'backup.js', 'app.js']);
++  assert.deepEqual(scripts, ['store.js', 'due.js', 'backup.js', 'app.js']);
++});
++
++test('the Undo button sits hidden in the live notices area, with the text of D6 (plan han-chot-cho-viec, Q5, Q7)', () => {
++  const { DUE_TEXT } = require('../app/due.js');
++  assert.match(html, /<div id="notices" role="status" aria-live="polite">[\s\S]*<button type="button" id="undo" hidden>([^<]*)<\/button>\s*<\/div>/);
++  assert.equal(html.match(/id="undo" hidden>([^<]*)</)[1], DUE_TEXT.undo);
++});
++
++test('no UTC day: app.js and due.js never call toISOString (A9)', () => {
++  // A call, not the word: due.js names it in a comment to say it is not used.
++  for (const f of ['app.js', 'due.js']) assert.doesNotMatch(read(f), /\.toISOString\s*\(/, f);
+ });
+ 
+ test('index.html loads nothing from outside (AC26, S4)', () => {
+@@ -17,7 +29,7 @@ test('index.html loads nothing from outside (AC26, S4)', () => {
+ });
+ 
+ test('only store.js touches browser storage', () => {
+-  for (const f of ['app.js', 'backup.js']) assert.doesNotMatch(read(f), /localStorage/, f);
++  for (const f of ['app.js', 'backup.js', 'due.js']) assert.doesNotMatch(read(f), /localStorage/, f);
+ });
+ 
+ test('the main screen says where the list is kept, and has the new controls (AC23, U5)', () => {

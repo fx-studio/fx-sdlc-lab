@@ -1,0 +1,37 @@
+{
+ "findings": [
+  {
+   "pass": "Compliance",
+   "severity": "Important",
+   "file": "CLAUDE.md",
+   "line": null,
+   "title": "CLAUDE.md still says the healthy check output has 44 tests",
+   "why": "This PR adds a test, so `bash scripts/check.sh` now prints `tests 45 / pass 45`. The Verification section of CLAUDE.md still shows `ℹ tests 44 / ℹ pass 44` as the healthy output. Agents and people use that block to judge whether a run is complete, so after this PR a correct run no longer matches it. REVIEW.md says to report this whenever a change makes CLAUDE.md out of date.",
+   "fix": "In the PR, change the expected output in CLAUDE.md's Verification section to `ℹ tests 45` and `ℹ pass 45`."
+  },
+  {
+   "pass": "Compliance",
+   "severity": "Nit",
+   "file": "tests/static.test.js",
+   "line": 32,
+   "title": "The test and the fix are in the same commit",
+   "why": "CLAUDE.md says that when a person is present, they commit the failing test before the fix. In this PR, commit 4ec1f73 contains both the test and the CSS change. That is only allowed in a non-interactive run, and the PR does not say which kind of run this was. The PR does show the test failing before the fix.",
+   "fix": "State in PR.md that this was a non-interactive run, or split it into two commits: the failing test first, then the CSS rule."
+  },
+  {
+   "pass": "Bugs",
+   "severity": "Nit",
+   "file": "tests/static.test.js",
+   "line": 36,
+   "title": "The test checks the CSS text, not the Firefox bug",
+   "why": "The regex only confirms that the rule exists in style.css. It cannot show that 'Huỷ' gets a visible ring in Firefox after the file picker closes. The PR description says so itself. Until someone repeats T12 by keyboard in Firefox on macOS, U5 for this dialog is not confirmed, even though the check passes.",
+   "fix": "Do not count the fix as verified until a person has run T12 in Firefox on macOS. Record the result in PR.md."
+  }
+ ],
+ "dropped_nits": 0,
+ "claude_md_outdated": true,
+ "pr": 1,
+ "base": "04ee584",
+ "head": "4ec1f73",
+ "mode": "REVIEW.md"
+}

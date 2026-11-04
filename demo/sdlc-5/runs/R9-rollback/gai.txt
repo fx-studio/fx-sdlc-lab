@@ -1,0 +1,15 @@
+gài: ca228d2
+commit ca228d2 R9b: bản hỏng có chủ ý (render() trỏ sai id)
+
+diff --git a/app/app.js b/app/app.js
+index 2f26e65..5247d35 100644
+--- a/app/app.js
++++ b/app/app.js
+@@ -37,6 +37,9 @@ function visible() {
+ }
+ 
+ function render() {
++  const list = $('#lists');  // lỗi gài R9b: sai id, danh sách không vẽ được
++  list.innerHTML = '';
++  return;
+   const list = $('#list');

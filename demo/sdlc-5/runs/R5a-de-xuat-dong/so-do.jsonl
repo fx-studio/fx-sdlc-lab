@@ -1,0 +1,1 @@
+{"run": "R5a-de-xuat-dong", "giay": 68.3, "usd": 0.42111670000000007, "luot": 13, "model": ["claude-haiku-5-5", "claude-opus-5-5"], "tool_call": 12, "session": "31fbbd47-ec43-49b9-8db1-0195cdb8c89a", "tu_choi": [], "env": [], "sources": "project,local", "mcp": false, "swap_settings": null, "skill_nap": 26}

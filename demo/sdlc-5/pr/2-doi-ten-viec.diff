@@ -1,0 +1,282 @@
+diff --git a/CLAUDE.md b/CLAUDE.md
+index 8a6007b..ae3cca7 100644
+--- a/CLAUDE.md
++++ b/CLAUDE.md
+@@ -66,8 +66,8 @@ Humans read and write Vietnamese here; agent-facing files (`.claude/`, templates
+   step (plain files). Healthy output ends with:
+ 
+   ```
+-  ℹ tests 44
+-  ℹ pass 44
++  ℹ tests 52
++  ℹ pass 52
+   ℹ fail 0
+   == check: OK
+   ```
+diff --git a/app/app.js b/app/app.js
+index 7f822dc..981a29c 100644
+--- a/app/app.js
++++ b/app/app.js
+@@ -16,14 +16,50 @@ function toggle(id) {
+   commit();
+ }
+ 
++function rename(id, title) {
++  const t = todos.find((x) => x.id === id);
++  if (!t) return render();
++  const old = t.title;
++  t.title = title.trim();
++  // A failed save keeps its own message; after a read error ('skipped') the banner already says nothing is saved.
++  if (commit().message || store.readError) return;
++  offerUndo(`Đã đổi tên thành “${t.title}”.`, () => {
++    // Looked up again: an import may have replaced the list, or the todo may be gone.
++    const now = todos.find((x) => x.id === id);
++    if (!now) return;
++    now.title = old;
++    commit();
++  });
++}
++
++// policy-ux#U2: an action on one item happens at once and offers Undo for 10 seconds. Any later message
++// (show() sets textContent) removes the button too.
++let undoTimer;
++function offerUndo(message, undo) {
++  show(message);
++  const button = document.createElement('button');
++  button.type = 'button';
++  button.textContent = 'Hoàn tác';
++  button.onclick = () => {
++    clearTimeout(undoTimer);
++    button.remove();
++    undo();
++  };
++  $('#message').append(' ', button);
++  clearTimeout(undoTimer);
++  undoTimer = setTimeout(() => button.remove(), 10000);
++}
++
+ function remove(id) {
+   todos = todos.filter((x) => x.id !== id);
+   commit();
+ }
+ 
+ function commit() {
+-  show(persist(store, todos).message);
++  const result = persist(store, todos);
++  show(result.message);
+   render();
++  return result;
+ }
+ 
+ function show(message) {
+@@ -43,7 +79,29 @@ function render() {
+     const li = document.createElement('li');
+     li.className = t.done ? 'done' : '';
+     li.innerHTML = `<label><input type="checkbox" ${t.done ? 'checked' : ''}> <span></span></label><button aria-label="Xoá">×</button>`;
+-    li.querySelector('span').textContent = t.title;
++    const span = li.querySelector('span');
++    span.textContent = t.title;
++    span.title = 'Nhấp đúp hoặc nhấn Enter để đổi tên';
++    span.tabIndex = 0; // policy-ux#U5: renaming must also start from the keyboard
++    // The title is inside the checkbox's <label>: without this, each click of a double-click would tick or untick the todo.
++    span.onclick = (e) => e.preventDefault();
++    span.onkeydown = (e) => {
++      if (e.key !== 'Enter' && e.key !== 'F2') return;
++      e.preventDefault();
++      span.ondblclick();
++    };
++    span.ondblclick = () => {
++      const input = document.createElement('input');
++      input.value = t.title;
++      input.setAttribute('aria-label', `Tên mới của việc ${t.title}`);
++      span.replaceWith(input);
++      input.focus();
++      input.onkeydown = (e) => {
++        if (e.isComposing) return; // Enter that ends an input-method word (Telex) is not "save"
++        if (e.key === 'Enter' && input.value.trim()) rename(t.id, input.value);
++        if (e.key === 'Escape') render();
++      };
++    };
+     li.querySelector('input').onchange = () => toggle(t.id);
+     li.querySelector('button').onclick = () => remove(t.id);
+     list.append(li);
+diff --git a/tests/app.test.js b/tests/app.test.js
+index 14d75d1..8a4464e 100644
+--- a/tests/app.test.js
++++ b/tests/app.test.js
+@@ -11,10 +11,21 @@ const backup = require('../app/backup.js');
+ 
+ const appJs = fs.readFileSync(path.join(__dirname, '..', 'app', 'app.js'), 'utf8');
+ 
++// Setting innerHTML or textContent drops what was appended, as in a real page; `appended` is what is left.
+ function fakeElement() {
++  let html = '';
++  let text = '';
+   const el = {
+-    textContent: '', innerHTML: '', hidden: false, value: '', className: '', dataset: {},
+-    append() {},
++    hidden: false, value: '', className: '', dataset: {}, attributes: {}, appended: [],
++    get innerHTML() { return html; },
++    set innerHTML(v) { html = v; el.appended = []; },
++    get textContent() { return text; },
++    set textContent(v) { text = v; el.appended = []; },
++    append(...nodes) { el.appended.push(...nodes); },
++    setAttribute(name, value) { el.attributes[name] = value; },
++    replaceWith(node) { el.replacedWith = node; },
++    remove() { el.removed = true; },
++    focus() {},
+     querySelector(sel) { return (el.children[sel] ||= fakeElement()); },
+     children: {},
+   };
+@@ -22,14 +33,15 @@ function fakeElement() {
+ }
+ 
+ // Loads app.js on a readable list (empty unless given) and returns the add form plus every list the app tried to save.
+-function loadApp(initial = []) {
++// `saveResult` is what store.save answers ('saved', 'failed', or 'skipped' with `readError`).
++function loadApp(initial = [], { saveResult = 'saved', readError = false } = {}) {
+   const elements = {};
+   const saved = [];
+   const replaced = [];
+   const store = {
+-    readError: false,
+-    load() { return { todos: initial, readError: false }; },
+-    save(todos) { saved.push(todos.map((t) => ({ ...t }))); return 'saved'; },
++    readError,
++    load() { return { todos: initial, readError }; },
++    save(todos) { saved.push(todos.map((t) => ({ ...t }))); return saveResult; },
+     replace(todos) { replaced.push(todos); return 'saved'; },
+   };
+   const document = {
+@@ -37,7 +49,13 @@ function loadApp(initial = []) {
+     querySelectorAll() { return []; },
+     createElement() { return fakeElement(); },
+   };
+-  vm.runInNewContext(appJs, { ...backup, store, document, crypto });
++  // Native confirm() is recorded and answered "OK"; timers are recorded and fired by the test.
++  const confirms = [];
++  const timers = [];
++  const confirm = (q) => { confirms.push(q); return true; };
++  const setTimeout = (fn, ms) => timers.push({ fn, ms });
++  const clearTimeout = (id) => { if (timers[id - 1]) timers[id - 1].fn = () => {}; };
++  vm.runInNewContext(appJs, { ...backup, store, document, crypto, confirm, setTimeout, clearTimeout });
+   const submit = (value) => {
+     document.querySelector('#title').value = value;
+     document.querySelector('#add').onsubmit({ preventDefault() {} });
+@@ -53,9 +71,29 @@ function loadApp(initial = []) {
+   // Clicks a filter tab: 'all', 'open' or 'done'.
+   const filterBy = (f) => document.querySelector('#filters').onclick({ target: { dataset: { filter: f } } });
+   const emptyShown = () => !document.querySelector('#empty').hidden;
+-  return { submit, saved, replaced, asked, pick, count, filterBy, emptyShown };
++  // Rows on screen; renaming opens the edit box on row `row` (double-click, or a key such as 'Enter') and presses Enter.
++  const rows = () => document.querySelector('#list').appended;
++  const titleOf = (row) => rows()[row].querySelector('span');
++  const startRename = (row, key) => {
++    const span = titleOf(row);
++    if (key) span.onkeydown({ key, preventDefault() {} });
++    else span.ondblclick();
++    return span.replacedWith;
++  };
++  const rename = (row, value, key) => {
++    const input = startRename(row, key);
++    input.value = value;
++    input.onkeydown({ key: 'Enter', preventDefault() {} });
++  };
++  const message = () => document.querySelector('#message');
++  return {
++    submit, saved, replaced, asked, pick, count, filterBy, emptyShown,
++    rows, titleOf, startRename, rename, message, confirms, timers,
++  };
+ }
+ 
++const todo = (id, title, done = false) => ({ id, title, done, createdAt: 1 });
++
+ // A file whose text() resolves only when the test says so.
+ function slowFile(text) {
+   let finish;
+@@ -147,3 +185,85 @@ test('two overlapping imports: the later-finishing one asks before replacing the
+   assert.deepEqual(asked, [backup.fill(backup.MESSAGES.confirmReplace, { n: 1, m: 3 })]);
+   assert.equal(replaced.length, 1, 'cancelled, so the list from the small file stays');
+ });
++
++test('rename with a filter on renames the todo the user edited, not the one at that place in the whole list (PR 2)', () => {
++  const app = loadApp([todo('a', 'Việc A', true), todo('b', 'Việc B')]);
++  app.filterBy('open');
++  app.rename(0, 'Việc B mới');
++  assert.deepEqual(app.saved.at(-1).map((t) => t.title), ['Việc A', 'Việc B mới']);
++});
++
++test('the rename message shows the new title as text, never as HTML (policy-security#S3, PR 2)', () => {
++  const app = loadApp([todo('a', 'Việc A')]);
++  const evil = '<img src=x onerror=alert(1)>';
++  app.rename(0, evil);
++  assert.equal(app.message().innerHTML, '', 'innerHTML never set');
++  assert.match(app.message().textContent, /<img src=x onerror=alert\(1\)>/);
++});
++
++test('a rename that was not saved never says it worked (policy-ux#U1, PR 2)', () => {
++  const failed = loadApp([todo('a', 'Việc A')], { saveResult: 'failed' });
++  failed.rename(0, 'Việc A mới');
++  assert.equal(failed.message().textContent, backup.MESSAGES.notSaved);
++  // After a read error save() answers 'skipped' and the banner already explains it: no "Đã đổi tên" on top.
++  const skipped = loadApp([todo('a', 'Việc A')], { saveResult: 'skipped', readError: true });
++  skipped.rename(0, 'Việc A mới');
++  assert.doesNotMatch(skipped.message().textContent, /Đã đổi tên/);
++});
++
++test('rename happens at once, no confirm dialog, with Undo for 10 seconds (policy-ux#U2, PR 2)', () => {
++  const app = loadApp([todo('a', 'Việc A'), todo('b', 'Việc B')]);
++  app.rename(1, 'Việc B mới');
++  assert.deepEqual(app.confirms, [], 'no confirm dialog');
++  assert.deepEqual(app.saved.at(-1).map((t) => t.title), ['Việc A', 'Việc B mới']);
++  const undoButton = (a) => a.message().appended.find((node) => typeof node === 'object');
++  const undo = undoButton(app);
++  assert.equal(undo?.textContent, 'Hoàn tác', 'an Undo button next to the message');
++  assert.deepEqual(app.timers.map((t) => t.ms), [10000]);
++  undo.onclick();
++  assert.deepEqual(app.saved.at(-1).map((t) => t.title), ['Việc A', 'Việc B'], 'Undo puts the old title back, saved');
++
++  const later = loadApp([todo('a', 'Việc A')]);
++  later.rename(0, 'Việc A mới');
++  const button = undoButton(later);
++  later.timers[0].fn();
++  assert.equal(button.removed, true, 'the Undo button goes after 10 seconds');
++});
++
++test('renaming starts from the keyboard: the title takes focus, Enter or F2 opens the edit box (policy-ux#U5, PR 2)', () => {
++  const app = loadApp([todo('a', 'Việc A'), todo('b', 'Việc B')]);
++  assert.equal(app.titleOf(0).tabIndex, 0, 'the title can get keyboard focus');
++  assert.equal(typeof app.titleOf(0).onkeydown, 'function', 'the title listens to keys');
++  app.rename(0, 'Việc A mới', 'Enter');
++  app.rename(1, 'Việc B mới', 'F2');
++  assert.deepEqual(app.saved.at(-1).map((t) => t.title), ['Việc A mới', 'Việc B mới']);
++  assert.equal(app.startRename(0, 'a'), undefined, 'other keys do nothing');
++});
++
++// The title sits in the checkbox's <label>, so a page would turn every click on it into a click on the checkbox. The fake page
++// has no labels; what it can pin is that the title cancels its own clicks, so a double-click to rename never ticks the todo.
++test('clicking or double-clicking the title never ticks the todo (PR 2, review watch-1)', () => {
++  const app = loadApp([todo('a', 'Việc A')]);
++  const span = app.titleOf(0);
++  let cancelled = 0;
++  for (let i = 0; i < 2; i++) span.onclick?.({ preventDefault() { cancelled++; } });
++  assert.equal(cancelled, 2, 'both clicks of a double-click are kept from reaching the checkbox');
++});
++
++test('Enter while an input method is composing (Vietnamese Telex) does not save a half-typed name (PR 2)', () => {
++  const app = loadApp([todo('a', 'Việc A')]);
++  const input = app.startRename(0);
++  input.value = 'Việc A m';
++  input.onkeydown({ key: 'Enter', isComposing: true, preventDefault() {} });
++  assert.equal(app.saved.length, 0);
++});
++
++test('Undo of a rename does nothing once that todo is gone from the list (PR 2)', () => {
++  const app = loadApp([todo('a', 'Việc A')]);
++  app.rename(0, 'Việc A mới');
++  const undo = app.message().appended.find((node) => typeof node === 'object');
++  app.rows()[0].querySelector('button').onclick(); // delete the todo
++  const saves = app.saved.length;
++  undo.onclick();
++  assert.equal(app.saved.length, saves, 'no save for a todo that is no longer there');
++});

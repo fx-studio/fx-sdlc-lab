@@ -63,11 +63,11 @@ Humans read and write Vietnamese here; agent-facing files (`.claude/`, templates
 ## Verification
 
 - **One command:** `bash scripts/check.sh` runs every test (`node --test`) and a syntax check of every script. There is no build
-  step (plain files). Healthy output ends with:
+  step (plain files). Healthy output ends with `ℹ fail 0` and `== check: OK`, and `tests` equals `pass`:
 
   ```
-  ℹ tests 44
-  ℹ pass 44
+  ℹ tests N
+  ℹ pass N
   ℹ fail 0
   == check: OK
   ```
@@ -80,6 +80,21 @@ Humans read and write Vietnamese here; agent-facing files (`.claude/`, templates
   Sessions started with `TASK_KIND=fix` cannot edit committed tests (hook `protect-tests`).
 - Flaky tests (quarantined, do not try to fix them here): none (`bash scripts/flaky.sh 10`, 2026-10-29).
 
+## Deploy
+
+- **Pull requests are local** (no remote in this repo): a branch `pr/<n>-<slug>` plus `review/<n>/PR.md`.
+  `python3 scripts/pr.py new <slug>` opens one (branch + worktree in `.worktrees/`); `python3 scripts/pr.py show <n>` prints its
+  size and risk label. On a `pr/*` branch you may commit; merging into `main` is a person's act (hook `no-self-approve`).
+- **Review** follows `REVIEW.md`: `python3 scripts/review.py <n>` writes `review/<n>/findings.json`. Findings are advisory. Fix the
+  Important ones on the PR branch, list what you fixed, and stop: **you never approve or merge your own pull request.**
+- When review flags the **same** mistake a second time, propose a line for "Things Claude gets wrong" below; a person adds it.
+- **Environments:** `dev`, `staging`, `production` (local folders under `deploy/`). Use the `deploy` MCP tools: `deploy` works for
+  `dev` and `staging`; for `production` you can only `prepare_release`. A named release manager authorizes production
+  (`release/approvals/`, written by a person). Never create, edit or fake an approval, and never work around the gate: if it blocks
+  you, say what is ready and who has to approve.
+- **Rollback** is one command: `python3 scripts/rollback.py <env>` (or the `rollback` tool). Prefer it over a hot fix when an
+  environment is broken.
+
 ## Things Claude gets wrong
 
 One line per mistake, with the month it was added. Added after the **same** mistake happens twice. If it still happens after the line
@@ -88,3 +103,5 @@ is here, the line becomes a hook and is removed from this list.
 - 2026-10: Building throwaway scripts in Bash (heredocs, `sed -i`, `for` loops, `&&` chains, `echo $?`). Those need approval and get
   refused in a headless run (R0, R3, R3b, R3d: 20 refusals). Write the script with the Write tool, then run it with one plain
   `node <file>`. One command per Bash call.
+- 2026-11: Writing a check block (in `review/<n>/PR.md` or a report) from memory instead of pasting the output of a run on that
+  exact head (PR 2, `/watch-pr`). Run `bash scripts/check.sh` after your last change and paste its real last lines.

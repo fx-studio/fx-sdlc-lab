@@ -110,6 +110,16 @@ test('open-todo count line counts the whole list, whatever the filter (T-013)', 
   assert.equal(count(), '3 việc chưa xong', 'back to tab "Tất cả"');
 });
 
+test('count line says "Đã xong hết" when every todo is done, but not on an empty list (Thảo, PR 3)', () => {
+  const todo = (i, done) => ({ id: `id-${i}`, title: `Việc ${i}`, done, createdAt: 1 });
+  const { count, filterBy } = loadApp([todo(1, true), todo(2, true)]);
+  assert.equal(count(), 'Đã xong hết');
+  filterBy('open');
+  assert.equal(count(), 'Đã xong hết', 'tab "Chưa xong"');
+  assert.equal(loadApp([todo(1, false), todo(2, true)]).count(), '1 việc chưa xong');
+  assert.equal(loadApp([]).count(), '0 việc chưa xong', 'an empty list keeps the count');
+});
+
 test('empty-list message only when the whole list is empty, not when a filter hides everything (T-014)', () => {
   const todo = (i, done) => ({ id: `id-${i}`, title: `Việc ${i}`, done, createdAt: 1 });
   const { emptyShown, filterBy } = loadApp([todo(1, false), todo(2, false), todo(3, false), todo(4, false)]);
