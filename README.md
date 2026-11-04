@@ -21,6 +21,7 @@ khoản. Mỗi tập của loạt thêm vào repo những thứ một bước SD
 | SDLC-2 | Design: `intent.md` thành `spec.md` | skill `write-spec`, ba skill `policy-*` có phiên bản, subagent `spec-reviewer`, spec job (git `post-commit`), hook `no-self-approve` bản 2, thư mục `spec/` | [demo/sdlc-2/](demo/sdlc-2/README.md) | [intent.md thành spec.md](https://fxstudio.dev/ai-native-sdlc-design-intent-thanh-spec/) |
 | SDLC-3 | Build: plan trước, code sau | `CLAUDE.md` mục Build (bảng phân hạng, plan bốn mục, Things Claude gets wrong), thư mục `plan/`, ba hook build (`protect-paths`, `no-secrets`, `check-js`), subagent `verifier`, git `pre-commit` đòi plan đi cùng code, bộ thử kích hoạt skill; **tính năng sao lưu / nhập lại** trong `app/` và bộ test đầu tiên (`tests/`, 42 test) | [demo/sdlc-3/](demo/sdlc-3/README.md) | [Build: plan trước, code sau](https://fxstudio.dev/ai-native-sdlc-build-plan-truoc-code-sau/) |
 | SDLC-4 | Test: agent tự kiểm, cấu hình cũng phải test | `CLAUDE.md` mục Verification, `scripts/check.sh` (một lệnh kiểm), hook `protect-tests`, `scripts/flaky.sh`, subagent `test-writer`, **bộ eval** `evals/` (9 task từ lịch sử repo, test ẩn, chấm bằng máy, đo A/B cấu hình), workflow `evals.yml` (chưa bật), `scripts/shot.py` cho vòng kiểm bằng hình; sửa T-013, T-014 (bug gài có chủ ý), 44 test | [demo/sdlc-4/](demo/sdlc-4/README.md) | [Test: agent tự kiểm, cấu hình cũng phải test](https://fxstudio.dev/ai-native-sdlc-test-agent-tu-kiem/) |
+| SDLC-5 | Deploy: review hai chiều, agent dừng trước cổng production | `REVIEW.md`, pull request cục bộ (`scripts/pr.py`: cỡ + nhãn rủi ro do script tính), `scripts/review.py` (review chỉ đọc, bảng đếm theo mức), `/watch-pr`, `scripts/triage.py`, deploy ba môi trường cục bộ + MCP server `deploy` (production chỉ `prepare_release`), `rollback.py` + `rollback-drill.py`, hook `release-gate` (duyệt gắn với một bản) cạnh hook mẫu `production-gate.sh` để so; PR 1, 3 merge; spec + plan hạn chót accepted, PR 5–7 chờ review | [demo/sdlc-5/](demo/sdlc-5/README.md) | [Deploy: agent dừng trước cổng production](https://fxstudio.dev/ai-native-sdlc-deploy-truoc-cong-production/) |
 
 Các bài của loạt trên blog: https://fxstudio.dev/tag/ai-native-sdlc/
 
@@ -105,6 +106,22 @@ Cần Claude Code, `python3`, Node (app mẫu). Eval tốn tiền mỗi lần ch
 7. CI: `.github/workflows/evals.yml` theo khuôn của playbook (PR đụng `CLAUDE.md` / `.claude/` / `evals/` + mỗi tuần). **Ở repo này
    chỉ chạy tay**: task bắt đầu từ commit cũ trong lịch sử, mà GitHub chỉ nhận một commit mỗi tập nên không có các commit đó.
    Repo của bạn có đủ lịch sử thì bật lại hai trigger, thêm `ANTHROPIC_API_KEY` vào GitHub Secrets, chạy thử ở máy trước.
+
+## Mang về repo của bạn (bước Deploy)
+
+Cần Claude Code, `python3`, `git`. Mọi thứ chạy ở máy; không cần GitHub.
+
+1. Chép `REVIEW.md` và sửa ba lượt theo policy của team. Demo cho thấy: lỗi lệch policy bị bắt cả khi không có file (nếu policy đã là skill);
+   thứ file thêm vào là **mức Important/Nit và bảng đếm** để một cổng merge đọc được.
+2. Review một nhánh: `python3 scripts/pr.py new <slug>` rồi `python3 scripts/review.py <n>`. Ra `review/<n>/<lượt>/findings.json`,
+   `tally.json`, `comment.md`. Muốn chạy trên GitHub thì dùng claude-code-action với cùng `REVIEW.md`.
+3. Cỡ và rủi ro do script tính, không do agent chọn: sửa bảng `RISK` trong `scripts/pr.py` theo đường dẫn của repo bạn. Cảnh báo > 400 dòng.
+   ⚠ Nhãn theo đường dẫn lách được (tách file ra PR khác) và nhìn sót (đổi dạng dữ liệu mà không đụng file "nguy hiểm").
+4. Cổng production: **đừng dựa vào hook so chữ trong lệnh.** Demo R8: hook mẫu của playbook bị vượt bằng một script trung gian, và cả hook của
+   repo này cũng cho qua đường đó. Lớp giữ chắc là **phạm vi công cụ**: chép `tools/deploy-mcp/` (production chỉ `prepare_release`) và ở môi
+   trường thật, agent không cầm quyền ghi production. Hook `release-gate.py` là lưới: duyệt gắn với một bản (`release/approvals/<sha>.md` người
+   commit trên `main`).
+5. Tập rollback: `python3 scripts/rollback-drill.py staging 10`. Rollback chỉ gỡ được bản do chính công cụ deploy đưa lên.
 
 ## Bố cục
 

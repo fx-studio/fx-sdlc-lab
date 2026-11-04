@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "deploy": {
+      "command": "python3",
+      "args": ["tools/deploy-mcp/server.py"]
+    }
+  }
+}

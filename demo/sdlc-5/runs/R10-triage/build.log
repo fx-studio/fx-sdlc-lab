@@ -1,0 +1,6 @@
+== test: node --test
+ℹ tests 46
+ℹ pass 44
+ℹ fail 2
+== lint: node --check app/*.js tests/*.js
+== check: FAILED

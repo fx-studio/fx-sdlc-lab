@@ -1,0 +1,55 @@
+{
+ "findings": [
+  {
+   "pass": "Bugs",
+   "severity": "Important",
+   "file": "app/app.js",
+   "line": 134,
+   "title": "Redrawing on blur drops the next mouse click on a row",
+   "why": "A user changes or clears a date with the mouse, then clicks another row's checkbox or '×', or the '×' on the same row. The date field blurs on mousedown. Because changedInPlace is true (or clearDue just ran), render() rebuilds every <li> before mouseup. The element under the mousedown is gone, so the click is lost: the todo is not ticked or deleted. When sorted by due date, the rows can also move under the pointer. Even with sort 'added' the redraw does nothing useful, since setDue already updated the row in place. This is still unfixed on head and needs the plan change the PR proposes (Q3).",
+   "fix": "Plan change (Khoa · Linh): on blur, redraw only when the visible order can change (sort === 'due'), and otherwise update just that row in place, also after clearDue. When sorted, wait until the pending click has finished before redrawing (for example setTimeout 0 or the next pointerup/keyup). Add an app test for mousedown on another row's checkbox → blur → click, which should toggle it."
+  },
+  {
+   "pass": "Compliance",
+   "severity": "Important",
+   "file": "plan/2026-10-19-han-chot-cho-viec.md",
+   "line": 293,
+   "title": "app/ committed without the plan's Tiến độ line",
+   "why": "Plan 'Order of work' and CLAUDE.md say a person records progress in the plan in the same commit as app/ changes, and that a pre-commit hook enforces it. Commit 5ccd951 changes app/ but not plan/, and the plan still says 'PR A: chưa bắt đầu.' If this is merged as it is, main's plan no longer matches the code, and the hook that should catch this did not fire for this worktree.",
+   "fix": "A person adds the PR A Tiến độ line on this branch before merge. They should also check why .git/hooks/pre-commit did not run in the .worktrees/ checkout (core.hooksPath or the executable bit)."
+  },
+  {
+   "pass": "Compliance",
+   "severity": "Nit",
+   "file": "CLAUDE.md",
+   "line": null,
+   "title": "CLAUDE.md 'App architecture' names the old script order",
+   "why": "CLAUDE.md still says scripts load store.js → backup.js → app.js, pinned by tests/static.test.js. This PR changes the pinned order to store → due → backup → app and adds app/due.js. An agent following CLAUDE.md would put a new script in the wrong place, or not know about due.js.",
+   "fix": "A person updates the line to 'loaded store.js → due.js → backup.js → app.js … due.js is DOM-free, storage-free date logic (tested in Node)'."
+  },
+  {
+   "pass": "Bugs",
+   "severity": "Nit",
+   "file": "app/app.js",
+   "line": 202,
+   "title": "Keyboard focus falls to the page after 'Hoàn tác'",
+   "why": "show() hides #undo while it still has focus, so a keyboard or screen-reader user is sent back to the top of the page after pressing Hoàn tác (U5, T8). It is not covered by a test because the harness's fake focus does not model hidden elements.",
+   "fix": "After the restore, focus the restored todo's date field if it is visible, otherwise #title. Check this with T8."
+  },
+  {
+   "pass": "Compliance",
+   "severity": "Nit",
+   "file": "app/app.js",
+   "line": 75,
+   "title": "'Sao lưu ra file' also removes the Undo button, which A16 does not list",
+   "why": "A16 lists exactly when the button disappears (add, toggle, delete, date change, import) and when it stays (filter, sort, leaving a date field). Export is in neither list, but because it calls show() it removes the button. A user who backs up right after clearing a date loses the 10-second Undo. This may well be intended, but no person has decided it.",
+   "fix": "Ask Linh to add export to one of the A16 lists. If it should keep Undo, show the export message without clearUndo()."
+  }
+ ],
+ "dropped_nits": 1,
+ "claude_md_outdated": true,
+ "pr": 4,
+ "base": "20b4e8f",
+ "head": "1af70df",
+ "mode": "REVIEW.md"
+}

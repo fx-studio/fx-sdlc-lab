@@ -1,0 +1,1 @@
+{"run": "R6-2B2-undo", "giay": 189.7, "usd": 1.2642464999999998, "luot": 38, "model": ["claude-haiku-5-5", "claude-opus-5-5"], "tool_call": 37, "session": "30f7624b-7d89-43b3-83df-9d2f0b4960e0", "tu_choi": ["Bash"], "env": [], "sources": "project,local", "mcp": false, "swap_settings": null, "skill_nap": 26}

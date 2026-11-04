@@ -1,0 +1,1 @@
+{"run": "R9b-staging-hong", "giay": 19.9, "usd": 0.2011799, "luot": 9, "model": ["claude-haiku-5-5", "claude-opus-5-5"], "tool_call": 8, "session": "5fcbd089-2c09-420f-826b-a3a8971c07a7", "tu_choi": [], "env": [], "sources": "project,local", "mcp": true, "swap_settings": null, "skill_nap": 26}

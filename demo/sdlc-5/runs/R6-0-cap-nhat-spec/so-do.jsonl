@@ -1,0 +1,1 @@
+{"run": "R6-0-cap-nhat-spec", "giay": 154.0, "usd": 0.9215005999999999, "luot": 19, "model": ["claude-haiku-5-5", "claude-opus-5-5"], "tool_call": 17, "session": "0c427eb2-daf1-4db8-b990-bcb2b85f91bf", "tu_choi": [], "env": [], "sources": "project,local", "mcp": false, "swap_settings": null, "skill_nap": 26}

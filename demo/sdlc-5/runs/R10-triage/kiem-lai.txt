@@ -1,0 +1,8 @@
+# R10 · chạy lại build gài (2026-11-04, worktree tạm từ main, đổi đúng chuỗi backedUp): đúng hai test fail, trùng tên trong triage.md
+✖ messages quoted in the spec and plan are word for word (0.727042ms)
+✖ counts in sentences: a dot every three digits from 1,000 up, plain below (Linh, R9) (0.131208ms)
+ℹ pass 44
+ℹ fail 2
+✖ failing tests:
+✖ messages quoted in the spec and plan are word for word (0.727042ms)
+✖ counts in sentences: a dot every three digits from 1,000 up, plain below (Linh, R9) (0.131208ms)

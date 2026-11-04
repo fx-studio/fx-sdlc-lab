@@ -1,0 +1,73 @@
+{
+ "findings": [
+  {
+   "pass": "Bugs",
+   "severity": "Important",
+   "file": "app/app.js",
+   "line": 50,
+   "title": "Rename edits the wrong item when a filter is on",
+   "why": "`i` is the item's position in `visible()`, but `rename()` uses it to index the full `todos` array. With the 'Chưa xong' or 'Đã xong' filter on, renaming the 1st visible item changes whatever item is 1st in the whole list. The user's other item is silently renamed and saved.",
+   "fix": "Pass the id instead (`rename(t.id, input.value)`) and look the item up with `todos.find((x) => x.id === id)`, the same way `toggle` and `remove` do. Add a test that renames an item while a filter is on."
+  },
+  {
+   "pass": "Bugs",
+   "severity": "Important",
+   "file": "app/app.js",
+   "line": 24,
+   "title": "Rename message hides a failed save",
+   "why": "`commit()` shows the result from `persist()`, which can say the save failed or was skipped after a read error. `rename()` then overwrites `#message` with 'Đã đổi tên…', so the user is told it worked when it was never saved. This breaks policy-ux@2#U1.",
+   "fix": "Show the rename message only when `persist` succeeded, or keep the persist message when it reports a problem (for example, have `commit()` return the persist result and check it)."
+  },
+  {
+   "pass": "Security",
+   "severity": "Important",
+   "file": "app/app.js",
+   "line": 24,
+   "title": "User text rendered with innerHTML",
+   "why": "`t.title` is user text and is put into the page with `innerHTML`. A title like `<img src=x onerror=...>` runs script, and one stored via import runs again every time it is renamed. This breaks policy-security#S3.",
+   "fix": "Build the message with `textContent`, for example create a `<b>` element, set its `textContent` to the title, and append it, or simply call `show(`Đã đổi tên thành ${t.title}`)`."
+  },
+  {
+   "pass": "Compliance",
+   "severity": "Important",
+   "file": "app/app.js",
+   "line": 21,
+   "title": "Confirm dialog on a single-item action, no Undo",
+   "why": "policy-ux@2#U2 says actions on one item happen at once with no confirmation dialog and offer Undo for 10 seconds. The PR uses a native `confirm()` and has no Undo.",
+   "fix": "Remove the `confirm()`. Rename at once and offer 'Hoàn tác' for 10 seconds that restores the old title."
+  },
+  {
+   "pass": "Bugs",
+   "severity": "Important",
+   "file": "app/app.js",
+   "line": 57,
+   "title": "Rename can't be started from the keyboard",
+   "why": "Rename only starts on `dblclick` on a plain `<span>`, which can't take keyboard focus. Keyboard and screen-reader users can't rename at all, which breaks policy-ux@2#U5. The 'Nhấp đúp để đổi tên' hint is a `title` tooltip, so those users don't get it either.",
+   "fix": "Add a focusable control, for example a 'Đổi tên' button with an aria-label, or make the title focusable and start editing on Enter/F2."
+  },
+  {
+   "pass": "Compliance",
+   "severity": "Nit",
+   "file": "app/app.js",
+   "line": 19,
+   "title": "New behaviour has no tests",
+   "why": "The diff adds rename but no test in `tests/` (`app.test.js` can run `app.js` in a vm). A test would have caught the filter-index bug. The count is still 44.",
+   "fix": "Add tests to `tests/app.test.js`: rename saves the new title, Escape changes nothing, and renaming works with a filter on."
+  },
+  {
+   "pass": "Bugs",
+   "severity": "Nit",
+   "file": "app/app.js",
+   "line": 62,
+   "title": "Edit box stays open on blur; empty Enter does nothing",
+   "why": "Clicking away leaves the input open until the next render. Pressing Enter with an empty name does nothing and says nothing, so the user doesn't know why.",
+   "fix": "On `blur`, save or cancel (pick one and keep it consistent). On an empty name, either cancel or show a short message."
+  }
+ ],
+ "dropped_nits": 0,
+ "claude_md_outdated": false,
+ "pr": 2,
+ "base": "04ee584",
+ "head": "80c5c4a",
+ "mode": "REVIEW.md"
+}

@@ -1,0 +1,1 @@
+{"run": "B6-linh-ux-owner", "giay": 15.4, "usd": 0.076421, "luot": 1, "model": ["claude-haiku-5-5", "claude-sonnet-5-5"], "tool_call": 0, "session": "ca219f87-efcb-4b3c-8a07-2809487afc59", "tu_choi": [], "env": [], "sources": "project,local", "mcp": false, "swap_settings": null, "skill_nap": 21}

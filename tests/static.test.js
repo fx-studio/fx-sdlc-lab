@@ -29,6 +29,13 @@ test('the main screen says where the list is kept, and has the new controls (AC2
   assert.match(html, /<dialog id="confirm" aria-labelledby="confirm-text">/);
 });
 
+test('confirm dialog buttons show a focus ring on any focus, not only :focus-visible (U5, PR 1)', () => {
+  // Firefox gives the autofocused "Huỷ" no ring after the file picker closes: its :focus-visible heuristic
+  // does not count that focus as keyboard focus. A rule on plain :focus does not depend on that heuristic.
+  const css = read('style.css');
+  assert.match(css, /dialog button:focus\s*\{[^}]*outline:\s*2px solid/);
+});
+
 test('visible text in index.html has no technical words (AC24, U4)', () => {
   const text = html.replace(/<script[\s\S]*?<\/script>/g, '').replace(/<[^>]+>/g, ' ');
   assert.doesNotMatch(text, /localStorage|JSON|console/i);

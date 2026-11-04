@@ -1,0 +1,216 @@
+diff --git a/CLAUDE.md b/CLAUDE.md
+index 0b9bdaa..1c58b26 100644
+--- a/CLAUDE.md
++++ b/CLAUDE.md
+@@ -87,6 +87,9 @@ Humans read and write Vietnamese here; agent-facing files (`.claude/`, templates
+   size and risk label. On a `pr/*` branch you may commit; merging into `main` is a person's act (hook `no-self-approve`).
+ - **Review** follows `REVIEW.md`: `python3 scripts/review.py <n>` writes `review/<n>/findings.json`. Findings are advisory. Fix the
+   Important ones on the PR branch, list what you fixed, and stop: **you never approve or merge your own pull request.**
++- **Size:** keep a pull request under 400 changed lines (`python3 scripts/pr.py show <n>`; `demo/`, `review/`, `evals/results/` not
++  counted). If a step of the plan needs more, split it into several pull requests in the order of the plan, each one green on its own
++  (`python3 scripts/pr.py new <slug> --base <previous PR branch>`).
+ - When review flags the **same** mistake a second time, propose a line for "Things Claude gets wrong" below; a person adds it.
+ - **Environments:** `dev`, `staging`, `production` (local folders under `deploy/`). Use the `deploy` MCP tools: `deploy` works for
+   `dev` and `staging`; for `production` you can only `prepare_release`. A named release manager authorizes production
+diff --git a/app/due.js b/app/due.js
+new file mode 100644
+index 0000000..6ce1f46
+--- /dev/null
++++ b/app/due.js
+@@ -0,0 +1,64 @@
++// Due dates (plan/2026-10-19-han-chot-cho-viec.md, Q2). No DOM and no browser storage here, so this file can be tested in Node.
++// A due date is a string YYYY-MM-DD on the todo (key `dueDate`, absent when there is none). "Today" is the machine's own day
++// (local time), never the UTC day: no toISOString and no Date built from a due date string except through Date.UTC below.
++
++// Every new sentence and label of the due date feature (plan, Câu chữ). {title} is filled by the caller, {date} by formatDueDate.
++const DUE_TEXT = {
++  addLabel: 'Hạn chót', // D1
++  rowLabel: 'Hạn chót của việc {title}', // D2
++  dueOn: 'Hạn {date}', // D3
++  overdue: 'Quá hạn', // D4
++  cleared: 'Đã bỏ hạn chót của việc {title}.', // D5
++  undo: 'Hoàn tác', // D6
++  sortLabel: 'Xếp theo', // D8
++  sortAdded: 'Thứ tự thêm', // D8
++  sortDue: 'Hạn chót', // D8
++  undone: 'Đã hoàn tác.', // D9
++};
++
++// A string in the fixed form YYYY-MM-DD that is a real day (no 2026-02-30). Date.UTC + getUTC* so the time zone plays no part.
++function isValidDueDate(v) {
++  if (typeof v !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(v)) return false;
++  const [y, m, d] = v.split('-').map(Number);
++  const date = new Date(Date.UTC(y, m - 1, d));
++  return date.getUTCFullYear() === y && date.getUTCMonth() === m - 1 && date.getUTCDate() === d;
++}
++
++// The machine's own day as YYYY-MM-DD (A9).
++function localDateString(date) {
++  const pad = (n) => String(n).padStart(2, '0');
++  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
++}
++
++// today is localDateString(new Date()). Comparing strings works because the form is fixed (4-2-2 digits).
++// Due today is not overdue (A6); a done todo never is (A7); a broken value counts as no due date (A14).
++function isOverdue(todo, today) {
++  return !todo.done && isValidDueDate(todo.dueDate) && todo.dueDate < today;
++}
++
++// "Hạn DD/MM/YYYY" (A5). Only call it with a valid due date.
++function formatDueDate(s) {
++  const [y, m, d] = s.split('-');
++  return DUE_TEXT.dueOn.replace('{date}', `${d}/${m}/${y}`);
++}
++
++// A new array (the saved list keeps its added order, Q6): valid dates earliest first, then todos with no due date or a broken
++// one. Ties keep the original order, by index, without relying on sort stability (A12).
++function sortByDue(todos) {
++  const key = (t) => (isValidDueDate(t.dueDate) ? t.dueDate : null);
++  return todos
++    .map((t, i) => ({ t, i, k: key(t) }))
++    .sort((a, b) => {
++      if (a.k !== b.k) {
++        if (a.k === null) return 1;
++        if (b.k === null) return -1;
++        return a.k < b.k ? -1 : 1;
++      }
++      return a.i - b.i;
++    })
++    .map((x) => x.t);
++}
++
++if (typeof module !== 'undefined') {
++  module.exports = { DUE_TEXT, isValidDueDate, localDateString, isOverdue, formatDueDate, sortByDue };
++}
+diff --git a/plan/2026-10-19-han-chot-cho-viec.md b/plan/2026-10-19-han-chot-cho-viec.md
+index 426cc4f..9c89dce 100644
+--- a/plan/2026-10-19-han-chot-cho-viec.md
++++ b/plan/2026-10-19-han-chot-cho-viec.md
+@@ -290,5 +290,9 @@ AC10 (không có chữ kỹ thuật) do `due.test.js` và `static.test.js` kiể
+ ## Tiến độ
+ Người commit điền (sau khi plan được duyệt, hook không cho agent sửa plan này).
+ 
+-- PR A: chưa bắt đầu.
++- PR A: **tách ba PR** theo luật trần 400 dòng (Khoa chọn phương án (b), 2026-11-04, `demo/sdlc-5/runs/B6s-khoa-tach`):
++  PR 5 = bước 1–3 (`app/due.js` + `tests/due.test.js`, chưa nạp vào trang) · PR kế tiếp = bước 4–5a (cơ chế Undo dùng chung,
++  `offerUndo`/`clearUndo`, tách `save()`/`render()`, nút Hoàn tác, kèm test) · PR sau đó = bước 4–5b (ô ngày, Xếp theo, Quá hạn,
++  `index.html`, `style.css`, phần còn lại của `app.js`, test luồng). Mỗi PR xanh riêng, nhánh sau dựa trên nhánh trước.
++  (Bản làm song song không có luật trần: PR 4, một PR 950 dòng, giữ để so.)
+ - PR B: chưa bắt đầu.
+diff --git a/tests/due.test.js b/tests/due.test.js
+new file mode 100644
+index 0000000..bd9e373
+--- /dev/null
++++ b/tests/due.test.js
+@@ -0,0 +1,111 @@
++process.env.TZ = 'Asia/Ho_Chi_Minh'; // must be set before anything creates a Date (A9: machine time is UTC+7)
++// Tests for app/due.js (plan/2026-10-19-han-chot-cho-viec.md, PR A step 3; written before the module exists). Run: node --test
++const test = require('node:test');
++const assert = require('node:assert/strict');
++const { isValidDueDate, localDateString, isOverdue, formatDueDate, sortByDue, DUE_TEXT } = require('../app/due.js');
++
++const TODAY = '2026-11-10'; // the spec's acceptance criteria use 10/11/2026
++const todo = (title, extra = {}) => ({ id: title, title, done: false, createdAt: 0, ...extra });
++
++// --- isValidDueDate (AC8, AC16, A14) ---
++
++test('isValidDueDate: accepts real YYYY-MM-DD dates, rejects bad shapes, impossible dates and non-strings', () => {
++  for (const v of ['2026-11-12', '2028-02-29']) assert.equal(isValidDueDate(v), true, `should accept ${JSON.stringify(v)}`);
++  const bad = ['abc', '2026-02-30', '2027-02-29', '2026-13-01', '2026-1-5', '', null, 20261112, ' 2026-11-12'];
++  for (const v of bad) assert.equal(isValidDueDate(v), false, `should reject ${JSON.stringify(v)}`);
++});
++
++// --- localDateString (AC3, A9): local machine date, never the UTC date ---
++
++test('localDateString: uses the machine date in UTC+7, not the UTC date', () => {
++  // 06:00 on 10/11 in UTC+7 is still 09/11 in UTC
++  assert.equal(localDateString(new Date('2026-11-09T23:00:00Z')), '2026-11-10');
++  // 00:30 local on 10/11 is 17:30 on 09/11 in UTC
++  assert.equal(localDateString(new Date(2026, 10, 10, 0, 30)), '2026-11-10');
++});
++
++// --- isOverdue (AC3, A4, A6, A7) ---
++
++test('isOverdue: only an unfinished todo with a valid date before today', () => {
++  const cases = [
++    [todo('due yesterday', { dueDate: '2026-11-09' }), true],
++    [todo('due today', { dueDate: '2026-11-10' }), false], // A6: due today is not overdue
++    [todo('due tomorrow', { dueDate: '2026-11-11' }), false],
++    [todo('done, due yesterday', { dueDate: '2026-11-09', done: true }), false], // A7
++    [todo('no due date'), false],
++    [todo('broken due date', { dueDate: 'abc' }), false], // A14: shown as no due date
++    [todo('past date picked on add', { dueDate: '2026-11-01' }), true], // A4
++  ];
++  for (const [t, expected] of cases) assert.equal(isOverdue(t, TODAY), expected, t.title);
++});
++
++// --- formatDueDate (AC1, A5) ---
++
++test('formatDueDate: "Hạn DD/MM/YYYY"', () => {
++  assert.equal(formatDueDate('2026-11-12'), 'Hạn 12/11/2026');
++});
++
++// --- sortByDue (AC4, AC8, A12, Q6) ---
++
++const titles = (list) => list.map((t) => t.title);
++
++test('sortByDue: earliest first, same date keeps added order, no due date last (AC4)', () => {
++  const todos = [
++    todo('A'), todo('B', { dueDate: '2026-11-15' }), todo('C', { dueDate: '2026-11-12' }), todo('D', { dueDate: '2026-11-12' }),
++  ];
++  assert.deepEqual(titles(sortByDue(todos)), ['C', 'D', 'B', 'A']);
++});
++
++test('sortByDue: broken due dates sort last, in original order (AC8)', () => {
++  // AMBIGUOUS: spec says broken values are shown and sorted "like no due date" (A14, AC8) and the plan groups "no due date or broken"
++  // together at the end; read here as one group in original order, not broken values after (or before) todos with no due date.
++  const todos = [
++    todo('A'), todo('E', { dueDate: 'abc' }), todo('B', { dueDate: '2026-11-15' }), todo('C', { dueDate: '2026-11-12' }),
++    todo('F', { dueDate: '2026-02-30' }), todo('D', { dueDate: '2026-11-12' }),
++  ];
++  assert.deepEqual(titles(sortByDue(todos)), ['C', 'D', 'B', 'A', 'E', 'F']);
++});
++
++test('sortByDue: returns a new array and does not change the input (Q6: saved order stays "added")', () => {
++  const todos = [todo('A'), todo('B', { dueDate: '2026-11-15' }), todo('X', { dueDate: 'abc' }), todo('C', { dueDate: '2026-11-12' })];
++  const before = structuredClone(todos);
++  const sorted = sortByDue(todos);
++  assert.notEqual(sorted, todos);
++  assert.deepEqual(todos, before);
++  assert.equal(todos[2].dueDate, 'abc'); // A14: broken value kept as is
++});
++
++// --- DUE_TEXT (AC10, U4): D1-D6, D8, D9 verbatim ---
++
++// AMBIGUOUS: key names and nesting are not fixed by the plan (D8 could be one key holding three strings); flatten all values.
++const flat = (v) => (v && typeof v === 'object' ? Object.values(v).flatMap(flat) : [v]);
++const texts = () => flat(DUE_TEXT);
++
++test('DUE_TEXT: holds D1, D2, D4, D5, D6, D8, D9 verbatim', () => {
++  const expected = [
++    'Hạn chót', // D1
++    'Hạn chót của việc {title}', // D2, placeholder {tiêu đề} written as {title}
++    'Quá hạn', // D4
++    'Đã bỏ hạn chót của việc {title}.', // D5
++    'Hoàn tác', // D6
++    'Xếp theo', 'Thứ tự thêm', 'Hạn chót', // D8
++    'Đã hoàn tác.', // D9
++  ];
++  for (const s of expected) assert.ok(texts().includes(s), `DUE_TEXT is missing ${JSON.stringify(s)}`);
++});
++
++test('DUE_TEXT: holds D3 "Hạn {DD/MM/YYYY}"', () => {
++  // AMBIGUOUS: the plan gives D3 as "Hạn {DD/MM/YYYY}" but does not fix how the date slot is written in DUE_TEXT (a placeholder such
++  // as {date}, or the prefix "Hạn " alone). Accept either; the exact rendered form is pinned by the formatDueDate test above.
++  const d3 = texts().filter((s) => typeof s === 'string' && /^Hạn( \{[^}]+\}| ?)$/.test(s));
++  assert.ok(d3.length > 0, 'DUE_TEXT has no D3 value ("Hạn " followed by a date placeholder or nothing)');
++});
++
++test('DUE_TEXT: every value is a string with no technical words (AC10)', () => {
++  const values = texts();
++  assert.ok(values.length >= 9);
++  for (const s of values) {
++    assert.equal(typeof s, 'string');
++    for (const word of ['localStorage', 'JSON', 'console', 'dueDate']) assert.ok(!s.includes(word), `${JSON.stringify(s)} contains ${word}`);
++  }
++});

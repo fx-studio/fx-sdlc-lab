@@ -1,0 +1,1 @@
+{"run": "B6s-khoa-tach", "giay": 11.7, "usd": 0.06122, "luot": 1, "model": ["claude-haiku-5-5", "claude-sonnet-5-5"], "tool_call": 0, "session": "aee31bf0-0373-436e-8683-dcbc747385a7", "tu_choi": [], "env": [], "sources": "project,local", "mcp": false, "swap_settings": null, "skill_nap": 21}

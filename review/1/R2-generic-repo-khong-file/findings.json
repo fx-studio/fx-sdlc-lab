@@ -1,0 +1,33 @@
+{
+ "findings": [
+  {
+   "file": "app/style.css",
+   "line": 24,
+   "comment": "The diagnosis may be wrong, and if it is, this rule changes nothing. The PR assumes \"Huỷ\" has focus but no ring. The only evidence we have suggests \"Huỷ\" never had focus. The person's T12 run (demo/sdlc-4/README.md:113-115) says that when the dialog opened, a single Tab and then Enter chose \"Thay\". \"Huỷ\" is the last button in the form (index.html:38). If it had focus, Tab would move past it, out of the buttons, and could not land on \"Thay\" before it. Tab landing on \"Thay\" fits better with focus sitting on the dialog or the page, so `autofocus` was not applied after the file picker closed. A `:focus` rule cannot draw a ring on a button that doesn't have focus. Before merging, have the person run one quick check in Firefox on macOS: open the dialog by keyboard and press Enter (or Space) straight away. If the import is cancelled, \"Huỷ\" had focus and this fix applies. If nothing happens, or \"Thay\" runs, the fix is to move focus in `ask()` after `showModal()` (for example `dialog.querySelector('[value=no]').focus()`), with a test in app.test.js. A CSS rule won't fix it."
+  },
+  {
+   "file": "tests/static.test.js",
+   "line": 36,
+   "comment": "This test only checks that the CSS text contains the rule. It would pass even if T12's actual symptom were still there (see the comment on style.css:24). The PR says so, which is good. If the cause turns out to be missing focus, the useful test belongs in tests/app.test.js. It would assert that after `ask()` opens the dialog, `document.activeElement` is the \"Huỷ\" button (value=\"no\"). That test reproduces the bug. This one only fixes a CSS string in place. Keep this test only if the manual check confirms the focus-visible explanation."
+  },
+  {
+   "file": "CLAUDE.md",
+   "line": null,
+   "comment": "CLAUDE.md, under Verification, still describes healthy `scripts/check.sh` output as `ℹ tests 44 / ℹ pass 44`. With this PR the count becomes 45, so once it's merged that example is stale, and agents told to compare against it will report a mismatch. A person should update it to 45 in the same merge. This needs a person: CLAUDE.md is not for the agent to edit unasked."
+  },
+  {
+   "file": "app/style.css",
+   "line": 23,
+   "comment": "The comment states the Firefox heuristic as fact. The PR description says the cause is \"probable, not confirmed in a browser\". Keep the comment as hedged as the evidence until the T12 recheck is done, e.g. \"Probable cause (unconfirmed): …\". Otherwise the next reader will take it as established."
+  },
+  {
+   "file": "review/1/PR.md",
+   "line": null,
+   "comment": "The bug-fix process in CLAUDE.md says to add the reproducing test, show it fails, and when a person is there, they commit the test before the fix. Here the test and the fix are in one commit, 4ec1f73. The failing output is pasted, which is fine for a non-interactive run, but please say which case applies. Also, demo/sdlc-4/README.md:99 still says the issue is not fixed (\"chưa sửa\"). Leave it until the person repeats T12, then update that line together with the T12 result."
+  }
+ ],
+ "pr": 1,
+ "base": "1af3e6c",
+ "head": "4f8f4cb",
+ "mode": "generic, no REVIEW.md in repo"
+}

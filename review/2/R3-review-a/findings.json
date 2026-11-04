@@ -1,0 +1,91 @@
+{
+ "findings": [
+  {
+   "pass": "Bugs",
+   "severity": "Important",
+   "file": "app/app.js",
+   "line": 21,
+   "title": "rename() looks up the item by its place in the filtered list, then changes that place in the full list",
+   "why": "`render()` passes `i` from `visible().entries()`, which is the position in the filtered list. `rename()` then uses it as `todos[index]`, the position in the full list. With the 'Chưa xong' or 'Đã xong' filter on, renaming an item gives the new name to a different item and saves it. The user's data is changed without them noticing.",
+   "fix": "Pass the id, as `toggle` and `remove` do: `rename(t.id, input.value)`, then `const t = todos.find((x) => x.id === id)`. Add an app.test.js case that renames with a filter on."
+  },
+  {
+   "pass": "Security",
+   "severity": "Important",
+   "file": "app/app.js",
+   "line": 25,
+   "title": "The new name reaches the page through innerHTML (policy-security@1#S3)",
+   "why": "`$('#message').innerHTML = `Đã đổi tên thành <b>${t.title}</b>`` puts the user's text into HTML. A name like `<img src=x onerror=...>` runs script. That name is saved, and a backup file can bring it back in through import.",
+   "fix": "Build the message with textContent. For example, create a `<b>` element, set its textContent to `t.title`, and append it after a text node. Or use `show(fill(MESSAGES.renamed, { title: t.title }))`."
+  },
+  {
+   "pass": "Bugs",
+   "severity": "Important",
+   "file": "app/app.js",
+   "line": 25,
+   "title": "The rename message overwrites the 'not saved' warning (policy-ux@2#U1)",
+   "why": "`commit()` calls `show(persist(...).message)`, which shows MESSAGES.notSaved when the write fails. `rename()` then replaces #message with 'Đã đổi tên thành …'. The user is told the rename worked when it was never saved, and the data is lost silently on reload.",
+   "fix": "Show the rename message only when persist reported no problem. For example, have commit() return the persist result and call show(renamed) only if its message is null."
+  },
+  {
+   "pass": "Compliance",
+   "severity": "Important",
+   "file": "app/app.js",
+   "line": 22,
+   "title": "Asks for confirmation on an action on one item (policy-ux@2#U2)",
+   "why": "U2 (v2) says actions on a single item happen at once and offer Undo for 10 seconds, with no confirmation dialog. This adds a native `confirm('Đổi tên việc này?')` on every rename. It is also the browser's dialog, not the app's own #confirm.",
+   "fix": "Remove the confirm and rename at once. If the team wants Undo, add it as the policy describes. Otherwise ask the UX owner whether rename needs it."
+  },
+  {
+   "pass": "Bugs",
+   "severity": "Important",
+   "file": "app/app.js",
+   "line": 57,
+   "title": "Double-clicking the name also clicks the checkbox twice, and with a filter on the item disappears",
+   "why": "The span is inside the `<label>` with the checkbox. Each click of the double-click toggles the item, which calls commit() and re-renders. With the 'Chưa xong' or 'Đã xong' filter on, the first click moves the item out of view, so the user cannot rename it. Each double-click also writes to storage twice. I have not checked whether `dblclick` still fires on the span once the first click has re-rendered the list. If it does not, rename never starts at all. Check this in a browser.",
+   "fix": "Move the name span out of the `<label>`, or call preventDefault on click for the span. Or start editing from a separate 'Sửa' button."
+  },
+  {
+   "pass": "Bugs",
+   "severity": "Important",
+   "file": "app/app.js",
+   "line": 57,
+   "title": "Rename cannot be reached with the keyboard (policy-ux@2#U5)",
+   "why": "Editing starts only on `ondblclick` on a span that cannot take focus. A keyboard-only user has no way to rename. U5 requires every control to work with the keyboard.",
+   "fix": "Add a focusable control with an aria-label, such as a 'Đổi tên' button, or start editing with Enter/F2 on a focusable name."
+  },
+  {
+   "pass": "Compliance",
+   "severity": "Nit",
+   "file": "tests/app.test.js",
+   "line": null,
+   "title": "No test for the new behaviour",
+   "why": "app.test.js runs app.js in a vm, but nothing covers rename: Enter, Esc, an empty name, or a filter being on. That is why the bug with the filtered position passed check.sh (44/44).",
+   "fix": "Add app.test.js cases: rename with a filter on, Esc keeps the old name, and the message shows the name as text."
+  },
+  {
+   "pass": "Bugs",
+   "severity": "Nit",
+   "file": "app/app.js",
+   "line": 63,
+   "title": "Clicking away leaves the edit box open",
+   "why": "There is no blur handler. The input stays until the next render, and the typed name is neither saved nor clearly cancelled.",
+   "fix": "On blur, either save (as Enter does) or call render() (as Esc does), and say which in the code."
+  },
+  {
+   "pass": "Compliance",
+   "severity": "Nit",
+   "file": "app/app.js",
+   "line": 22,
+   "title": "The new UI strings are hardcoded and not in MESSAGES",
+   "why": "Every other user-facing message lives in backup.js MESSAGES, and tests check them word for word. 'Đổi tên việc này?' and 'Đã đổi tên thành …' are left out of that.",
+   "fix": "Add `renamed` to MESSAGES and use fill()."
+  }
+ ],
+ "dropped_nits": 0,
+ "claude_md_outdated": false,
+ "pr": 2,
+ "base": "04ee584",
+ "head": "80c5c4a",
+ "mode": "REVIEW.md"
+}

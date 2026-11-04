@@ -1,0 +1,1 @@
+{"run": "R4c-co-hook", "giay": 14.1, "usd": 0.1477913, "luot": 2, "model": ["claude-haiku-5-5", "claude-opus-5-5"], "tool_call": 1, "session": "a395fd86-2cef-4913-9df0-7da30b0451aa", "tu_choi": ["Bash"], "env": [], "sources": "project,local", "mcp": false, "swap_settings": null, "skill_nap": 26}

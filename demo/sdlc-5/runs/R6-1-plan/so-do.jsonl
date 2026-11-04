@@ -1,0 +1,1 @@
+{"run": "R6-1-plan", "giay": 301.9, "usd": 1.5833402999999997, "luot": 27, "model": ["claude-opus-5-5", "claude-haiku-5-5"], "tool_call": 26, "session": "c5bc884f-8d0f-41e4-b232-bfbed07e0244", "tu_choi": ["Bash", "Bash"], "env": [], "sources": "project,local", "mcp": false, "swap_settings": null, "skill_nap": 26}

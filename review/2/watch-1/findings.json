@@ -1,0 +1,73 @@
+{
+ "findings": [
+  {
+   "pass": "Bugs",
+   "severity": "Important",
+   "file": "app/app.js",
+   "line": 87,
+   "title": "Double-clicking a title also ticks or unticks the todo",
+   "why": "The title `<span>` sits inside the `<label>` that wraps the checkbox (line 77). In a browser, each click of a double-click activates the label, so the checkbox changes, toggle() runs, the list saves and redraws. Every rename by mouse therefore flips the done state, usually twice, with two saves before the edit box opens. With the 'Chưa xong' filter on, the first click marks the todo done and it vanishes from the view. The second click then lands on whichever row moved into its place: that todo gets toggled, or no edit box opens. A user who only wanted to rename ends up with done states they did not set. (I read the code but did not run it in a browser. To confirm, double-click a title with the 'Chưa xong' filter on and watch `todo.v1`.)",
+   "fix": "Move the title `<span>` out of the `<label>`, or keep the label to the checkbox alone, so clicks on the title never activate the checkbox. Add an app test that double-clicks with a filter on and checks the done values in `saved` stay the same."
+  },
+  {
+   "pass": "Compliance",
+   "severity": "Important",
+   "file": "app/app.js",
+   "line": 19,
+   "title": "Sized as Small, but it is a Medium feature with no committed plan",
+   "why": "CLAUDE.md's size table says Small is 'one well-located bug, one file' and Medium is 'a small feature, a few files', with plan/<name>.md committed and accepted before code. This PR adds a new feature (renaming) and a new shared Undo mechanism (offerUndo). It changes 2 files, about 150 lines. pr.py rates it risk medium, '1 code owner, who reads the plan', but no plan or spec exists for the code owner to read, so nobody can check Compliance against an accepted plan.",
+   "fix": "Re-size the change as Medium. Write plan/<name>.md as Status: draft with Files that change · Order of work · Risks · Proof, have a person accept it, then re-check this PR against that plan."
+  },
+  {
+   "pass": "Compliance",
+   "severity": "Important",
+   "file": "CLAUDE.md",
+   "line": null,
+   "title": "CLAUDE.md's healthy check output (tests 44) is out of date, and so is the PR's proof",
+   "why": "The base has 44 tests. This PR adds 5 to tests/app.test.js, so the head has 49. CLAUDE.md's Verification section still says a healthy run ends with 'tests 44 / pass 44'. A future run that compares against it will see a mismatch, or a run where tests went missing can still look healthy. The PR's 'How it was checked' block shows 44 tests, so it was not pasted from a check.sh run on this head (5a6d21b), against CLAUDE.md's 'paste the last lines of its output' rule.",
+   "fix": "Run bash scripts/check.sh on the head and paste its real output into PR.md. Update the healthy output in CLAUDE.md to the new count (49 if all pass) in the same PR."
+  },
+  {
+   "pass": "Bugs",
+   "severity": "Nit",
+   "file": "app/app.js",
+   "line": 93,
+   "title": "Text typed in the edit box is thrown away silently on blur or any other action",
+   "why": "There is no blur handler. If the user clicks elsewhere the edit box stays open. The next add, toggle, delete or filter click redraws the list and drops the typed name without a word. This is borderline policy-ux#U1, but it is unconfirmed input, not saved data, so I marked it Nit.",
+   "fix": "On blur, save if the value is non-empty and changed, or cancel. Pick one, use it every time, and test it."
+  },
+  {
+   "pass": "Bugs",
+   "severity": "Nit",
+   "file": "app/app.js",
+   "line": 94,
+   "title": "Enter during Vietnamese input-method composition saves a half-typed name",
+   "why": "The keydown handler does not check e.isComposing. With an input method that composes text (for example macOS Vietnamese Telex), pressing Enter to commit a composed character also renames the todo with the unfinished text. I have not checked this in a browser. To confirm, type with macOS Vietnamese Telex and press Enter mid-word.",
+   "fix": "Ignore the key while composing: `if (e.isComposing) return;` at the top of input.onkeydown."
+  },
+  {
+   "pass": "Bugs",
+   "severity": "Nit",
+   "file": "app/app.js",
+   "line": 92,
+   "title": "Keyboard focus is lost after Enter or Esc in the edit box",
+   "why": "rename() and Escape both call render(), which rebuilds every row. Focus falls back to the page body, so a keyboard user has to tab back through the whole page to find the todo they just renamed (policy-ux#U5).",
+   "fix": "After render, focus the renamed todo's title (find it by id), or the Undo button when one is shown."
+  },
+  {
+   "pass": "Bugs",
+   "severity": "Nit",
+   "file": "app/app.js",
+   "line": 26,
+   "title": "Undo holds a reference to the old todo object",
+   "why": "The undo closure changes `t`, the todo as it was at rename time. If an import replaces the list within the 10 seconds, `t` is no longer in `todos`, so Undo saves the current list unchanged and nothing is undone. No message is shown, but the button looked like it worked. Today the import's message clears the button, which hides this, but that depends on every later path calling show().",
+   "fix": "Have undo look the todo up again by id in the current `todos`, and do nothing (or remove the button) if it is gone."
+  }
+ ],
+ "dropped_nits": 1,
+ "claude_md_outdated": true,
+ "pr": 2,
+ "base": "04ee584",
+ "head": "5a6d21b",
+ "mode": "REVIEW.md"
+}
