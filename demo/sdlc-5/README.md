@@ -1,5 +1,7 @@
 # Demo SDLC-5 · Deploy: review hai chiều, agent dừng trước cổng production
 
+> Bài blog của tập: https://fxstudio.dev/ai-native-sdlc-deploy-truoc-cong-production/ (công khai 2026-11-04). Video dài và reel trên kênh Fx Studio.
+
 Bằng chứng cho tập **SDLC-5** của loạt AI-Native SDLC (Fx Studio). Chạy 2026-11-04 trên app todo của repo này, Claude Code 2.1.317,
 phiên chính `claude-opus-5-5`, nhân vật giả lập `sonnet`. Mỗi kịch bản chạy **một hoặc hai lượt**: ví dụ thật, không phải thống kê.
 
