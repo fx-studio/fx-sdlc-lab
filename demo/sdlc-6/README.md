@@ -1,6 +1,6 @@
 # Demo SDLC-6 · Maintain: khép vòng, sự cố thành intent.md mới
 
-> Bài blog của tập: (điền khi đăng). Video dài và reel trên kênh Fx Studio.
+> > Bài blog của tập: https://fxstudio.dev/ai-native-sdlc-maintain-khep-vong/ (công khai 2026-11-10). Video dài và reel trên kênh Fx Studio.
 
 Bằng chứng cho tập **SDLC-6** của loạt AI-Native SDLC (Fx Studio). Chạy 2026-11-10 trên app todo của repo này, Claude Code 2.1.317,
 phiên chính `claude-opus-5-5`, nhân vật giả lập `sonnet`. Mỗi kịch bản chạy **một hoặc vài lượt**: ví dụ thật, không phải thống kê.
