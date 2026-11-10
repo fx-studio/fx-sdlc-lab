@@ -1,0 +1,82 @@
+# Response bands for the watch job (SDLC-6, Maintain; playbook Stage 6, "Closing the loop with monitoring thresholds").
+# Version-controlled: changing a band is a pull request a person reviews (python3 scripts/pr.py). The agent never edits this file
+# during a watch run (it has no write tool at level 2, and protect-paths blocks ops/bands.yaml).
+#
+# Detection is a plain script (scripts/detect.py), no model: a rolling mean and standard deviation over `window` points that come
+# before the last `tail` points, plus Western Electric run rules on the upper side (a higher value is worse for every metric here):
+#   WE1  the last point above mean + 3 sd                     -> level 3
+#   WE2  2 of the last 3 points above mean + 2 sd             -> level 2
+#   WE3  4 of the last 5 points above mean + 1 sd             -> level 1
+#   WE4  the last 8 points all above the mean (slow drift)    -> level 2
+# When the baseline has fewer than `min_points` points or its sd is 0, there is no statistical baseline: the script says so and
+# falls back to the `fixed` thresholds below (fix 4.4 of 06-maintain.md: fixed thresholds until there is a baseline).
+version: 2   # v2 (PR 8, ngày 22): min_value for level 2-3 of error rates; noise model per metric
+owner: Huy (on-call this week, simulated) · reviewed by Khoa (tech lead, simulated)
+
+queue:
+  max_open: 5          # open agent-written intents waiting for triage; above it the agent merges into an open one of the same kind
+  triage_within: 2 working days
+
+levels:
+  1: {action: log}
+  2: {action: diagnose, tools: "Read,Glob,Grep,Skill,Bash(python3 scripts/ci_log.py:*),Bash(git log:*),Bash(git show:*),Bash(git diff:*),mcp__deploy__status"}
+  3: {action: act}
+
+metrics:
+  ci_fail_rate:
+    what: share of CI runs that failed in a day (bash scripts/check.sh equivalent, node --test)
+    window: 21
+    tail: 5
+    min_points: 14
+    fixed:              # used while there is no baseline (sd = 0): on the mean of the last `smooth` days
+      smooth: 3
+      levels: [[0.0001, 1], [0.2, 2], [0.4, 3]]
+    level3:             # the only two paths at level 3 (playbook): a PR into the review gate, or a runbook approved beforehand
+      paths: [pull_request]
+      tools: "Read,Glob,Grep,Skill,Write,Edit,Bash(python3 scripts/ci_log.py:*),Bash(git log:*),Bash(git show:*),Bash(git diff:*),Bash(git status:*),Bash(git add:*),Bash(git commit:*),Bash(node:*),Bash(bash scripts/check.sh:*),Bash(python3 scripts/pr.py:*)"
+      instructions: >-
+        Open one pull request with python3 scripts/pr.py (quarantine the flaky test or revert the commit that broke CI), commit on
+        the pr/* branch only, run bash scripts/check.sh there, and stop. A person reviews and merges.
+
+  staging_error_rate:
+    what: share of failed actions of simulated users on staging (scripts/traffic.js), the stand-in for a 5xx rate
+    window: 14
+    tail: 3
+    min_points: 10
+    min_value: 0.05     # below 5 % failed actions, level 2-3 is capped at 1 (log): rare but harmless noise does not wake anyone
+    noise: >-
+      Known noise: the browser storage refuses about 1 % of writes, and every action that writes can fail from it: each save
+      (not_saved) and each import (store.replace -> import_failed). Expect roughly 2 failures a day out of ~210 actions; a day with
+      6-9 happens a few times a year by chance alone.
+    fixed:
+      smooth: 1
+      levels: [[0.03, 1], [0.05, 2], [0.08, 3]]
+    level3:
+      paths: [runbook, pull_request]
+      runbooks: ["rollback staging (MCP tool deploy.rollback, env staging), only when a release changed inside the window"]
+      tools: "Read,Glob,Grep,Skill,Bash(python3 scripts/ci_log.py:*),Bash(git log:*),Bash(git show:*),Bash(git diff:*),mcp__deploy__status,mcp__deploy__rollback,Bash(python3 scripts/collect.py traffic:*)"
+      instructions: >-
+        If a release went live inside the window, run the approved runbook: roll staging back with the deploy MCP tool
+        rollback(env=staging), then confirm with python3 scripts/collect.py traffic --env staging --day <same day> --confirm
+        that the rate is back near the baseline. Do not fix code on staging. Write the intent for the real fix.
+
+  production_error_rate:
+    what: share of failed actions of simulated users on production (scripts/traffic.js)
+    window: 14
+    tail: 3
+    min_points: 10
+    min_value: 0.05     # below 5 % failed actions, level 2-3 is capped at 1 (log): rare but harmless noise does not wake anyone
+    noise: >-
+      Known noise: the browser storage refuses about 1 % of writes, and every action that writes can fail from it: each save
+      (not_saved) and each import (store.replace -> import_failed). Expect roughly 2 failures a day out of ~210 actions; a day with
+      6-9 happens a few times a year by chance alone.
+    fixed:
+      smooth: 1
+      levels: [[0.03, 1], [0.05, 2], [0.08, 3]]
+    level3:
+      paths: [page_a_person]     # chủ kênh chốt 2026-11-10: on production the agent prepares, a person decides
+      tools: "Read,Glob,Grep,Skill,Bash(python3 scripts/ci_log.py:*),Bash(git log:*),Bash(git show:*),Bash(git diff:*),mcp__deploy__status"
+      instructions: >-
+        Production rollback is a person's call in this repo. Diagnose, name the release to roll back to (from
+        deploy/production/history.jsonl) and the exact command a person runs, and stop. Put it at the top of the intent as
+        "Page: on-call".

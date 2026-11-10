@@ -1,0 +1,25 @@
+# Watch job (playbook Stage 6, "Closing the loop with monitoring thresholds"): collect a metric, detect, act by ops/bands.yaml.
+# MANUAL ONLY (workflow_dispatch). The playbook shape runs on a schedule; it is off here because:
+#   1. The metrics of this repo are simulated (scripts/collect.py), there is no real CI history or real environment on GitHub.
+#   2. Level 2-3 call Claude (needs ANTHROPIC_API_KEY in the repository secrets, every run costs money).
+# The agent runs non-interactive with the tools listed in ops/bands.yaml; a level-3 run may open a PR, never merge.
+name: watch
+on:
+  workflow_dispatch:
+    inputs:
+      metric: {description: "ci_fail_rate | staging_error_rate | production_error_rate", required: true, default: ci_fail_rate}
+  # schedule:
+  #   - cron: '0 * * * *'      # hourly in a real team
+jobs:
+  watch:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions: {contents: read}      # level 3 PRs need contents: write + pull-requests: write, add only if you enable it
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: {node-version: '22'}
+      - run: pip install pyyaml && npm install -g @anthropic-ai/claude-code
+      - run: python3 scripts/watch.py tick "${{ inputs.metric }}"
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}

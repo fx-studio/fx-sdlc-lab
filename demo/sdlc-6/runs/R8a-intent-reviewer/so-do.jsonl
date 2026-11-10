@@ -1,0 +1,1 @@
+{"run": "R8a-intent-reviewer", "giay": 160.2, "usd": 0.9439519000000001, "luot": 2, "model": ["claude-haiku-5-5", "claude-opus-5-5"], "tool_call": 29, "session": "58a1ed7b-377a-439f-b8eb-a3426896a9d2", "tu_choi": [], "env": [], "sources": "project,local", "mcp": false, "swap_settings": null, "skill_nap": 28}

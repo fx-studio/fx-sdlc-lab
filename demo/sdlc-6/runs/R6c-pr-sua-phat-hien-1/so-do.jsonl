@@ -1,0 +1,1 @@
+{"run": "R6c-pr-sua-phat-hien-1", "giay": 75.7, "usd": 0.5955305, "luot": 24, "model": ["claude-haiku-5-5", "claude-opus-5-5"], "tool_call": 23, "session": "74840131-f2b4-4a4e-b702-299b607f03e1", "tu_choi": ["Bash"], "env": [], "sources": "project,local", "mcp": false, "swap_settings": null, "skill_nap": 28}

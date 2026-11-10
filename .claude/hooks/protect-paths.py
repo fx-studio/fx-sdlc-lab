@@ -4,6 +4,7 @@
 Denied:
   - docs/      the channel owner's own notes
   - tickets/   incoming tickets are evidence, not working files
+  - ops/bands.yaml, ops/metrics/, ops/ci/, ops/scan/dismissed.json   the watch job's policy and evidence (SDLC-6)
   - intent/, spec/, plan/ files that already say `Status: accepted`: changing an approved decision is a person's call.
     (Drafts stay editable. A plan that has to change during the build is updated by a person, in the same commit as the code.)
 Fast and scoped: it only looks at the one file the tool call touches.
@@ -33,6 +34,12 @@ rel = os.path.relpath(os.path.abspath(path), root)
 
 if re.match(r"(docs|tickets)/", rel):
     deny(tool, rel, f"protect-paths: {rel.split('/')[0]}/ is read-only for the agent.")
+
+# SDLC-6: the watch job's bands and the collected metrics are evidence and policy, not working files. A band changes through a PR
+# that a person writes and reviews; the agent proposes it in an intent.
+if re.match(r"(\.worktrees/[^/]+/)?ops/(bands\.yaml|metrics/|ci/|scan/dismissed\.json)", rel):
+    deny(tool, rel, "protect-paths: ops/bands.yaml, ops/metrics/, ops/ci/ and ops/scan/dismissed.json are not the agent's to change. "
+                    "Propose a band change in the intent; a person opens the PR.")
 
 if re.match(r"(intent|spec|plan)/", rel) and os.path.exists(path):
     with open(path, encoding="utf-8") as f:

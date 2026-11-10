@@ -1,0 +1,28 @@
+# Weekly security scan, home-made (fix 4.6 of 06-maintain.md, when Claude Security is not available).
+# MANUAL ONLY (workflow_dispatch): it calls Claude (ANTHROPIC_API_KEY, costs money). The playbook default is weekly.
+# Read-only: findings are written to ops/scan/ and uploaded as an artifact; nothing is fixed, nothing is merged.
+name: scan
+on:
+  workflow_dispatch:
+    inputs:
+      since: {description: "git ref of last week's scan (empty = full baseline)", required: false, default: ""}
+  # schedule:
+  #   - cron: '0 3 * * 1'      # Mondays
+jobs:
+  scan:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions: {contents: read}
+    steps:
+      - uses: actions/checkout@v4
+        with: {fetch-depth: 0}
+      - uses: actions/setup-node@v4
+        with: {node-version: '22'}
+      - run: npm install -g @anthropic-ai/claude-code
+      - run: |
+          if [ -n "${{ inputs.since }}" ]; then python3 scripts/scan.py --since "${{ inputs.since }}" --label weekly
+          else python3 scripts/scan.py --full --label baseline; fi
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+      - uses: actions/upload-artifact@v4
+        with: {name: scan, path: ops/scan/}

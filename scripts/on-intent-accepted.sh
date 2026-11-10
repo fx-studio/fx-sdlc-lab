@@ -8,7 +8,7 @@ LOG="${SPEC_JOB_LOG:-.spec-job.log}"
 
 for f in $(git diff-tree --no-commit-id --name-only -r HEAD -- 'intent/*.md'); do
   [ -f "$f" ] || continue
-  grep -qiE '^.*Status:[[:space:]]*accepted' "$f" || continue
+  grep -qiE '^Author:.*Status:[[:space:]]*accepted([[:space:]]|$)' "$f" || continue  # header line only (scan #4): a body line that mentions 'Status: accepted' is not an approval
   spec="spec/$(basename "$f")"
   [ -e "$spec" ] && continue
   echo "[$(date '+%F %T')] spec job: $f → $spec" >> "$LOG"

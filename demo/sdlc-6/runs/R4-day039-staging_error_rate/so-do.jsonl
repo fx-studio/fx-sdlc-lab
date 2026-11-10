@@ -1,0 +1,1 @@
+{"seconds": 50.0, "usd": 0.3682149, "turns": 14, "model": ["claude-haiku-5-5", "claude-opus-5-5"], "tool_calls": 12, "denied": ["Bash"], "hooksPath": "<repo>/.git/hooks"}
