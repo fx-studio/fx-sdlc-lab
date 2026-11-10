@@ -1,0 +1,1 @@
+{"run": "R6b-khoa-phan-loai-scan", "giay": 17.6, "usd": 0.0592888, "luot": 1, "model": ["claude-haiku-5-5", "claude-sonnet-5-5"], "tool_call": 0, "session": "b1e9e8d2-8b12-4f22-bdf3-a5803b154811", "tu_choi": [], "env": [], "sources": "project,local", "mcp": false, "swap_settings": null, "skill_nap": 22}

@@ -1,0 +1,25 @@
+{
+  "id": "E10-nhap-trung-ten",
+  "pass": true,
+  "checks": [
+    {
+      "check": "tests_pass",
+      "ok": true,
+      "note": "ℹ pass 48 ℹ fail 0"
+    },
+    {
+      "check": "hidden_test E10-nhap-trung-ten.eval.js",
+      "ok": true,
+      "note": "ℹ pass 2 ℹ fail 0"
+    },
+    {
+      "check": "only_paths app/ tests/ plan/",
+      "ok": true,
+      "note": ""
+    }
+  ],
+  "usd": 0.3183442,
+  "secs": 43.6,
+  "turns": 11,
+  "answer": "e.\n- **`tests/backup.test.js`, new test:** a list with \"Mua sữa\" twice (one done) and \"mua sữa \" survives backup then import. Before the fix it failed with the `badTodo` message, which is the reported bug.\n- **`tests/backup.test.js`, test changed:** \"a file that lists the same todo twice … is refused\" was written to pin the title rule, using two todos with different `id`s and the same title. That is exactly Ngân's valid case, so the test was wrong. It now uses the same `id` twice, which is a real duplicate and which the spec says to refuse. Please confirm you agree with this change, since it rewrites a test that was already committed.\n\n**Check (`bash scripts/check.sh`):**\n```\nℹ tests 48\nℹ pass 48\nℹ fail 0\n== lint: node --check app/*.js tests/*.js\n== check: OK\n```\n\n**Not done; these are for a person:**\n- Nothing is committed (the checkout is a detached HEAD). The test-first commit and the fix commit are yours to make. I didn't touch the changes that were already there in `CLAUDE.md` and `.claude/skills/diagnose/SKILL.md`.\n- Production is on `b51a55e` per `a5351c7`, which is before `2e2ce98`. So \"hôm qua app cập nhật\" doesn't match what production has, unless something shipped after that. Check which build Ngân was on before releasing this.\n- `2e2ce98` has no intent or spec behind it. An incident lesson for `ops/lessons.md` and an eval in `evals/` would make sense: a validation rule went in without the spec, and the test checked the rule's wording rather than the real use case."
+}

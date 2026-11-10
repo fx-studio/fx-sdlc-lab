@@ -1,0 +1,1 @@
+{"run": "R3b-khoa-duyet-pr9", "giay": 18.8, "usd": 0.0711693, "luot": 1, "model": ["claude-haiku-5-5", "claude-sonnet-5-5"], "tool_call": 0, "session": "5da3d98b-8bf5-4673-8d87-8b456452fa68", "tu_choi": [], "env": [], "sources": "project,local", "mcp": false, "swap_settings": null, "skill_nap": 22}

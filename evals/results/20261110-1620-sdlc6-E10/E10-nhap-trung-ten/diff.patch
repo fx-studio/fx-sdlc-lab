@@ -1,0 +1,46 @@
+diff --git a/app/backup.js b/app/backup.js
+index 03dc36b..812e41c 100644
+--- a/app/backup.js
++++ b/app/backup.js
+@@ -96,12 +96,10 @@ function parseBackup(text) {
+   }
+   if (data.todos.length === 0) return { ok: false, message: MESSAGES.emptyFile };
+   const ids = new Set();
+-  const titles = new Set(); // a file that lists the same todo twice (two backups pasted together) is not one this app wrote
++  // Same todo twice = same id. Two todos may share a title (the app lets you add "Mua sữa" every week), so titles are not checked.
+   for (const t of data.todos) {
+-    const title = isValidTodo(t) && t.title.trim().toLowerCase();
+-    if (!title || ids.has(t.id) || titles.has(title)) return { ok: false, message: MESSAGES.badTodo };
++    if (!isValidTodo(t) || ids.has(t.id)) return { ok: false, message: MESSAGES.badTodo };
+     ids.add(t.id);
+-    titles.add(title);
+   }
+   return { ok: true, todos: data.todos.map(pick) };
+ }
+diff --git a/tests/backup.test.js b/tests/backup.test.js
+index 4946985..8ff95db 100644
+--- a/tests/backup.test.js
++++ b/tests/backup.test.js
+@@ -122,6 +122,11 @@ test('every list the app can create survives backup then import unchanged', () =
+   assert.deepEqual(parseBackup(toBackupText(list(2000))).ok, true);
+ });
+ 
++test('a list with two todos of the same title (Mua sữa every week) survives backup then import (Ngân)', () => {
++  const todos = [todo('Mua sữa'), todo('Gọi mẹ'), todo('Mua sữa', { done: true }), todo('mua sữa ')];
++  assert.deepEqual(parseBackup(toBackupText(todos)), { ok: true, todos });
++});
++
+ // --- Confirmation (AC5, AC6, AC19, AC20, S2) ---
+ 
+ test('confirmText asks before replacing anything, and only then', () => {
+@@ -276,8 +281,8 @@ test('no message uses a technical word', () => {
+   }
+ });
+ 
+-test('a file that lists the same todo twice (two backups pasted together) is refused, list untouched', () => {
++test('a file that lists the same todo twice (same id) is refused, list untouched', () => {
+   const a = todo('Nộp báo cáo');
+-  const twice = { ...a, id: randomUUID() };
++  const twice = { ...a };
+   assert.deepEqual(parseBackup(fileOf([a, todo('Gọi mẹ'), twice])), { ok: false, message: MESSAGES.badTodo });
+ });

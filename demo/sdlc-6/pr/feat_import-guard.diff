@@ -1,0 +1,32 @@
+diff --git a/app/backup.js b/app/backup.js
+index 76176df..03dc36b 100644
+--- a/app/backup.js
++++ b/app/backup.js
+@@ -96,9 +96,12 @@ function parseBackup(text) {
+   }
+   if (data.todos.length === 0) return { ok: false, message: MESSAGES.emptyFile };
+   const ids = new Set();
++  const titles = new Set(); // a file that lists the same todo twice (two backups pasted together) is not one this app wrote
+   for (const t of data.todos) {
+-    if (!isValidTodo(t) || ids.has(t.id)) return { ok: false, message: MESSAGES.badTodo };
++    const title = isValidTodo(t) && t.title.trim().toLowerCase();
++    if (!title || ids.has(t.id) || titles.has(title)) return { ok: false, message: MESSAGES.badTodo };
+     ids.add(t.id);
++    titles.add(title);
+   }
+   return { ok: true, todos: data.todos.map(pick) };
+ }
+diff --git a/tests/backup.test.js b/tests/backup.test.js
+index 59d2ebc..4946985 100644
+--- a/tests/backup.test.js
++++ b/tests/backup.test.js
+@@ -275,3 +275,9 @@ test('no message uses a technical word', () => {
+     assert.doesNotMatch(text, /localStorage|JSON|console/i, key);
+   }
+ });
++
++test('a file that lists the same todo twice (two backups pasted together) is refused, list untouched', () => {
++  const a = todo('Nộp báo cáo');
++  const twice = { ...a, id: randomUUID() };
++  assert.deepEqual(parseBackup(fileOf([a, todo('Gọi mẹ'), twice])), { ok: false, message: MESSAGES.badTodo });
++});

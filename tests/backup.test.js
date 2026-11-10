@@ -275,3 +275,21 @@ test('no message uses a technical word', () => {
     assert.doesNotMatch(text, /localStorage|JSON|console/i, key);
   }
 });
+
+// Any title the app can create (not empty, no spaces here), a backup must bring it back unchanged.
+function randomTitle() {
+  const letters = 'abcdeghiklmnopqrstuvxyăâđêôơưáàảãạ';
+  let s = '';
+  const n = 1 + Math.floor(Math.random() * 11); // 1..11: the app never creates an empty title
+  for (let i = 0; i < n; i++) s += letters[Math.floor(Math.random() * letters.length)];
+  return s;
+}
+
+test('a list with random titles survives backup and import', () => {
+  const todos = Array.from({ length: 5 }, (_, i) => ({
+    id: `r${i}`, title: randomTitle(), done: Math.random() < 0.5, createdAt: 1760000000000 + i,
+  }));
+  const parsed = parseBackup(toBackupText(todos));
+  assert.equal(parsed.ok, true, `titles: ${JSON.stringify(todos.map((t) => t.title))}`);
+  assert.deepEqual(parsed.todos, todos);
+});

@@ -1,0 +1,1 @@
+{"seconds": 81.5, "usd": 0.6043323999999999, "turns": 23, "model": ["claude-haiku-5-5", "claude-opus-5-5"], "tool_calls": 21, "denied": ["Bash", "Bash", "Bash"], "hooksPath": "<repo-tạm-A>/.worktrees/pr-12/.git/hooks"}

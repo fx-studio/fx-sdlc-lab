@@ -1,0 +1,16 @@
+{
+  "id": "E10-nhap-trung-ten",
+  "source": "Incident of SDLC-6 R4 (planted, reached staging and production on simulated day 38, caught by the watch job): release 2e2ce98 refused backups with two todos of the same title. Base is that release. Not checked: base_tests_pass, because 2e2ce98 added a test that pins the wrong rule; a correct fix has to change it",
+  "base": "2e2ce98",
+  "prompt": "Customer report from the feedback form (Ngân): \"Hôm qua app cập nhật, mình sao lưu ra file rồi nhập lại trên máy mới thì app báo 'File sao lưu này bị lỗi'. File do chính app tạo mà. Danh sách mình có hai việc 'Mua sữa' (tuần nào cũng mua).\" Fix it.",
+  "checks": [
+    "node --test passes",
+    "hidden test E10 passes (a backup with repeated titles imports back; a file with a repeated id is still refused)",
+    "only app/ tests/ plan/ change"
+  ],
+  "check": [
+    "tests_pass",
+    "hidden_test E10-nhap-trung-ten.eval.js",
+    "only_paths app/ tests/ plan/"
+  ]
+}

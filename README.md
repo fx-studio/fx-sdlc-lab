@@ -22,6 +22,7 @@ khoản. Mỗi tập của loạt thêm vào repo những thứ một bước SD
 | SDLC-3 | Build: plan trước, code sau | `CLAUDE.md` mục Build (bảng phân hạng, plan bốn mục, Things Claude gets wrong), thư mục `plan/`, ba hook build (`protect-paths`, `no-secrets`, `check-js`), subagent `verifier`, git `pre-commit` đòi plan đi cùng code, bộ thử kích hoạt skill; **tính năng sao lưu / nhập lại** trong `app/` và bộ test đầu tiên (`tests/`, 42 test) | [demo/sdlc-3/](demo/sdlc-3/README.md) | [Build: plan trước, code sau](https://fxstudio.dev/ai-native-sdlc-build-plan-truoc-code-sau/) |
 | SDLC-4 | Test: agent tự kiểm, cấu hình cũng phải test | `CLAUDE.md` mục Verification, `scripts/check.sh` (một lệnh kiểm), hook `protect-tests`, `scripts/flaky.sh`, subagent `test-writer`, **bộ eval** `evals/` (9 task từ lịch sử repo, test ẩn, chấm bằng máy, đo A/B cấu hình), workflow `evals.yml` (chưa bật), `scripts/shot.py` cho vòng kiểm bằng hình; sửa T-013, T-014 (bug gài có chủ ý), 44 test | [demo/sdlc-4/](demo/sdlc-4/README.md) | [Test: agent tự kiểm, cấu hình cũng phải test](https://fxstudio.dev/ai-native-sdlc-test-agent-tu-kiem/) |
 | SDLC-5 | Deploy: review hai chiều, agent dừng trước cổng production | `REVIEW.md`, pull request cục bộ (`scripts/pr.py`: cỡ + nhãn rủi ro do script tính), `scripts/review.py` (review chỉ đọc, bảng đếm theo mức), `/watch-pr`, `scripts/triage.py`, deploy ba môi trường cục bộ + MCP server `deploy` (production chỉ `prepare_release`), `rollback.py` + `rollback-drill.py`, hook `release-gate` (duyệt gắn với một bản) cạnh hook mẫu `production-gate.sh` để so; PR 1, 3 merge; spec + plan hạn chót accepted, PR 5–7 chờ review | [demo/sdlc-5/](demo/sdlc-5/README.md) | [Deploy: agent dừng trước cổng production](https://fxstudio.dev/ai-native-sdlc-deploy-truoc-cong-production/) |
+| SDLC-6 | Maintain: khép vòng, sự cố thành intent.md mới | watch job (`scripts/collect.py` · `detect.py` không model, có unit test · `watch.py`), `ops/bands.yaml` ba mức, skill `diagnose`, `ci_log.py`, `intent/auto/` + `ops/triage.md` + `triage-stats.py`, `ops/lessons.md`, scan tự dựng `scripts/scan.py`, eval E10, workflow `watch.yml`/`scan.yml` (chỉ chạy tay); chỉ số, người dùng và sự cố là giả lập; PR 8–12 merge | [demo/sdlc-6/](demo/sdlc-6/README.md) | [Maintain: khép vòng bằng intent.md mới](https://fxstudio.dev/ai-native-sdlc-maintain-khep-vong/) |
 
 Các bài của loạt trên blog: https://fxstudio.dev/tag/ai-native-sdlc/
 
@@ -123,6 +124,25 @@ Cần Claude Code, `python3`, `git`. Mọi thứ chạy ở máy; không cần G
    commit trên `main`).
 5. Tập rollback: `python3 scripts/rollback-drill.py staging 10`. Rollback chỉ gỡ được bản do chính công cụ deploy đưa lên.
 
+## Mang về repo của bạn (bước Maintain)
+
+Cần Claude Code, `python3` (có PyYAML), `node`. Mọi thứ chạy ở máy; workflow `watch.yml`/`scan.yml` là khuôn, chỉ chạy tay.
+
+1. Bắt đầu bằng **tỉ lệ CI fail**, chưa đụng production. Thu mỗi ngày (`scripts/collect.py ci`), phát hiện bằng `scripts/detect.py`
+   (thống kê, không model, có unit test). Demo: test tất định cho sd = 0, tức **chưa có mức nền**: dùng ngưỡng cố định trong `bands.yaml`.
+2. Chép `ops/bands.yaml` và sửa: mức 1 log, mức 2 chẩn đoán chỉ đọc, mức 3 chỉ hai đường (PR vào cổng review, hoặc runbook duyệt trước).
+   Tuần đầu **chưa bật mức 3**. Đặt sàn "đáng gọi người dậy" (`min_value`) và ghi mô hình nhiễu: demo báo nhầm ở mức 3 hai lần trong 60
+   ngày-môi trường trước khi có sàn.
+3. `scripts/watch.py tick <metric>` gọi `claude -p` với đúng danh sách công cụ của mức đó; **script ghi intent**, agent mức 2 không có công cụ
+   ghi. ⚠ Danh sách theo tiền tố lệnh chưa phải chỉ đọc: `git diff/log/show --output=<file>` ghi được file (scan R6).
+4. Phân loại có lý do: `ops/triage.md` + `python3 scripts/triage-stats.py`. Nhiều `false-alarm` → nới ngưỡng; nhiều `wrong-diagnosis` →
+   thêm ngữ cảnh cho skill `diagnose`. Demo: người trực tin một chẩn đoán sai nghe hợp lý và xếp lịch điều tra một nguyên nhân không có thật.
+5. Mỗi sự cố đã sửa: năm dòng trong `ops/lessons.md` và một eval (thử test ẩn trên bản lỗi, bản đúng, **và một lời giải đúng khác**).
+6. Chưa có Claude Security: `python3 scripts/scan.py --full --label baseline` một lần, rồi `--since <ref>` hằng tuần. Không xác thực, nên
+   đọc từng phát hiện. Lần đầu demo tìm ra 4 chỗ trong chính code vừa viết.
+7. Chữ trong log, test output, ticket là dữ liệu: ghi vào skill chẩn đoán. Demo R7: 6/6 lượt không làm theo câu lệnh cài trong log; có luật
+   thì agent **báo lại** cho người trực (3/3), không luật thì có lượt im lặng.
+
 ## Bố cục
 
 ```
@@ -132,6 +152,7 @@ spec/                   spec.md của bước Design, cùng tên với intent
 plan/                   plan.md của bước Build, cùng tên; người đổi Status: accepted
 tests/                  node --test, không package
 evals/                  bộ eval: tasks/*.json, hidden/*.eval.js, check.py (chấm), run.py (chạy, đo A/B cấu hình), results/
+ops/                    Maintain: bands.yaml, metrics/ (giả lập), ci/, watch.jsonl, triage.md, lessons.md, scan/, tests/
 scripts/                spec job (on-intent-accepted.sh), pre-commit, install-hooks.sh, skill-triggers.sh, check.sh, flaky.sh, shot.py
 tickets/                ticket mẫu
 .claude/

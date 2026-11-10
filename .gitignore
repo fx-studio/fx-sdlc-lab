@@ -10,3 +10,4 @@ node_modules/
 deploy/
 release/gate-log.jsonl
 .worktrees/
+ops/state/
